@@ -8680,6 +8680,93 @@ function renderCrmPage() {
       </div>
     </div>`;
 
+  // ── Renewals Not in CRM ──────────────────────────────────────────
+  // All renewal/estimated chains from the renewals engine that do NOT have a
+  // matching CRM opp. Sorted by annualized $ descending. Uses the same matching
+  // logic as the CRM badge in the Renewals table (rnCrmStatusForRecord).
+  const rnRecords = (_rnData && _rnData.records) || [];
+  const gapRecords = [];
+  for (const r of rnRecords) {
+    if (r.type !== 'renewal' && r.type !== 'estimated') continue;
+    const { status, url } = rnCrmStatusForRecord(r);
+    if (status === 'covered') continue;
+    if (status === 'no-crm-data') continue; // CRM data not loaded yet — skip
+    const annualized = r.annualizedRev || (r.termYears ? r.totalRev / Math.max(1, r.termYears) : r.totalRev) || 0;
+    gapRecords.push({ r, status, url, annualized });
+  }
+  gapRecords.sort((a, b) => b.annualized - a.annualized);
+  const gapTotal = gapRecords.reduce((s, g) => s + g.annualized, 0);
+
+  const gapStatusBadge = (status, url) => {
+    const opts = {
+      'not-in-crm':   { cls: 'bg-slate-800 text-slate-400 border-slate-700/60',              label: 'Not in CRM' },
+      'no-opps':      { cls: 'bg-amber-900/30 text-amber-300 border-amber-700/50',           label: 'No Opps'    },
+      'no-match':     { cls: 'bg-rose-900/30 text-rose-300 border-rose-700/50',              label: 'No Match'   },
+      'vendor-only':  { cls: 'bg-indigo-900/30 text-indigo-300 border-indigo-700/50',        label: 'Date Off'   },
+    };
+    const { cls, label } = opts[status] || opts['not-in-crm'];
+    return url
+      ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold ${cls} border hover:opacity-80 whitespace-nowrap">${label} ↗</a>`
+      : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold ${cls} border whitespace-nowrap">${label}</span>`;
+  };
+
+  const gapTableHtml = gapRecords.length === 0 ? `<p class="text-[11px] text-slate-500">All renewal chains have a matched CRM opportunity.</p>` : (() => {
+    const rows = gapRecords.map(({ r, status, url, annualized }) => {
+      const custDisplay = escHtml(r.customer || '');
+      const vendors = (r.vendors || []).slice(0, 2).map(v => escHtml(v)).join(', ') + (r.vendors && r.vendors.length > 2 ? ` +${r.vendors.length - 2}` : '');
+      const renewalDt = r.renewalDate ? r.renewalDate : null;
+      const dtStr = renewalDt ? `${String(renewalDt.getMonth()+1).padStart(2,'0')}/${String(renewalDt.getDate()).padStart(2,'0')}/${renewalDt.getFullYear()}` : '—';
+      const daysOut = renewalDt ? Math.floor((renewalDt - today) / 86400000) : null;
+      const dtCls = daysOut == null ? 'text-slate-500' : daysOut < 0 ? 'text-rose-400' : daysOut <= 30 ? 'text-amber-300' : daysOut <= 90 ? 'text-yellow-300' : 'text-slate-300';
+      const daysBadge = daysOut == null ? '' : daysOut < 0 ? `<span class="text-rose-400 text-[9px] ml-1">${Math.abs(daysOut)}d past</span>` : `<span class="text-slate-500 text-[9px] ml-1">${daysOut}d</span>`;
+      const typeBadge = r.type === 'estimated'
+        ? `<span class="text-[9px] text-slate-500 italic">~est</span>`
+        : `<span class="text-[9px] text-slate-400">renewal</span>`;
+      return `<tr class="border-t border-slate-800 hover:bg-slate-900/40">
+        <td class="py-1.5 px-3 text-slate-200 truncate max-w-[220px] text-xs">${custDisplay}</td>
+        <td class="py-1.5 px-3 text-slate-400 text-xs truncate max-w-[180px]">${vendors || '—'}</td>
+        <td class="py-1.5 px-3 text-xs whitespace-nowrap"><span class="${dtCls} font-mono">${dtStr}</span>${daysBadge}</td>
+        <td class="py-1.5 px-3 text-right font-mono text-xs text-indigo-300 font-semibold">${fmtMoney(annualized)}</td>
+        <td class="py-1.5 px-3 text-xs">${typeBadge}</td>
+        <td class="py-1.5 px-3 text-xs">${gapStatusBadge(status, url)}</td>
+      </tr>`;
+    }).join('');
+    return `<div class="overflow-auto" style="max-height:420px;">
+      <table class="w-full text-xs">
+        <thead class="sticky top-0 z-10 bg-slate-900">
+          <tr class="text-slate-500 uppercase tracking-wider text-[10px]">
+            <th class="text-left py-2 px-3 font-semibold">Customer</th>
+            <th class="text-left py-2 px-3 font-semibold">Vendor(s)</th>
+            <th class="text-left py-2 px-3 font-semibold">Renewal Date</th>
+            <th class="text-right py-2 px-3 font-semibold">Annualized $</th>
+            <th class="text-left py-2 px-3 font-semibold">Type</th>
+            <th class="text-left py-2 px-3 font-semibold">Gap</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  })();
+
+  const gapSection = `
+    <div class="mb-6">
+      <div class="flex items-baseline justify-between mb-3 gap-3 flex-wrap">
+        <div>
+          <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Renewals Without CRM Coverage</h3>
+          <p class="text-[11px] text-slate-500 mt-0.5">${gapRecords.length} renewal chain${gapRecords.length === 1 ? '' : 's'} · ${fmtMoney(gapTotal)} annualized · no matched Dynamics opp</p>
+        </div>
+        <div class="flex gap-3 text-[10px] text-slate-500">
+          <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-slate-600"></span>Not in CRM</span>
+          <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-amber-700"></span>No opps</span>
+          <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-rose-700"></span>No match</span>
+          <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-indigo-700"></span>Date off</span>
+        </div>
+      </div>
+      <div class="bg-slate-800/40 border border-slate-700/60 rounded-2xl overflow-hidden">
+        ${gapTableHtml}
+      </div>
+    </div>`;
+
   host.innerHTML = `
     <div class="flex items-baseline justify-between mb-1 gap-3 flex-wrap">
       <h2 class="text-2xl font-bold text-white">CRM Pipeline</h2>
@@ -8690,6 +8777,7 @@ function renderCrmPage() {
     ${pipelineTable}
     ${topNicePanel}
     ${hygiene}
+    ${gapSection}
   `;
   // Mount the standard sg-table data engine for the pipeline. Sort + col
   // filter + global search + column hide/order all flow through STATE.crmPage.
@@ -20260,6 +20348,39 @@ function dtSortRows(rows, cols, sort) {
     return dir * (av - bv);
   });
 }
+// Parses expressions like >500k, <1m, >=100000, 500k-1m into a numeric predicate.
+// Returns a function(n) => bool, or null if the string is not a numeric expression.
+function parseMoneyFilter(q) {
+  const s = (q || '').replace(/[$,\s]/g, '');
+  if (!s) return null;
+  const parseVal = v => {
+    const lower = v.toLowerCase();
+    const n = parseFloat(lower);
+    if (isNaN(n)) return null;
+    if (lower.endsWith('k')) return n * 1000;
+    if (lower.endsWith('m')) return n * 1000000;
+    return n;
+  };
+  // Range: 500k-1m or 500k–1m
+  const rangeM = s.match(/^([\d.]+[km]?)[-–]([\d.]+[km]?)$/i);
+  if (rangeM) {
+    const lo = parseVal(rangeM[1]), hi = parseVal(rangeM[2]);
+    if (lo != null && hi != null) return n => n >= lo && n <= hi;
+  }
+  // Comparison: >=, <=, >, <
+  const cmpM = s.match(/^([<>]=?)([\d.]+[km]?)$/i);
+  if (cmpM) {
+    const v = parseVal(cmpM[2]);
+    if (v == null) return null;
+    switch (cmpM[1]) {
+      case '>':  return n => n > v;
+      case '>=': return n => n >= v;
+      case '<':  return n => n < v;
+      case '<=': return n => n <= v;
+    }
+  }
+  return null;
+}
 function dtApplyFilters(rows, visCols, state, allCols) {
   // Per-column filters only act on visible columns (they're the only ones
   // with a filter input). Global search hits EVERY column with a searchBlob,
@@ -20278,6 +20399,10 @@ function dtApplyFilters(rows, visCols, state, allCols) {
     const colByKey = new Map(visCols.map(c => [c.key, c]));
     rows = rows.filter(r => activeColFilters.every(([k, q]) => {
       const c = colByKey.get(k);
+      if (c?.numericValue) {
+        const pred = parseMoneyFilter(q);
+        if (pred) return pred(c.numericValue(r));
+      }
       const blob = c?.searchBlob ? c.searchBlob(r) : '';
       return String(blob).toLowerCase().includes(q);
     }));
@@ -20329,7 +20454,8 @@ function dtBuildHeader(visCols, config, state, ctx) {
     if (typeof c.headerFilterHtml === 'function') return c.headerFilterHtml(state, ctx);
     const cur = (state.colFilters && state.colFilters[c.key]) || '';
     const onInput = config.onColFilter ? `oninput="${config.onColFilter}('${c.key}', this.value)"` : '';
-    return `<th style="padding:4px 6px;"><input type="text" placeholder="Filter…" data-col-filter="${c.key}"
+    const placeholder = c.numericValue ? 'Filter… or >500k' : 'Filter…';
+    return `<th style="padding:4px 6px;"><input type="text" placeholder="${placeholder}" data-col-filter="${c.key}"
       value="${cpEsc(cur)}" ${onInput}
       onclick="event.stopPropagation()"
       class="w-full bg-slate-900 border border-slate-700/60 rounded px-2 py-1 text-[11px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/60"/></th>`;
@@ -26999,11 +27125,13 @@ function dtEnrichRnCol(c, opts) {
       headerFilterHtml: () => `<th style="padding:4px;"></th>`,
     };
   }
+  const MONEY_KEYS = new Set(['stSales','openSell','sales','margin','annualized','profit','splitMargin']);
   return {
     ...c,
     align,
     searchBlob: r => rnSearchBlob(r, c.key),
     sortValue:  r => rnSortValue(r, c.key),
+    numericValue: MONEY_KEYS.has(c.key) ? (r => Number(rnSortValue(r, c.key)) || 0) : undefined,
     sortComparator: c.key === 'renewal'
       ? (opts.renewalComparator || rnbRenewalComparator)
       : undefined,
@@ -27467,6 +27595,53 @@ function rnSearchBlob(r, key) {
   return String(v);
 }
 
+// Returns CRM coverage status for a renewal chain record.
+// Shared by the CRM badge in rnRenderRecordRows and the CRM-page gap table.
+// status: 'no-crm-data' | 'not-in-crm' | 'no-opps' | 'covered' | 'vendor-only' | 'no-match'
+function rnCrmStatusForRecord(r) {
+  if (!STATE.crmIndex || !STATE.crmIndex.size) return { status: 'no-crm-data', entry: null, url: null, matchedOpp: null };
+  const custNorm = normalizeCustomer(r.customer);
+  const aliases  = getCrmAliases();
+  let entry = STATE.crmIndex.get(custNorm)
+           || STATE.crmIndex.get(aliases[custNorm] || '')
+           || null;
+  if (!entry) {
+    const parentName = rnRollupSingle(r.lines, 'custParent');
+    if (parentName) {
+      const pNorm = normalizeCustomer(parentName);
+      entry = STATE.crmIndex.get(pNorm)
+           || STATE.crmIndex.get(aliases[pNorm] || '')
+           || null;
+    }
+  }
+  if (!entry) return { status: 'not-in-crm', entry: null, url: null, matchedOpp: null };
+  const url  = crmBuildAccountUrl(entry.accountId, entry.sourceUrl);
+  const opps = entry.oppsDetail || [];
+  if (!opps.length) return { status: 'no-opps', entry, url, matchedOpp: null };
+  const vendorNorms = r.vendors.map(v => normalizeCustomer(v)).filter(Boolean);
+  const oemMatches = (oem) => {
+    if (!vendorNorms.length || !oem) return false;
+    const on = normalizeCustomer(oem);
+    return !!(on && vendorNorms.some(vn => vn && (vn === on || vn.startsWith(on) || on.startsWith(vn))));
+  };
+  const rnTs = r.renewalDate ? r.renewalDate.getTime() : null;
+  const DATE_WINDOW_MS = 90 * 86400000;
+  const closeMatches = (estClose) => {
+    if (!rnTs || !estClose) return true;
+    const cd = new Date(estClose + 'T00:00:00');
+    return !isNaN(cd.getTime()) && Math.abs(cd.getTime() - rnTs) <= DATE_WINDOW_MS;
+  };
+  const RENEWAL_OPP_KW = /\brenew(al|als|ing)?\b|\bEA\b|\bELA\b|co[\s-]?term|true[\s-]?up|maint(enance)?\s*renew/i;
+  const isRenewalType = (o) =>
+    ['Renewal'].includes(o.projectType) || Number(o.renewalValue) > 0 || RENEWAL_OPP_KW.test(o.name || '');
+  const fullMatch     = opps.find(o => oemMatches(o.oem) && closeMatches(o.estClose));
+  const vendorMatch   = !fullMatch && vendorNorms.length && opps.find(o => oemMatches(o.oem));
+  const fallbackMatch = !fullMatch && !vendorNorms.length && opps.find(o => isRenewalType(o) && closeMatches(o.estClose));
+  if (fullMatch || fallbackMatch) return { status: 'covered', entry, url, matchedOpp: fullMatch || fallbackMatch };
+  if (vendorMatch) return { status: 'vendor-only', entry, url, matchedOpp: vendorMatch };
+  return { status: 'no-match', entry, url, matchedOpp: null };
+}
+
 window.rnSetGlobalSearch = function(val) {
   _rnGlobalSearch = (val || '').toString().trim().toLowerCase();
   const input = document.getElementById('rn-global-search');
@@ -27745,80 +27920,34 @@ function rnRenderRecordRows(r, visCols, today, opts) {
     // Vendor match without date match → indigo "timing off" badge.
     // No vendor match at all → amber "No opp".
     crmOpp: (() => {
-      if (!STATE.crmIndex || !STATE.crmIndex.size) {
-        return `<td class="text-center"><span class="text-slate-600 text-[10px]">—</span></td>`;
-      }
-      const custNorm = normalizeCustomer(r.customer);
-      const aliases  = getCrmAliases();
-      let entry = STATE.crmIndex.get(custNorm)
-               || STATE.crmIndex.get(aliases[custNorm] || '')
-               || null;
-      if (!entry) {
-        const parentName = rnRollupSingle(r.lines, 'custParent');
-        if (parentName) {
-          const pNorm = normalizeCustomer(parentName);
-          entry = STATE.crmIndex.get(pNorm)
-               || STATE.crmIndex.get(aliases[pNorm] || '')
-               || null;
-        }
-      }
-      if (!entry) {
-        return `<td class="text-center"><span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-800 text-slate-500 border border-slate-700/60" title="Customer not found in CRM data">—</span></td>`;
-      }
-      const url  = crmBuildAccountUrl(entry.accountId, entry.sourceUrl);
-      const opps = entry.oppsDetail || [];
-      if (!opps.length) {
+      const { status, entry, url, matchedOpp } = rnCrmStatusForRecord(r);
+      const tipSuffix = url ? ' — click to open account in Dynamics' : '';
+      if (status === 'no-crm-data') return `<td class="text-center"><span class="text-slate-600 text-[10px]">—</span></td>`;
+      if (status === 'not-in-crm') return `<td class="text-center"><span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-800 text-slate-500 border border-slate-700/60" title="Customer not found in CRM data">—</span></td>`;
+      if (status === 'no-opps') {
         const inner = url
-          ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-900/30 text-amber-300 border border-amber-700/50 hover:bg-amber-900/50 whitespace-nowrap" title="In CRM but no open opportunities — click to open account in Dynamics">No opp ↗</a>`
+          ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-900/30 text-amber-300 border border-amber-700/50 hover:bg-amber-900/50 whitespace-nowrap" title="In CRM but no open opportunities${tipSuffix}">No opp ↗</a>`
           : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-900/30 text-amber-300 border border-amber-700/50 whitespace-nowrap" title="In CRM but no open opportunities">No opp</span>`;
         return `<td class="text-center">${inner}</td>`;
       }
-      // Vendor match: bidirectional prefix so "Okta" matches "Okta Inc" and
-      // "Cisco Talos" matches oem "Cisco" (one must be a prefix of the other).
-      const vendorNorms = r.vendors.map(v => normalizeCustomer(v)).filter(Boolean);
-      const oemMatches = (oem) => {
-        if (!vendorNorms.length || !oem) return false;
-        const on = normalizeCustomer(oem);
-        return !!(on && vendorNorms.some(vn => vn && (vn === on || vn.startsWith(on) || on.startsWith(vn))));
-      };
-      // Date match: opp est. close within ±90 days of the renewal date.
-      // When no renewal date is stamped (estimated/billing type), skip date gating.
-      const rnTs = r.renewalDate ? r.renewalDate.getTime() : null;
-      const DATE_WINDOW_MS = 90 * 86400000;
-      const closeMatches = (estClose) => {
-        if (!rnTs || !estClose) return true;
-        const cd = new Date(estClose + 'T00:00:00');
-        return !isNaN(cd.getTime()) && Math.abs(cd.getTime() - rnTs) <= DATE_WINDOW_MS;
-      };
-      // Fall-back when vendors are unknown: accept any renewal-type opp by projectType.
-      const RENEWAL_OPP_KW = /\brenew(al|als|ing)?\b|\bEA\b|\bELA\b|co[\s-]?term|true[\s-]?up|maint(enance)?\s*renew/i;
-      const isRenewalType = (o) =>
-        ['Renewal'].includes(o.projectType) || Number(o.renewalValue) > 0 || RENEWAL_OPP_KW.test(o.name || '');
-      const tipSuffix = url ? ' — click to open account in Dynamics' : '';
-      const oppCount  = opps.length;
-      // Full match: vendor + date.
-      const fullMatch = opps.find(o => oemMatches(o.oem) && closeMatches(o.estClose));
-      // Vendor-only without date (coverage exists but timing is off).
-      const vendorMatch = !fullMatch && vendorNorms.length && opps.find(o => oemMatches(o.oem));
-      // No vendor info: fall back to renewal-type opp + date.
-      const fallbackMatch = !fullMatch && !vendorNorms.length && opps.find(o => isRenewalType(o) && closeMatches(o.estClose));
-      if (fullMatch || fallbackMatch) {
-        const o = fullMatch || fallbackMatch;
+      if (status === 'covered') {
+        const o = matchedOpp;
         const tip = cpEsc(`${o.name || 'Unnamed'} · OEM: ${o.oem || '—'} · closes ${o.estClose || '—'}${tipSuffix}`);
         const inner = url
           ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-900/30 text-emerald-300 border border-emerald-700/50 hover:bg-emerald-900/50 whitespace-nowrap" title="${tip}">✓ Opp ↗</a>`
           : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-900/30 text-emerald-300 border border-emerald-700/50 whitespace-nowrap" title="${tip}">✓ Opp</span>`;
         return `<td class="text-center">${inner}</td>`;
       }
-      if (vendorMatch) {
-        const o = vendorMatch;
+      if (status === 'vendor-only') {
+        const o = matchedOpp;
         const tip = cpEsc(`Vendor matched but close date is off · ${o.name || 'Unnamed'} · closes ${o.estClose || '—'}${tipSuffix}`);
         const inner = url
           ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-900/30 text-indigo-300 border border-indigo-700/50 hover:bg-indigo-900/50 whitespace-nowrap" title="${tip}">Opp/date ↗</a>`
           : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-900/30 text-indigo-300 border border-indigo-700/50 whitespace-nowrap" title="${tip}">Opp/date</span>`;
         return `<td class="text-center">${inner}</td>`;
       }
-      // Has opps but none match vendor + date.
+      // no-match: has opps but none match vendor + date
+      const oppCount = (entry.oppsDetail || []).length;
       const inner = url
         ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-900/30 text-amber-300 border border-amber-700/50 hover:bg-amber-900/50 whitespace-nowrap" title="${oppCount} opp${oppCount===1?'':'s'} open — none match vendor+date${tipSuffix}">No opp ↗</a>`
         : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-900/30 text-amber-300 border border-amber-700/50 whitespace-nowrap" title="${oppCount} opp${oppCount===1?'':'s'} open — none match vendor+date">No opp</span>`;
