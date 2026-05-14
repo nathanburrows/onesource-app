@@ -27737,10 +27737,13 @@ function rnRenderRecordRows(r, visCols, today, opts) {
       return `<td onclick="event.stopPropagation()"><button type="button" class="orig-quote-badge" data-quote-no="${qno}">↗ Q-${_qpEscape(q.quoteNo)}</button></td>`;
     })(),
     // CRM opp coverage — does this renewal have a staged opportunity in Dynamics?
-    // Looks up the customer in STATE.crmIndex (populated after CRM sync), checks
-    // oppsDetail for any renewal-flavored opp (by projectType, renewalValue, name
-    // keyword, or vendor/OEM match), then shows a clickable badge linking to the
-    // Dynamics account so the rep can create the opp in one click.
+    // Match criteria (both required for ✓):
+    //   1. OEM on the opp matches the renewal's vendor (bidirectional prefix,
+    //      handles "Okta" vs "Okta Inc", "Cisco Talos" vs "Cisco")
+    //   2. Opp est. close date within ±90 days of the renewal date
+    // When vendors are unknown, falls back to renewal-type opp + date match.
+    // Vendor match without date match → indigo "timing off" badge.
+    // No vendor match at all → amber "No opp".
     crmOpp: (() => {
       if (!STATE.crmIndex || !STATE.crmIndex.size) {
         return `<td class="text-center"><span class="text-slate-600 text-[10px]">—</span></td>`;
@@ -27770,25 +27773,55 @@ function rnRenderRecordRows(r, visCols, today, opts) {
           : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-900/30 text-amber-300 border border-amber-700/50 whitespace-nowrap" title="In CRM but no open opportunities">No opp</span>`;
         return `<td class="text-center">${inner}</td>`;
       }
-      const RENEWAL_OPP_KW = /\brenew(al|als|ing)?\b|\bEA\b|\bELA\b|co[\s-]?term|subscription|\bsub\b|recompete|extension|true[\s-]?up|maint(enance)?\s*renew/i;
+      // Vendor match: bidirectional prefix so "Okta" matches "Okta Inc" and
+      // "Cisco Talos" matches oem "Cisco" (one must be a prefix of the other).
       const vendorNorms = r.vendors.map(v => normalizeCustomer(v)).filter(Boolean);
-      const hasRenewalOpp = opps.some(o =>
-        ['Renewal', 'Refresh', 'Expansion'].includes(o.projectType) ||
-        Number(o.renewalValue) > 0 ||
-        RENEWAL_OPP_KW.test(o.name || '') ||
-        (vendorNorms.length && vendorNorms.some(vn => o.oem && normalizeCustomer(o.oem).startsWith(vn.slice(0, 6))))
-      );
-      const oppCount = opps.length;
+      const oemMatches = (oem) => {
+        if (!vendorNorms.length || !oem) return false;
+        const on = normalizeCustomer(oem);
+        return !!(on && vendorNorms.some(vn => vn && (vn === on || vn.startsWith(on) || on.startsWith(vn))));
+      };
+      // Date match: opp est. close within ±90 days of the renewal date.
+      // When no renewal date is stamped (estimated/billing type), skip date gating.
+      const rnTs = r.renewalDate ? r.renewalDate.getTime() : null;
+      const DATE_WINDOW_MS = 90 * 86400000;
+      const closeMatches = (estClose) => {
+        if (!rnTs || !estClose) return true;
+        const cd = new Date(estClose + 'T00:00:00');
+        return !isNaN(cd.getTime()) && Math.abs(cd.getTime() - rnTs) <= DATE_WINDOW_MS;
+      };
+      // Fall-back when vendors are unknown: accept any renewal-type opp by projectType.
+      const RENEWAL_OPP_KW = /\brenew(al|als|ing)?\b|\bEA\b|\bELA\b|co[\s-]?term|true[\s-]?up|maint(enance)?\s*renew/i;
+      const isRenewalType = (o) =>
+        ['Renewal'].includes(o.projectType) || Number(o.renewalValue) > 0 || RENEWAL_OPP_KW.test(o.name || '');
       const tipSuffix = url ? ' — click to open account in Dynamics' : '';
-      if (hasRenewalOpp) {
+      const oppCount  = opps.length;
+      // Full match: vendor + date.
+      const fullMatch = opps.find(o => oemMatches(o.oem) && closeMatches(o.estClose));
+      // Vendor-only without date (coverage exists but timing is off).
+      const vendorMatch = !fullMatch && vendorNorms.length && opps.find(o => oemMatches(o.oem));
+      // No vendor info: fall back to renewal-type opp + date.
+      const fallbackMatch = !fullMatch && !vendorNorms.length && opps.find(o => isRenewalType(o) && closeMatches(o.estClose));
+      if (fullMatch || fallbackMatch) {
+        const o = fullMatch || fallbackMatch;
+        const tip = cpEsc(`${o.name || 'Unnamed'} · OEM: ${o.oem || '—'} · closes ${o.estClose || '—'}${tipSuffix}`);
         const inner = url
-          ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-900/30 text-emerald-300 border border-emerald-700/50 hover:bg-emerald-900/50 whitespace-nowrap" title="${oppCount} open opp${oppCount===1?'':'s'} — renewal-type match${tipSuffix}">✓ Opp ↗</a>`
-          : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-900/30 text-emerald-300 border border-emerald-700/50 whitespace-nowrap">✓ Opp</span>`;
+          ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-900/30 text-emerald-300 border border-emerald-700/50 hover:bg-emerald-900/50 whitespace-nowrap" title="${tip}">✓ Opp ↗</a>`
+          : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-900/30 text-emerald-300 border border-emerald-700/50 whitespace-nowrap" title="${tip}">✓ Opp</span>`;
         return `<td class="text-center">${inner}</td>`;
       }
+      if (vendorMatch) {
+        const o = vendorMatch;
+        const tip = cpEsc(`Vendor matched but close date is off · ${o.name || 'Unnamed'} · closes ${o.estClose || '—'}${tipSuffix}`);
+        const inner = url
+          ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-900/30 text-indigo-300 border border-indigo-700/50 hover:bg-indigo-900/50 whitespace-nowrap" title="${tip}">Opp/date ↗</a>`
+          : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-900/30 text-indigo-300 border border-indigo-700/50 whitespace-nowrap" title="${tip}">Opp/date</span>`;
+        return `<td class="text-center">${inner}</td>`;
+      }
+      // Has opps but none match vendor + date.
       const inner = url
-        ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-900/30 text-indigo-300 border border-indigo-700/50 hover:bg-indigo-900/50 whitespace-nowrap" title="${oppCount} opp${oppCount===1?'':'s'} open — none matched as renewal${tipSuffix}">${oppCount} opp${oppCount===1?'':'s'} ↗</a>`
-        : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-900/30 text-indigo-300 border border-indigo-700/50 whitespace-nowrap">${oppCount} opp${oppCount===1?'':'s'}</span>`;
+        ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-900/30 text-amber-300 border border-amber-700/50 hover:bg-amber-900/50 whitespace-nowrap" title="${oppCount} opp${oppCount===1?'':'s'} open — none match vendor+date${tipSuffix}">No opp ↗</a>`
+        : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-900/30 text-amber-300 border border-amber-700/50 whitespace-nowrap" title="${oppCount} opp${oppCount===1?'':'s'} open — none match vendor+date">No opp</span>`;
       return `<td class="text-center">${inner}</td>`;
     })(),
   };
