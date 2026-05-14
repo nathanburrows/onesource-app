@@ -25915,6 +25915,7 @@ const RN_COLS = [
   { key:'annualized',    label:'Annualized $',             defaultVisible:true  },
   { key:'profit',        label:'Profit $',                 defaultVisible:false },
   { key:'status',        label:'Status',                   defaultVisible:true  },
+  { key:'crmOpp',        label:'CRM',                      defaultVisible:true  },
   // Phase 15 / QLINK-08, QLINK-10 — originating-quote provenance.
   // v1.1.0-dev.24 — Coverage column dropped; the renewal-date column now
   // carries the same signal via stacked pills (Quoted / Not Quoted /
@@ -27699,6 +27700,61 @@ function rnRenderRecordRows(r, visCols, today, opts) {
       const qno = String(q.quoteNo).replace(/"/g,'&quot;');
       return `<td onclick="event.stopPropagation()"><button type="button" class="orig-quote-badge" data-quote-no="${qno}">↗ Q-${_qpEscape(q.quoteNo)}</button></td>`;
     })(),
+    // CRM opp coverage — does this renewal have a staged opportunity in Dynamics?
+    // Looks up the customer in STATE.crmIndex (populated after CRM sync), checks
+    // oppsDetail for any renewal-flavored opp (by projectType, renewalValue, name
+    // keyword, or vendor/OEM match), then shows a clickable badge linking to the
+    // Dynamics account so the rep can create the opp in one click.
+    crmOpp: (() => {
+      if (!STATE.crmIndex || !STATE.crmIndex.size) {
+        return `<td class="text-center"><span class="text-slate-600 text-[10px]">—</span></td>`;
+      }
+      const custNorm = normalizeCustomer(r.customer);
+      const aliases  = getCrmAliases();
+      let entry = STATE.crmIndex.get(custNorm)
+               || STATE.crmIndex.get(aliases[custNorm] || '')
+               || null;
+      if (!entry) {
+        const parentName = rnRollupSingle(r.lines, 'custParent');
+        if (parentName) {
+          const pNorm = normalizeCustomer(parentName);
+          entry = STATE.crmIndex.get(pNorm)
+               || STATE.crmIndex.get(aliases[pNorm] || '')
+               || null;
+        }
+      }
+      if (!entry) {
+        return `<td class="text-center"><span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-800 text-slate-500 border border-slate-700/60" title="Customer not found in CRM data">—</span></td>`;
+      }
+      const url  = crmBuildAccountUrl(entry.accountId, entry.sourceUrl);
+      const opps = entry.oppsDetail || [];
+      if (!opps.length) {
+        const inner = url
+          ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-900/30 text-amber-300 border border-amber-700/50 hover:bg-amber-900/50 whitespace-nowrap" title="In CRM but no open opportunities — click to open account in Dynamics">No opp ↗</a>`
+          : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-900/30 text-amber-300 border border-amber-700/50 whitespace-nowrap" title="In CRM but no open opportunities">No opp</span>`;
+        return `<td class="text-center">${inner}</td>`;
+      }
+      const RENEWAL_OPP_KW = /\brenew(al|als|ing)?\b|\bEA\b|\bELA\b|co[\s-]?term|subscription|\bsub\b|recompete|extension|true[\s-]?up|maint(enance)?\s*renew/i;
+      const vendorNorms = r.vendors.map(v => normalizeCustomer(v)).filter(Boolean);
+      const hasRenewalOpp = opps.some(o =>
+        ['Renewal', 'Refresh', 'Expansion'].includes(o.projectType) ||
+        Number(o.renewalValue) > 0 ||
+        RENEWAL_OPP_KW.test(o.name || '') ||
+        (vendorNorms.length && vendorNorms.some(vn => o.oem && normalizeCustomer(o.oem).startsWith(vn.slice(0, 6))))
+      );
+      const oppCount = opps.length;
+      const tipSuffix = url ? ' — click to open account in Dynamics' : '';
+      if (hasRenewalOpp) {
+        const inner = url
+          ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-900/30 text-emerald-300 border border-emerald-700/50 hover:bg-emerald-900/50 whitespace-nowrap" title="${oppCount} open opp${oppCount===1?'':'s'} — renewal-type match${tipSuffix}">✓ Opp ↗</a>`
+          : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-900/30 text-emerald-300 border border-emerald-700/50 whitespace-nowrap">✓ Opp</span>`;
+        return `<td class="text-center">${inner}</td>`;
+      }
+      const inner = url
+        ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-900/30 text-indigo-300 border border-indigo-700/50 hover:bg-indigo-900/50 whitespace-nowrap" title="${oppCount} opp${oppCount===1?'':'s'} open — none matched as renewal${tipSuffix}">${oppCount} opp${oppCount===1?'':'s'} ↗</a>`
+        : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-900/30 text-indigo-300 border border-indigo-700/50 whitespace-nowrap">${oppCount} opp${oppCount===1?'':'s'}</span>`;
+      return `<td class="text-center">${inner}</td>`;
+    })(),
   };
   const parent = `<tr class="row-parent" onclick="${toggleHandler}('${safeKey}')">${visCols.map(c => cellByKey[c.key] || '<td></td>').join('')}</tr>`;
   if (!expanded) return parent;
@@ -27787,6 +27843,7 @@ function _rnLineCellByKey(line, idx, parentRec, today) {
     // Phase 15 — child rows defer to the parent chain's coverage state; just dash here.
     coverage:     `<td><span class="text-slate-600">—</span></td>`,
     originatingQuote: `<td><span class="text-slate-600">—</span></td>`,
+    crmOpp:       `<td></td>`,
   };
 }
 
