@@ -20800,7 +20800,7 @@ function commFmtYM_today() {
   return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`;
 }
 
-let _ordSort = { col:'sales', dir:'desc' };
+let _ordSort = { col:'_renewalDate', dir:'asc' };
 let _ordFilters = {};
 let _ordGlobalSearch = '';
 // Deep-link filter — limits the order-search table to ST rows whose
@@ -21200,7 +21200,7 @@ function applyDeepLinkFromHash() {
 }
 function ordSetSort(col) {
   if (_ordSort.col === col) _ordSort.dir = _ordSort.dir === 'asc' ? 'desc' : 'asc';
-  else _ordSort = { col, dir: 'desc' };
+  else _ordSort = { col, dir: col === '_renewalDate' ? 'asc' : 'desc' };
   ordRenderHead();
   ordRender();
 }
@@ -21549,8 +21549,23 @@ function ordGroupedOrders() {
   const { col, dir } = _ordSort;
   const colSpec = ORD_COLS.find(x => x.key === col);
   const numeric = colSpec && (colSpec.type === 'money' || colSpec.type === 'pct' || colSpec.type === 'num');
+  // Renewal date gets a bucketed sort: ≤90 days (including past-due) → >90 days → no date.
+  // Within each bucket the direction toggle applies; the bucket order is always fixed.
+  const _rnSortKey = (v) => {
+    const d = v ? String(v).split('|')[0] : '';
+    if (!d) return [2, 0];
+    const t = new Date(d + 'T00:00:00').getTime();
+    if (isNaN(t)) return [2, 0];
+    return [t <= Date.now() + 90 * 86400000 ? 0 : 1, t];
+  };
   orderList.sort((a, b) => {
     const av = a.parent[col], bv = b.parent[col];
+    if (col === '_renewalDate') {
+      const [ab, at] = _rnSortKey(av);
+      const [bb, bt] = _rnSortKey(bv);
+      if (ab !== bb) return ab - bb;
+      return dir === 'asc' ? at - bt : bt - at;
+    }
     let cmp;
     if (numeric) cmp = (Number(av)||0) - (Number(bv)||0);
     else cmp = String(av || '').localeCompare(String(bv || ''));
@@ -21559,6 +21574,12 @@ function ordGroupedOrders() {
   orderList.forEach(o => {
     o.children.sort((a, b) => {
       const av = a[col], bv = b[col];
+      if (col === '_renewalDate') {
+        const [ab, at] = _rnSortKey(av);
+        const [bb, bt] = _rnSortKey(bv);
+        if (ab !== bb) return ab - bb;
+        return dir === 'asc' ? at - bt : bt - at;
+      }
       let cmp;
       if (numeric) cmp = (Number(av)||0) - (Number(bv)||0);
       else cmp = String(av || '').localeCompare(String(bv || ''));
