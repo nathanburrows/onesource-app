@@ -4094,10 +4094,14 @@
         <h3 class="text-lg font-semibold text-white" style="margin:0;">API Keys</h3>
         <span id="api-keys-status-overall" style="font-size:12px;color:#94a3b8;"></span>
       </div>
-      <p style="margin:6px 0 14px;font-size:12px;color:#94a3b8;">
+      <p style="margin:6px 0 8px;font-size:12px;color:#94a3b8;">
         Stored encrypted in your local AppData via macOS Keychain / Windows DPAPI.
         Saving a key restarts the proxy so it picks up the new value.
       </p>
+      <div style="margin:0 0 14px;padding:8px 12px;background:#1e3a2f;border:1px solid #166534;border-radius:8px;font-size:12px;color:#86efac;display:flex;gap:10px;align-items:flex-start;">
+        <span style="font-size:15px;line-height:1.2;">🔑</span>
+        <span><strong style="color:#bbf7d0;">macOS keychain prompt:</strong> The first time you save a key, macOS will ask for permission to access <em>"OneSourceCMD Safe Storage"</em> in your keychain. Click <strong style="color:#bbf7d0;">Always Allow</strong> — this lets the app decrypt your keys on every launch without prompting again. Clicking Allow (once) will prompt you each restart.</span>
+      </div>
       <div id="api-keys-rows"></div>
       <div id="api-keys-no-app-notice" style="display:none;font-size:13px;color:#94a3b8;padding:8px 0;">
         API key management is only available in the desktop app.
