@@ -10549,6 +10549,13 @@ function _ooWireOrderSearch(input, slot, opts) {
 // rendered table. Centralizing here ensures MM/DD/YYYY display and gives
 // every table the same ✎ edit affordance for multi-year master / link.
 function _ooRenderRenewalCell(v, r) {
+  // Multi-date rollup: pipe-joined ISO dates from a grouped parent row.
+  // Show each date stacked instead of "(N values)".
+  if (v && String(v).includes('|')) {
+    return String(v).split('|').filter(Boolean).map(d =>
+      `<span class="text-violet-300 font-semibold" style="display:block;font-size:12px;">${fmtDate(d)}</span>`
+    ).join('');
+  }
   // v1.1.0-dev.15 — covered chains render an emerald "✓ Covered" pill
   // here (instead of blank) so the renewal-date column still carries an
   // audit signal. Tooltip surfaces the original renewal date so you can
@@ -10621,6 +10628,13 @@ function _ooRenderRenewalCell(v, r) {
 }
 function _ooRenderTermCell(r) {
   const v = r && r._termYears;
+  // Multi-term rollup: pipe-joined values from a grouped parent row.
+  if (v && String(v).includes('|')) {
+    return String(v).split('|').filter(Boolean).map(t => {
+      const n = Number(t);
+      return `<span class="text-amber-300 font-semibold" style="display:block;font-size:12px;text-align:center;">${n > 0 ? n + 'y' : t}</span>`;
+    }).join('');
+  }
   const n = Number(v);
   // Prefer the safest order-number signal: rows can carry orderNumber
   // (canonical) or orderNo (alias). Customer may be undefined; modal
@@ -17462,7 +17476,8 @@ function crtdGroupedOrders() {
       estInvoiceDate: distinct('estInvoiceDate'), orderQty: sumKey('orderQty'),
       stSales: sumKey('stSales'), custQuoteNo: distinct('custQuoteNo'),
       warrantyStart: distinct('warrantyStart'), warrantyEnd: distinct('warrantyEnd'),
-      _renewalDate: distinct('_renewalDate'), _termYears: distinct('_termYears'),
+      _renewalDate: (() => { const _d=[...new Set(c.map(r=>r._renewalDate).filter(Boolean))].sort(); return _d.join('|'); })(),
+      _termYears: (() => { const _t=[...new Set(c.map(r=>r._termYears).filter(Boolean))]; return _t.join('|'); })(),
     };
     return { groupValue: g.groupValue, children: c, parent };
   });
@@ -19131,8 +19146,8 @@ function ovMonthlyDetailGroupedOrders() {
         rebill:         distinct('rebill'),
         desc:           c.length === 1 ? c[0].desc : `${c.length} line${c.length === 1 ? '' : 's'}`,
         originalOrderNo:distinct('originalOrderNo'),
-        _renewalDate:   distinct('_renewalDate'),
-        _termYears:     distinct('_termYears'),
+        _renewalDate:   (() => { const _d=[...new Set(c.map(r=>r._renewalDate).filter(Boolean))].sort(); return _d.join('|'); })(),
+        _termYears:     (() => { const _t=[...new Set(c.map(r=>r._termYears).filter(Boolean))]; return _t.join('|'); })(),
       },
     };
   });
@@ -21491,8 +21506,8 @@ function ordGroupedOrders() {
       invoiceNo:         distinct('invoiceNo'),
       originalInvoiceNo: distinct('originalInvoiceNo'),
       originalOrderNo:   distinct('originalOrderNo'),
-      _renewalDate:      distinct('_renewalDate'),
-      _termYears:        distinct('_termYears'),
+      _renewalDate:      (() => { const _d=[...new Set(c.map(r=>r._renewalDate).filter(Boolean))].sort(); return _d.join('|'); })(),
+      _termYears:        (() => { const _t=[...new Set(c.map(r=>r._termYears).filter(Boolean))]; return _t.join('|'); })(),
       poNumber:          distinct('poNumber'),
       projectNumber:     distinct('projectNumber'),
       custQuoteNo:       distinct('custQuoteNo'),
@@ -21952,8 +21967,8 @@ function cordGroupedOrders() {
       custQuoteNo:    distinct('custQuoteNo'),
       warrantyStart:  distinct('warrantyStart'),
       warrantyEnd:    distinct('warrantyEnd'),
-      _renewalDate:   distinct('_renewalDate'),
-      _termYears:     distinct('_termYears'),
+      _renewalDate:   (() => { const _d=[...new Set(c.map(r=>r._renewalDate).filter(Boolean))].sort(); return _d.join('|'); })(),
+      _termYears:     (() => { const _t=[...new Set(c.map(r=>r._termYears).filter(Boolean))]; return _t.join('|'); })(),
     };
     parent[groupKey] = g.groupValue;  // pin the chosen group key column to literal value
     return { groupValue:g.groupValue, children:c, parent };
@@ -22428,8 +22443,8 @@ function svcGroupedProjects() {
       splitPercent:      distinct('splitPercent'),
       salesRepTeam:      distinct('salesRepTeam'),
       rebill:            distinct('rebill'),
-      _renewalDate:      distinct('_renewalDate'),
-      _termYears:        distinct('_termYears'),
+      _renewalDate:      (() => { const _d=[...new Set(c.map(r=>r._renewalDate).filter(Boolean))].sort(); return _d.join('|'); })(),
+      _termYears:        (() => { const _t=[...new Set(c.map(r=>r._termYears).filter(Boolean))]; return _t.join('|'); })(),
       desc:              [...new Set(c.map(r => (r.desc || '').trim()).filter(Boolean))].join(' · '),
     };
     return { groupValue: g.groupValue, children: c, parent };
@@ -22751,8 +22766,8 @@ function csvcGroupedProjects() {
       splitPercent:      distinct('splitPercent'),
       salesRepTeam:      distinct('salesRepTeam'),
       rebill:            distinct('rebill'),
-      _renewalDate:      distinct('_renewalDate'),
-      _termYears:        distinct('_termYears'),
+      _renewalDate:      (() => { const _d=[...new Set(c.map(r=>r._renewalDate).filter(Boolean))].sort(); return _d.join('|'); })(),
+      _termYears:        (() => { const _t=[...new Set(c.map(r=>r._termYears).filter(Boolean))]; return _t.join('|'); })(),
       desc:              [...new Set(c.map(r => (r.desc || '').trim()).filter(Boolean))].join(' · '),
     };
     return { groupValue: g.groupValue, children: c, parent };
