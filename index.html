@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:37 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:39 PM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 14 · 11:37 PM ET</p>
+          <p class="upload-brand-ver-ts">May 14 · 11:39 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 14 · 11:37 PM ET</div>
+        <div class="ds-brand-ver-ts">May 14 · 11:39 PM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:37 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:39 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -12538,29 +12538,45 @@ function handleParsedQuotes(parsed, errors) {
   // else preserves whatever the bookmarklet wrote (notes, crosslinks, etc.).
   const existing = Array.isArray(STATE.quotesRows) ? STATE.quotesRows : [];
   const existingByNo = new Map(existing.map(r => [String(r.quoteNo), r]));
+  const incomingByNo = new Map(rows.map(r => [String(r.quoteNo), r]));
   let overwritten = 0, preserved = 0, added = 0;
-  const merged = rows.map(incoming => {
-    const prior = existingByNo.get(String(incoming.quoteNo));
-    if (!prior) { added++; return Object.assign({}, incoming, { _ingestSource: 'manual' }); }
-    const statusToOrdered = incoming.quoteStatus === 'closed-won' && prior.quoteStatus !== 'closed-won';
-    const saleChanged     = incoming.totalSale !== null && prior.totalSale !== incoming.totalSale;
-    const modifiedNewer   = incoming.modified && incoming.modified !== prior.modified;
-    if (statusToOrdered || saleChanged || modifiedNewer) {
-      overwritten++;
-      // Preserve canonicalization stamps from the prior row so we don't lose them.
-      return Object.assign({}, incoming, {
-        _ingestSource:    'manual',
-        custCanonical:    prior.custCanonical    ?? incoming.custCanonical,
-        _canonicalSource: prior._canonicalSource ?? incoming._canonicalSource,
-      });
-    }
-    preserved++;
-    return prior;
-  });
-  // Append any incoming quotes that don't exist yet (already counted as added above).
-  // The map() above handles all incoming rows; existing-only rows not in the upload
-  // are intentionally dropped — the upload represents the current snapshot from OSIT.
 
+  // Build merged result keyed by quoteNo — incoming rows are upserted, existing
+  // rows not present in the upload are kept as-is (bookmarklet data, prior uploads).
+  const resultMap = new Map();
+
+  // Pass 1 — process all incoming rows (add new / update existing).
+  for (const incoming of rows) {
+    const qno = String(incoming.quoteNo);
+    const prior = existingByNo.get(qno);
+    if (!prior) {
+      added++;
+      resultMap.set(qno, Object.assign({}, incoming, { _ingestSource: 'manual' }));
+    } else {
+      const statusToOrdered = incoming.quoteStatus === 'closed-won' && prior.quoteStatus !== 'closed-won';
+      const saleChanged     = incoming.totalSale !== null && prior.totalSale !== incoming.totalSale;
+      const modifiedNewer   = incoming.modified && incoming.modified !== prior.modified;
+      if (statusToOrdered || saleChanged || modifiedNewer) {
+        overwritten++;
+        resultMap.set(qno, Object.assign({}, incoming, {
+          _ingestSource:    'manual',
+          custCanonical:    prior.custCanonical    ?? incoming.custCanonical,
+          _canonicalSource: prior._canonicalSource ?? incoming._canonicalSource,
+        }));
+      } else {
+        preserved++;
+        resultMap.set(qno, prior);
+      }
+    }
+  }
+
+  // Pass 2 — keep existing rows not present in this upload (bookmarklet quotes, etc.).
+  let kept = 0;
+  for (const [qno, row] of existingByNo) {
+    if (!resultMap.has(qno)) { resultMap.set(qno, row); kept++; }
+  }
+
+  const merged = [...resultMap.values()];
   STATE.quotesRows = merged;
   STATE.quotesSourceFile = sourceFile;
   // Persist to <userData>/quotes-cache.json via the proxy. _sample:false
@@ -12569,7 +12585,7 @@ function handleParsedQuotes(parsed, errors) {
   writeQuotesCache({ savedAt: new Date().toISOString(), sourceFile, _sample: false, rows: merged })
     .then(() => {
       const oCount = merged.filter(r => r.quoteStatus === 'closed-won').length;
-      toast('info','Quotes imported', `${merged.length} rows from ${sourceFile} · ${oCount} ordered · ${overwritten} updated, ${preserved} preserved, ${added} new. Canonicalization runs next.`);
+      toast('info','Quotes imported', `${merged.length} rows total · ${oCount} ordered · ${overwritten} updated, ${preserved} preserved, ${added} new, ${kept} kept from prior sync. Canonicalization runs next.`);
       // Plan 02 integration seam — canonicalization pipeline subscribes to
       // this event, mutates STATE.quotesRows in-place, and re-persists.
       window.dispatchEvent(new CustomEvent('quotes-imported', { detail: { rows: merged, sourceFile } }));
