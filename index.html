@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:17 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:19 PM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 14 · 11:17 PM ET</p>
+          <p class="upload-brand-ver-ts">May 14 · 11:19 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 14 · 11:17 PM ET</div>
+        <div class="ds-brand-ver-ts">May 14 · 11:19 PM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:17 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:19 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -5965,19 +5965,25 @@ async function postProxyIngest(endpoint, rows, { headers = [], replace = true, f
           }
         }, 30);
       } else {
-        // v1.1.0-dev.23 — preserve the user's full input query so multi-token
-        // intent survives the click. Typing "Coats axonius" and clicking the
-        // axonius vendor row should filter Order Search to "Coats axonius",
-        // not just "axonius". The clicked result's own value is appended only
-        // if it isn't already a substring of the query (e.g. invoice rows
-        // whose canonical orderNumber the user didn't type out).
+        // Preserve multi-token intent when the user typed terms that aren't part
+        // of the selected value (e.g. "Coats axonius" → click Axonius vendor →
+        // keep "Coats axonius"). But when the user typed a prefix of the selected
+        // value (e.g. "edward" → click "EDWARD VIA VIRGINIA...") use the full
+        // selected value directly — don't concatenate the typed prefix onto it.
         const userQuery = (input.value || '').trim();
         const clickValue =
           (r.type === 'invoice' && meta.orderNumber) ? String(meta.orderNumber) :
           String(value || '');
         let filterValue = userQuery || clickValue;
-        if (clickValue && userQuery && !userQuery.toLowerCase().includes(clickValue.toLowerCase())) {
-          filterValue = `${userQuery} ${clickValue}`.trim();
+        if (clickValue && userQuery) {
+          const uLow = userQuery.toLowerCase();
+          const cLow = clickValue.toLowerCase();
+          if (cLow.includes(uLow)) {
+            filterValue = clickValue; // typed a prefix — use the full selected value
+          } else if (!uLow.includes(cLow)) {
+            filterValue = `${userQuery} ${clickValue}`.trim(); // genuinely different terms — keep both
+          }
+          // else: userQuery already contains clickValue — keep userQuery as-is
         }
         if (typeof setActivePage === 'function') setActivePage('order-search');
         if (typeof ordSetGlobalSearch === 'function') ordSetGlobalSearch(filterValue);
