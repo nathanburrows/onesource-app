@@ -10683,9 +10683,12 @@ function _ooRenderRenewalCell(v, r) {
   // fmtDate handles ISO → MM/DD/YYYY without TZ drift.
   // v1.1.0-dev.14 — when an override changed this value, surface the
   // pre-override date in a tooltip so the user can audit on hover.
+  const _rdChainNote = String((r && r._chainNote) || '').trim();
   let tip = '';
   if (r && r._origRenewalDate && r._origRenewalDate !== v) {
-    tip = ` title="Originally ${fmtDate(r._origRenewalDate)} — overridden to ${fmtDate(v)} by user"`;
+    tip = ` title="${cpEsc('Originally ' + fmtDate(r._origRenewalDate) + ' — overridden to ' + fmtDate(v) + ' by user' + (_rdChainNote ? ' · ' + _rdChainNote : ''))}"`;
+  } else if (_rdChainNote) {
+    tip = ` title="${cpEsc(_rdChainNote)}"`;
   }
   // v1.1.0-dev.24 — pipeline-state badge stacked under the renewal date.
   // Two states (covered / did-not-renew already returned above):
@@ -10707,7 +10710,8 @@ function _ooRenderRenewalCell(v, r) {
       </div>`;
     }
     // Default "Not Quoted" badge — signals active renewal awaiting engagement.
-    return `<div title="No quote provided yet — click the term-cell ✎ to mark as Quoted / Covered / Not Renewed" style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.1;">
+    const _nqTip = cpEsc('No quote provided yet — click the term-cell ✎ to mark as Quoted / Covered / Not Renewed' + (_rdChainNote ? ' · ' + _rdChainNote : ''));
+    return `<div title="${_nqTip}" style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.1;">
       <span class="text-violet-300 font-semibold" style="font-size:12px;">${fmtDate(v)}</span>
       <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-800/40 border border-slate-700/40 text-slate-500" style="font-size:10px;font-weight:500;line-height:1;">Not Quoted</span>
     </div>`;
@@ -10792,13 +10796,16 @@ function _ooRenderTermCell(r) {
       : `<span data-override="${dataOverrideKind}" title="${tip}" class="text-violet-300 font-bold text-xs">Yr ${yn}/${yt} · ${Math.round(yt)}y</span>`;
     return btn;
   }
+  const _tcNote = String((r && r._chainNote) || '').trim();
   if (!v || !n) {
-    if (!editable) return '';
-    return `<button onclick="event.stopPropagation();openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="Mark as multi-year master / link to master" class="text-slate-600 hover:text-violet-300 text-xs">✎</button>`;
+    if (!editable) return _tcNote ? `<span title="${cpEsc(_tcNote)}">—</span>` : '';
+    const _tcEditTip = cpEsc('Mark as multi-year master / link to master' + (_tcNote ? ' · ' + _tcNote : ''));
+    return `<button onclick="event.stopPropagation();openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="${_tcEditTip}" class="text-slate-600 hover:text-violet-300 text-xs">✎</button>`;
   }
-  const label = `<span class="text-amber-400 font-semibold">${n}y</span>`;
+  const _tcTip = cpEsc('Mark as multi-year master / link to master' + (_tcNote ? ' · ' + _tcNote : ''));
+  const label = `<span class="text-amber-400 font-semibold"${_tcNote ? ` title="${cpEsc(_tcNote)}"` : ''}>${n}y</span>`;
   if (!editable) return label;
-  return `<span class="inline-flex items-center gap-1">${label}<button onclick="event.stopPropagation();openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="Mark as multi-year master / link to master" class="text-slate-600 hover:text-violet-300 text-xs ml-1">✎</button></span>`;
+  return `<span class="inline-flex items-center gap-1" title="${cpEsc(_tcNote)}">${label}<button onclick="event.stopPropagation();openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="${_tcTip}" class="text-slate-600 hover:text-violet-300 text-xs ml-1">✎</button></span>`;
 }
 
 // Single-pass modal for managing the multi-year override on `orderNumber`.
