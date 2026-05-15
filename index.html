@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:31 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:35 AM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 12:31 AM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 12:35 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -1831,7 +1831,7 @@
       <div class="type-card indigo" id="ds-card-crm" data-source="crm" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn,.ds-empty-cta,.ds-st-drop'))openDataSourceTable('crm')">
         <div class="type-card-corner">
           <button type="button" class="ds-corner-btn" data-action="refresh" data-source="crm" title="Refresh from proxy (after re-running CRM bookmarklet)" onclick="event.stopPropagation();window.dsTriggerRefreshExt&&window.dsTriggerRefreshExt('crm')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
-          <button type="button" class="ds-corner-btn" data-action="resync" data-source="crm" title="Upload file to overwrite CRM proxy data" onclick="event.stopPropagation();window.dsTriggerResyncExt&&window.dsTriggerResyncExt('crm')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+          <button type="button" class="ds-corner-btn" data-action="bookmarklet" data-source="crm" title="Open bookmarklet installer" onclick="event.stopPropagation();try{window.electronAPI?.shell?.openBookmarkletPage?.();}catch(_){}try{window.open('bookmarklet.html','_blank');}catch(_){}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>
           <button type="button" class="ds-corner-btn" data-action="clear" data-source="crm" data-disabled="true" data-demo-disable title="Clear CRM cache" onclick="event.stopPropagation();window.dsTriggerClearExt&&window.dsTriggerClearExt('crm')">🗑</button>
         </div>
         <div class="type-card-head">
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 12:31 AM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 12:35 AM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:31 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:35 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -4457,7 +4457,7 @@
           <div class="type-card indigo" data-source="crm" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn,.ds-empty-cta,.ds-st-drop,.ds-bm-block'))openDataSourceTable('crm')">
             <div class="type-card-corner">
               <button type="button" class="ds-corner-btn" data-action="refresh" data-source="crm" title="Refresh from proxy (after re-running CRM bookmarklet)" onclick="event.stopPropagation();window.dsTriggerRefreshExt&&window.dsTriggerRefreshExt('crm')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
-              <button type="button" class="ds-corner-btn" data-action="resync" data-source="crm" title="Upload file to overwrite CRM proxy data" onclick="event.stopPropagation();window.dsTriggerResyncExt&&window.dsTriggerResyncExt('crm')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+              <button type="button" class="ds-corner-btn" data-action="bookmarklet" data-source="crm" title="Open bookmarklet installer" onclick="event.stopPropagation();try{window.electronAPI?.shell?.openBookmarkletPage?.();}catch(_){}try{window.open('bookmarklet.html','_blank');}catch(_){}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>
               <button type="button" class="ds-corner-btn" data-action="clear" data-source="crm" data-disabled="true" data-demo-disable title="Clear CRM cache" onclick="event.stopPropagation();window.dsTriggerClearExt&&window.dsTriggerClearExt('crm')">🗑</button>
             </div>
             <div class="type-card-head">
