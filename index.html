@@ -10652,6 +10652,7 @@ function _ooWireOrderSearch(input, slot, opts) {
 // rendered table. Centralizing here ensures MM/DD/YYYY display and gives
 // every table the same ✎ edit affordance for multi-year master / link.
 function _ooRenderRenewalCell(v, r) {
+  const _setBy = (typeof AI !== 'undefined' && AI.prompts && AI.prompts.profile && (AI.prompts.profile.REP_FIRST_NAME || AI.prompts.profile.REP_NAME)) || '';
   // Multi-date rollup: pipe-joined ISO dates from a grouped parent row.
   // Show each date stacked instead of "(N values)".
   if (v && String(v).includes('|')) {
@@ -10676,7 +10677,7 @@ function _ooRenderRenewalCell(v, r) {
     const dateTxt = v ? fmtDate(v) : (r._origRenewalDate ? fmtDate(r._origRenewalDate) : '—');
     const covSuffix = covBy ? ` by ${cpEsc(covBy)}` : '';
     const _covNote = String((r && r._chainNote) || '').trim();
-    const tip = cpEsc(`Renewal covered${covSuffix} — original renewal ${dateTxt} retained for audit (set by user)${_covNote ? ' · ' + _covNote : ''}`);
+    const tip = cpEsc(`Renewal covered${covSuffix} — ${dateTxt}${_covNote ? ' · ' + _covNote : ''}${_setBy ? ' · ' + _setBy : ''}`);
     return `<div data-override="covered" title="${tip}" style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.1;">
       <span style="color:#94a3b8;font-size:12px;text-decoration:line-through;">${dateTxt}</span>
       <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-900/30 border border-emerald-700/50 text-emerald-300" style="font-size:10px;font-weight:600;line-height:1;">✓ Covered</span>
@@ -10688,7 +10689,7 @@ function _ooRenderRenewalCell(v, r) {
   if (r && r._isUserDidNotRenew) {
     const dateTxt = v ? fmtDate(v) : (r._origRenewalDate ? fmtDate(r._origRenewalDate) : '—');
     const note = String(r._chainNote || r._didNotRenewNote || '').trim();
-    const tip = cpEsc(`Customer did not renew — original renewal ${dateTxt} retained for audit (set by user)${note ? ' · ' + note : ''}`);
+    const tip = cpEsc(`Customer did not renew — ${dateTxt}${note ? ' · ' + note : ''}${_setBy ? ' · ' + _setBy : ''}`);
     return `<div data-override="did-not-renew" title="${tip}" style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.1;">
       <span style="color:#94a3b8;font-size:12px;text-decoration:line-through;">${dateTxt}</span>
       <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-700/40 border border-slate-500/50 text-slate-300" style="font-size:10px;font-weight:600;line-height:1;">✗ Not renewed</span>
@@ -10735,6 +10736,7 @@ function _ooRenderRenewalCell(v, r) {
   return `<span class="text-violet-300 font-semibold" style="font-size:12px;"${tip}>${fmtDate(v)}</span>`;
 }
 function _ooRenderTermCell(r) {
+  const _setBy = (typeof AI !== 'undefined' && AI.prompts && AI.prompts.profile && (AI.prompts.profile.REP_FIRST_NAME || AI.prompts.profile.REP_NAME)) || '';
   const v = r && r._termYears;
   // Multi-term rollup: pipe-joined values from a grouped parent row.
   if (v && String(v).includes('|')) {
@@ -10773,7 +10775,7 @@ function _ooRenderTermCell(r) {
     if (r._origTermYears)   origBits.push(`${r._origTermYears}y term`);
     const origNote = origBits.length ? ` · was ${origBits.join(', ')}` : '';
     const _covTermNote = String((r && r._chainNote) || '').trim();
-    const tip = cpEsc(`Renewal covered by new purchase${origNote} — set by user${_covTermNote ? ' · ' + _covTermNote : ''}`);
+    const tip = cpEsc(`Renewal covered by new purchase${origNote}${_covTermNote ? ' · ' + _covTermNote : ''}${_setBy ? ' · ' + _setBy : ''}`);
     return editable
       ? `<button data-override="covered" onclick="event.stopPropagation();openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="${tip}" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-900/30 border border-emerald-700/50 hover:bg-emerald-800/40 text-emerald-300 text-xs font-bold tracking-wide">${lbl}</button>`
       : `<span data-override="covered" title="${tip}" class="text-emerald-300 font-bold text-xs">${lbl}</span>`;
@@ -10786,7 +10788,7 @@ function _ooRenderTermCell(r) {
     if (r._origRenewalDate) origBits.push(`renewal ${fmtDate(r._origRenewalDate)}`);
     if (r._origTermYears)   origBits.push(`${r._origTermYears}y term`);
     const origNote = origBits.length ? ` · was ${origBits.join(', ')}` : '';
-    const tip = cpEsc(`Customer did not renew${origNote} — set by user${note ? ' · ' + note : ''}`);
+    const tip = cpEsc(`Customer did not renew${origNote}${note ? ' · ' + note : ''}${_setBy ? ' · ' + _setBy : ''}`);
     return editable
       ? `<button data-override="did-not-renew" onclick="event.stopPropagation();openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="${tip}" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-700/40 border border-slate-500/50 hover:bg-slate-600/50 text-slate-200 text-xs font-bold tracking-wide">✗ Not renewed</button>`
       : `<span data-override="did-not-renew" title="${tip}" class="text-slate-300 font-bold text-xs">✗ Not renewed</span>`;
@@ -10806,7 +10808,7 @@ function _ooRenderTermCell(r) {
     if (r._origTermYears && r._origTermYears !== r._termYears) origBits.push(`was ${r._origTermYears}y`);
     if (r._origRenewalDate && r._origRenewalDate !== r._renewalDate) origBits.push(`would renew ${fmtDate(r._origRenewalDate)}`);
     const origNote = origBits.length ? ` (${origBits.join('; ')})` : '';
-    const tip = cpEsc(`${role}${origNote} — set by user`);
+    const tip = cpEsc(`${role}${origNote}${_setBy ? ' · ' + _setBy : ''}`);
     const dataOverrideKind = r._isUserLinkedRebill ? 'linked-rebill' : 'master';
     const btn = editable
       ? `<button data-override="${dataOverrideKind}" onclick="event.stopPropagation();openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="${tip}" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-900/30 border border-violet-700/50 hover:bg-violet-800/40 text-violet-200 text-xs font-bold tracking-wide">Yr ${yn}/${yt} · ${Math.round(yt)}y</button>`
@@ -27831,7 +27833,8 @@ function rnRenderRecordRows(r, visCols, today, opts) {
         const dateTxt = r.renewalDate
           ? `${String(r.renewalDate.getMonth()+1).padStart(2,'0')}/${String(r.renewalDate.getDate()).padStart(2,'0')}/${r.renewalDate.getFullYear()}`
           : (covRow._origRenewalDate ? fmtDate(covRow._origRenewalDate) : '—');
-        const tip = cpEsc(`Renewal covered${covBy ? ' by ' + covBy : ''} — original renewal ${dateTxt} retained for audit (set by user)`);
+        const _crmSetBy = (typeof AI !== 'undefined' && AI.prompts && AI.prompts.profile && (AI.prompts.profile.REP_FIRST_NAME || AI.prompts.profile.REP_NAME)) || '';
+        const tip = cpEsc(`Renewal covered${covBy ? ' by ' + covBy : ''} — ${dateTxt}${_crmSetBy ? ' · ' + _crmSetBy : ''}`);
         return `<td class="text-right"><div data-override="covered" title="${tip}" style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.1;">
           <span style="color:#94a3b8;font-size:12px;text-decoration:line-through;">${dateTxt}</span>
           <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-900/30 border border-emerald-700/50 text-emerald-300" style="font-size:10px;font-weight:600;line-height:1;">✓ Covered</span>
@@ -27845,7 +27848,8 @@ function rnRenderRecordRows(r, visCols, today, opts) {
           ? `${String(r.renewalDate.getMonth()+1).padStart(2,'0')}/${String(r.renewalDate.getDate()).padStart(2,'0')}/${r.renewalDate.getFullYear()}`
           : (dnrRow._origRenewalDate ? fmtDate(dnrRow._origRenewalDate) : '—');
         const note = String(dnrRow._chainNote || dnrRow._didNotRenewNote || '').trim();
-        const tip = cpEsc(`Customer did not renew — original renewal ${dateTxt} retained for audit (set by user)${note ? ' · ' + note : ''}`);
+        const _crmSetBy2 = (typeof AI !== 'undefined' && AI.prompts && AI.prompts.profile && (AI.prompts.profile.REP_FIRST_NAME || AI.prompts.profile.REP_NAME)) || '';
+        const tip = cpEsc(`Customer did not renew — ${dateTxt}${note ? ' · ' + note : ''}${_crmSetBy2 ? ' · ' + _crmSetBy2 : ''}`);
         return `<td class="text-right"><div data-override="did-not-renew" title="${tip}" style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.1;">
           <span style="color:#94a3b8;font-size:12px;text-decoration:line-through;">${dateTxt}</span>
           <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-700/40 border border-slate-500/50 text-slate-300" style="font-size:10px;font-weight:600;line-height:1;">✗ Not renewed</span>
@@ -27910,7 +27914,8 @@ function rnRenderRecordRows(r, visCols, today, opts) {
         const cBits = [];
         if (covLine._origRenewalDate) cBits.push(`renewal ${fmtDate(covLine._origRenewalDate)}`);
         if (covLine._origTermYears)   cBits.push(`${covLine._origTermYears}y term`);
-        const cTip = cpEsc(`Renewal covered by new purchase${cBits.length ? ' · was ' + cBits.join(', ') : ''} — set by user`);
+        const _crmSetBy3 = (typeof AI !== 'undefined' && AI.prompts && AI.prompts.profile && (AI.prompts.profile.REP_FIRST_NAME || AI.prompts.profile.REP_NAME)) || '';
+        const cTip = cpEsc(`Renewal covered by new purchase${cBits.length ? ' · was ' + cBits.join(', ') : ''}${_crmSetBy3 ? ' · ' + _crmSetBy3 : ''}`);
         return `<td class="text-right" onclick="event.stopPropagation()"><button data-override="covered" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-900/30 border border-emerald-700/50 hover:bg-emerald-800/40 text-emerald-300 text-xs font-bold tracking-wide" onclick="openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="${cTip}">${covLbl}</button></td>`;
       }
       if (dnrLine) {
@@ -27918,7 +27923,8 @@ function rnRenderRecordRows(r, visCols, today, opts) {
         const dBits = [];
         if (dnrLine._origRenewalDate) dBits.push(`renewal ${fmtDate(dnrLine._origRenewalDate)}`);
         if (dnrLine._origTermYears)   dBits.push(`${dnrLine._origTermYears}y term`);
-        const dTip = cpEsc(`Customer did not renew${dBits.length ? ' · was ' + dBits.join(', ') : ''} — set by user${note ? ' · ' + note : ''}`);
+        const _crmSetBy4 = (typeof AI !== 'undefined' && AI.prompts && AI.prompts.profile && (AI.prompts.profile.REP_FIRST_NAME || AI.prompts.profile.REP_NAME)) || '';
+        const dTip = cpEsc(`Customer did not renew${dBits.length ? ' · was ' + dBits.join(', ') : ''}${note ? ' · ' + note : ''}${_crmSetBy4 ? ' · ' + _crmSetBy4 : ''}`);
         return `<td class="text-right" onclick="event.stopPropagation()"><button data-override="did-not-renew" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-700/40 border border-slate-500/50 hover:bg-slate-600/50 text-slate-200 text-xs font-bold tracking-wide" onclick="openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="${dTip}">✗ Not renewed</button></td>`;
       }
       if (myLine) {
@@ -27928,7 +27934,8 @@ function rnRenderRecordRows(r, visCols, today, opts) {
         const mBits = [];
         if (myLine._origTermYears && myLine._origTermYears !== myLine._termYears) mBits.push(`was ${myLine._origTermYears}y`);
         if (myLine._origRenewalDate && myLine._origRenewalDate !== myLine._renewalDate) mBits.push(`would renew ${fmtDate(myLine._origRenewalDate)}`);
-        const mTip = cpEsc(`Multi-year master${mBits.length ? ' (' + mBits.join('; ') + ')' : ''} — set by user`);
+        const _crmSetBy5 = (typeof AI !== 'undefined' && AI.prompts && AI.prompts.profile && (AI.prompts.profile.REP_FIRST_NAME || AI.prompts.profile.REP_NAME)) || '';
+        const mTip = cpEsc(`Multi-year master${mBits.length ? ' (' + mBits.join('; ') + ')' : ''}${_crmSetBy5 ? ' · ' + _crmSetBy5 : ''}`);
         return `<td class="text-right" onclick="event.stopPropagation()"><button data-override="master" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-violet-900/30 border border-violet-700/50 hover:bg-violet-800/40 text-violet-200 text-xs font-bold tracking-wide" onclick="openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="${mTip}">Yr ${yn}/${yt} · ${Math.round(yt)}y</button></td>`;
       }
       return `<td class="text-right" onclick="event.stopPropagation()"><span class="inline-flex items-center gap-1"><span class="text-amber-400 font-bold text-sm tracking-wide">${label}</span><button class="text-slate-600 hover:text-violet-300 text-xs ml-1" onclick="openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="Mark as multi-year master / link to master">✎</button></span></td>`;
