@@ -8790,6 +8790,7 @@ window.crmGapSetFilter = function(col, val) {
 function crmGapTableMount() {
   const wrap = document.getElementById('crm-gap-table-wrap');
   if (!wrap) return;
+  const fmtMoney = (n) => '$' + Math.round(Number(n) || 0).toLocaleString();
   const allRecords = STATE._crmGapRecords || [];
   const filters = STATE.crmGapFilters || {};
   const today = new Date(); today.setHours(0,0,0,0);
