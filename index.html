@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 11:19 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 11:30 AM ET</span>
     </div>
   </div>
 </div>
@@ -1822,7 +1822,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 11:19 AM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 11:30 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2040,7 +2040,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 11:19 AM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 11:30 AM ET</div>
       </div>
     </div>
   </div>
@@ -2234,7 +2234,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 11:19 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 11:30 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -24437,6 +24437,19 @@ window.ordEmailOpenClient = function() {
   const to   = document.getElementById('ord-email-to')?.value || '';
   const subj = document.getElementById('ord-email-subject')?.value || '';
   const body = document.getElementById('ord-email-body')?.value || '';
+  // mailto: is plain-text only — HTML never survives it.
+  // Copy the rich HTML to clipboard, open client with subject+to only
+  // (body blank so cursor lands there), then prompt user to paste.
+  if (_ordEmailClipHtml && navigator.clipboard && window.ClipboardItem) {
+    navigator.clipboard.write([new ClipboardItem({
+      'text/html':  new Blob([`<html><body>${_ordEmailClipHtml}</body></html>`], { type:'text/html' }),
+      'text/plain': new Blob([body], { type:'text/plain' }),
+    })]).catch(() => {});
+    window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}`;
+    toast('ok', 'Formatted table copied — paste into the email that just opened (⌘V / Ctrl+V)');
+    return;
+  }
+  // Fallback: plain text via mailto:
   const safeBody = body.length > 1800
     ? body.slice(0, 1800) + '\n\n…(truncated — full content was copied to clipboard. Paste in your message body.)'
     : body;
@@ -29112,6 +29125,15 @@ window.rnEmailOpen = function() {
   const to      = document.getElementById('rn-email-to').value;
   const subject = document.getElementById('rn-email-subject').value;
   const body    = document.getElementById('rn-email-body').value;
+  if (_rnEmailClipHtml && navigator.clipboard && window.ClipboardItem) {
+    navigator.clipboard.write([new ClipboardItem({
+      'text/html':  new Blob([`<html><body>${_rnEmailClipHtml}</body></html>`], { type:'text/html' }),
+      'text/plain': new Blob([body], { type:'text/plain' }),
+    })]).catch(() => {});
+    window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}`;
+    rnToast('Formatted table copied — paste into the email that just opened (⌘V)');
+    return;
+  }
   const safeBody = body.length > 1800
     ? body.slice(0, 1800) + '\n\n…(truncated — full content was copied to clipboard)'
     : body;
