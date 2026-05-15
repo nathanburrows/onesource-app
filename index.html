@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:18 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:31 AM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 12:18 AM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 12:31 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 12:18 AM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 12:31 AM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:18 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:31 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -12166,7 +12166,7 @@ function enrichStWithRenewals() {
     let g = groups.get(key);
     if (!g) {
       g = { key, lines: [], cycles: new Map(),
-            firstInvoice: null, openSellTotal: 0, renewableLineCount: 0 };
+            firstInvoice: null, openSellTotal: 0, renewableLineCount: 0, maxEstInvoiceDate: null };
       groups.set(key, g);
     }
     g.lines.push(r);
@@ -12176,6 +12176,10 @@ function enrichStWithRenewals() {
     r._isRebill = isRebill;
     const inv = _rnDateFromCell(r.invoiceDate);
     if (inv && (!g.firstInvoice || inv < g.firstInvoice)) g.firstInvoice = inv;
+    if (!_rnIsRebill(r)) {
+      const eid = _rnDateFromCell(r.estInvoiceDate);
+      if (eid && (!g.maxEstInvoiceDate || eid > g.maxEstInvoiceDate)) g.maxEstInvoiceDate = eid;
+    }
     const openSell = Number(r.openSell) || 0;
     g.openSellTotal += openSell;
     const text = `${r.custOrdLineDesc || ''} ${r.partNo || ''}`;
@@ -12227,15 +12231,24 @@ function enrichStWithRenewals() {
         isMixedTerm = spreadDays > 30;
       }
     } else if (g.renewableLineCount > 0 && g.firstInvoice) {
-      // Type 3 — Estimated Renewal: 12mo from earliest invoice date.
-      const est = new Date(g.firstInvoice);
-      est.setMonth(est.getMonth() + 12);
+      // Type 3 — Estimated Renewal: prefer MAX(estInvoiceDate) on non-rebill
+      // lines when it's further out than the 12mo heuristic. Products like
+      // Palo Alto Cortex XDR carry no warranty dates but do have a correct
+      // estInvoiceDate reflecting the true contract end (e.g. 2028 for a
+      // 3-year deal). Falling back to firstInvoice + 12mo in that case
+      // understates the renewal date by 2 years.
+      const est12 = new Date(g.firstInvoice);
+      est12.setMonth(est12.getMonth() + 12);
+      const useEstInv = g.maxEstInvoiceDate && g.maxEstInvoiceDate > est12;
+      const est = useEstInv ? new Date(g.maxEstInvoiceDate) : est12;
       renewalDate = est;
       termEnd     = est;
       termStart   = g.firstInvoice;
       renewalType = 'estimated';
       confidence  = 'estimated';
-      termYears   = 1;
+      termYears   = useEstInv
+        ? (g.maxEstInvoiceDate - g.firstInvoice) / 86400000 / 365.25
+        : 1;
     } else if (g.openSellTotal > 0) {
       renewalType = 'billing';
       confidence  = 'estimated';
