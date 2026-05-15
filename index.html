@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 11:33 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 11:35 AM ET</span>
     </div>
   </div>
 </div>
@@ -1822,7 +1822,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 11:33 AM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 11:35 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2040,7 +2040,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 11:33 AM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 11:35 AM ET</div>
       </div>
     </div>
   </div>
@@ -2234,7 +2234,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 11:33 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 11:35 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -24217,23 +24217,23 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
     </tr>`;
   });
 
-  const pMeta = (label, val, clr='#e2e8f0', mono=false) =>
-    `<div style="min-width:72px;"><div style="color:#64748b;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px;">${_esc(label)}</div>`+
-    `<div style="color:${clr};font-size:11px;font-weight:600;${mono?'font-family:monospace;':''}">${_esc(val)}</div></div>`;
+  const pRow = (label, val, clr='#e2e8f0', mono=false) =>
+    `<div style="color:#64748b;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;padding:3px 0;white-space:nowrap;">${_esc(label)}</div>`+
+    `<div style="color:${clr};font-size:12px;font-weight:700;${mono?'font-family:monospace;':''}padding:3px 0;">${_esc(val)}</div>`;
 
   const previewHtml =
 `<div style="margin-bottom:14px;border:1px solid #2d3f55;border-radius:8px;overflow:hidden;font-family:ui-sans-serif,system-ui,sans-serif;">
-  <div style="background:#0f172a;padding:8px 14px;border-bottom:1px solid #2d3f55;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+  <div style="background:#0f172a;padding:8px 14px;border-bottom:1px solid #2d3f55;">
     <span style="color:#f1f5f9;font-size:12px;font-weight:700;">${_esc(cust)}</span>
-    <span style="color:#64748b;font-size:11px;">${_esc(ven)}</span>
   </div>
-  <div style="background:#1e293b;padding:10px 14px;display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #2d3f55;">
-    ${pMeta('Customer PO', po, '#e2e8f0', true)}
-    ${quote ? pMeta('ePlus Quote #', quote, '#e2e8f0', true) : ''}
-    ${pMeta('Sales Order #', soNum, '#e2e8f0', true)}
-    ${orderDate ? pMeta('Order Date', orderDate) : ''}
-    ${rnw ? pMeta('Renewal Date', rnw, '#a78bfa') : ''}
-    ${pMeta('Total', fmtD(totalSell), '#34d399')}
+  <div style="background:#1e293b;padding:10px 16px;border-bottom:1px solid #2d3f55;display:grid;grid-template-columns:max-content 1fr;column-gap:20px;row-gap:0;">
+    ${pRow('Customer PO', po, '#e2e8f0', true)}
+    ${quote ? pRow('ePlus Quote #', quote, '#e2e8f0', true) : ''}
+    ${pRow('Sales Order #', soNum, '#e2e8f0', true)}
+    ${pRow('Vendor', ven)}
+    ${orderDate ? pRow('Order Date', orderDate) : ''}
+    ${rnw ? pRow('Renewal Date', rnw, '#a78bfa') : ''}
+    ${pRow('Total Amount', fmtD(totalSell), '#34d399')}
   </div>
   <table style="width:100%;border-collapse:collapse;">
     <thead><tr style="background:#1e1b4b;border-bottom:1px solid #3730a3;">
@@ -24283,26 +24283,25 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
     </tr>`;
   });
 
-  const eMeta = (label, val, vs='font-size:12px;color:#0f172a;font-weight:700;') =>
-    `<td style="padding:10px 12px;vertical-align:top;border-right:1px solid #f1f5f9;">`+
-    `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;margin-bottom:3px;">${_esc(label)}</div>`+
-    `<div style="${vs}">${_esc(val)}</div></td>`;
+  const eRow = (label, val, vs='font-size:12px;color:#0f172a;font-weight:700;') =>
+    `<tr>`+
+    `<td style="padding:5px 14px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;white-space:nowrap;width:1%;border-bottom:1px solid #f1f5f9;">${_esc(label)}</td>`+
+    `<td style="padding:5px 14px 5px 10px;${vs}border-bottom:1px solid #f1f5f9;">${_esc(val)}</td>`+
+    `</tr>`;
 
   const clipHtml =
 `<div style="margin-bottom:24px;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;">
   <div style="background:#f8fafc;padding:10px 14px;border-bottom:1px solid #e2e8f0;">
     <strong style="font-size:14px;color:#0f172a;">${_esc(cust)}</strong>
   </div>
-  <table style="width:100%;border-collapse:collapse;border-bottom:1px solid #e2e8f0;">
-    <tr>
-      ${eMeta('Customer PO',  po,    'font-size:12px;color:#0f172a;font-weight:700;font-family:monospace;')}
-      ${quote ? eMeta('ePlus Quote #', quote, 'font-size:12px;color:#0f172a;font-weight:700;font-family:monospace;') : ''}
-      ${eMeta('Sales Order #', soNum, 'font-size:12px;color:#0f172a;font-weight:700;font-family:monospace;')}
-      ${eMeta('Vendor', ven)}
-      ${orderDate ? eMeta('Order Date', orderDate) : ''}
-      ${rnw ? eMeta('Renewal Date', rnw, 'font-size:12px;color:#6d28d9;font-weight:700;') : ''}
-      ${eMeta('Total Amount', fmtD(totalSell), 'font-size:12px;color:#059669;font-weight:700;')}
-    </tr>
+  <table style="border-collapse:collapse;border-bottom:1px solid #e2e8f0;">
+    ${eRow('Customer PO',  po,    'font-size:12px;color:#0f172a;font-weight:700;font-family:monospace;')}
+    ${quote ? eRow('ePlus Quote #', quote, 'font-size:12px;color:#0f172a;font-weight:700;font-family:monospace;') : ''}
+    ${eRow('Sales Order #', soNum, 'font-size:12px;color:#0f172a;font-weight:700;font-family:monospace;')}
+    ${eRow('Vendor', ven)}
+    ${orderDate ? eRow('Order Date', orderDate) : ''}
+    ${rnw ? eRow('Renewal Date', rnw, 'font-size:12px;color:#6d28d9;font-weight:700;') : ''}
+    ${eRow('Total Amount', fmtD(totalSell), 'font-size:12px;color:#059669;font-weight:700;')}
   </table>
   <table style="width:100%;border-collapse:collapse;">
     <thead><tr>
