@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 01:08 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 01:11 PM ET</span>
     </div>
   </div>
 </div>
@@ -1827,7 +1827,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 01:08 PM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 01:11 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2045,7 +2045,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 01:08 PM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 01:11 PM ET</div>
       </div>
     </div>
   </div>
@@ -2239,7 +2239,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 01:08 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 01:11 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -37434,17 +37434,17 @@ Use the response format from SYSTEM_PROMPT.`;
     }
     const fys = (status?.fiscalYears || []).map(f => f.fiscalYear).sort();
     if (!fys.length) {
-      dsRenderEmpty(modal, accent, 'No NICE data cached', 'Upload a NICE PortletExport CSV/XLSX, or run the "Sync Commission Data" bookmarklet from a NICE SPM Transactions report.',
-        `<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
-          <button type="button" id="ds-empty-cta" style="background:linear-gradient(135deg,#10b981,#34d399);color:#0f172a;border:none;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;">Upload PortletExport →</button>
-          <button type="button" id="ds-empty-cta-bm" style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.3);color:#34d399;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;">Install bookmarklet →</button>
+      dsRenderEmpty(modal, accent, 'No NICE data cached', 'Run the NICE-Import bookmarklet from your NICE SPM page to sync commission data directly.',
+        `<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;">
+          <button type="button" id="ds-empty-cta" style="background:linear-gradient(135deg,#10b981,#34d399);color:#0f172a;border:none;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;">Open NICE bookmarklet →</button>
+          <button type="button" id="ds-empty-cta-upload" title="Upload PortletExport CSV/XLSX instead" style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);color:#6ee7b7;border-radius:8px;padding:9px 12px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload file</button>
         </div>`);
       modal.querySelector('#ds-modal-meta').textContent = 'no data';
-      modal.querySelector('#ds-empty-cta')?.addEventListener('click', () => dsTriggerResync('nice'));
-      modal.querySelector('#ds-empty-cta-bm')?.addEventListener('click', () => {
+      modal.querySelector('#ds-empty-cta')?.addEventListener('click', () => {
         try { window.electronAPI?.shell?.openBookmarkletPage?.(); } catch (_) {}
         try { window.open('bookmarklet.html', '_blank'); } catch (_) {}
       });
+      modal.querySelector('#ds-empty-cta-upload')?.addEventListener('click', () => dsTriggerResync('nice'));
       dsEnableActionBtns(modal, { hasData: false, source: 'nice' });
       return;
     }
