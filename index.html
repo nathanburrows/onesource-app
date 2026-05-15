@@ -1816,7 +1816,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 02:30 UTC</p>
+          <p class="upload-brand-ver-ts">May 15 · 02:29 UTC</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2034,7 +2034,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 02:30 UTC</div>
+        <div class="ds-brand-ver-ts">May 15 · 02:29 UTC</div>
       </div>
     </div>
   </div>
@@ -2228,7 +2228,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 02:30 UTC</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 02:29 UTC</div>
       </div>
     </div>
     <div class="header-actions">
@@ -8702,6 +8702,8 @@ function renderCrmPage() {
   // All renewal/estimated chains from the renewals engine that do NOT have a
   // matching CRM opp. Sorted by annualized $ descending. Uses the same matching
   // logic as the CRM badge in the Renewals table (rnCrmStatusForRecord).
+  // Lazy-build renewals if the user hasn't visited the Renewals page yet.
+  if (!_rnData && typeof rnBuild === 'function') { try { _rnData = rnBuild(); } catch(_) {} }
   const rnRecords = (_rnData && _rnData.records) || [];
   const gapRecords = [];
   for (const r of rnRecords) {
