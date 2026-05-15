@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 11:39 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 11:44 AM ET</span>
     </div>
   </div>
 </div>
@@ -1827,7 +1827,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 11:39 AM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 11:44 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2045,7 +2045,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 11:39 AM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 11:44 AM ET</div>
       </div>
     </div>
   </div>
@@ -2239,7 +2239,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 11:39 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 11:44 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -24192,6 +24192,13 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
   const rnwRaw    = parent._renewalDate || children.find(c => c._renewalDate)?._renewalDate || '';
   const rnw       = rnwRaw.split('|')[0] || '';
   const totalSell = children.reduce((s, c) => s + (Number(c.stSales)||0) + (Number(c.openSell)||0), 0);
+  const totalCost = children.reduce((s, c) => {
+    const es = (Number(c.stSales)||0) + (Number(c.openSell)||0);
+    const m  = Number(c.marginPct) || 0;
+    return s + (m > 0 && m < 100 ? es * (1 - m / 100) : 0);
+  }, 0);
+  const blendedMargin = totalSell > 0 && totalCost > 0
+    ? ((totalSell - totalCost) / totalSell * 100) : null;
 
   // ── Preview HTML (dark, shown in modal) ──────────────────────────────
   const TH  = 'padding:5px 9px;font-size:9px;font-weight:700;color:#a5b4fc;text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;text-align:left;border-right:1px solid #2e3f5c;';
@@ -24245,6 +24252,8 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
     ${orderDate ? pRow('Order Date', orderDate) : ''}
     ${rnw ? pRow('Renewal Date', rnw, '#a78bfa') : ''}
     ${pRow('Total Amount', fmtD(totalSell), '#34d399')}
+    ${totalCost > 0 ? pRow('Total Cost', fmtD(totalCost)) : ''}
+    ${blendedMargin !== null ? pRow('Blended Margin', blendedMargin.toFixed(1) + '%') : ''}
   </div>
   <table style="width:100%;border-collapse:collapse;">
     <thead><tr style="background:#1e1b4b;border-bottom:1px solid #3730a3;">
@@ -24314,6 +24323,8 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
     ${orderDate ? eRow('Order Date', orderDate) : ''}
     ${rnw ? eRow('Renewal Date', rnw, 'font-size:12px;color:#6d28d9;font-weight:700;') : ''}
     ${eRow('Total Amount', fmtD(totalSell), 'font-size:12px;color:#059669;font-weight:700;')}
+    ${totalCost > 0 ? eRow('Total Cost', fmtD(totalCost)) : ''}
+    ${blendedMargin !== null ? eRow('Blended Margin %', blendedMargin.toFixed(1) + '%') : ''}
   </table>
   <table style="width:100%;border-collapse:collapse;">
     <thead><tr>
