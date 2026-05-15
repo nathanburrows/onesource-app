@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:14 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:18 AM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 12:14 AM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 12:18 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 12:14 AM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 12:18 AM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:14 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:18 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -4591,14 +4591,13 @@
          from the Match Unmatched button in the CRM Diagnostic card. -->
     <!-- (markup injected inline below, hidden until openCrmMatcher() runs) -->
 
-    <!-- CRM Diagnostic — surfaces hydrate state, sync staleness, totals, and
-         the unmatched-customer list (cached CRM customers that didn't join
-         to any NICE/ST row). Phase 1 of the CRM merge. -->
+    <!-- Customer Matching Diagnostic — CRM sync state, unmatched CRM customers,
+         and unmatched quote customers. All name-matching via Name Matching… button. -->
     <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl mb-5">
       <div class="px-5 py-4 border-b border-slate-700/50 flex items-center justify-between gap-3">
         <div>
-          <h3 class="text-lg font-semibold text-white">CRM Diagnostic <span class="text-xs font-normal text-slate-500">— Phase 1</span></h3>
-          <p class="text-xs text-slate-500 mt-1">Cached customers, last sync age, and CRM rows that didn't join to NICE/ST data.</p>
+          <h3 class="text-lg font-semibold text-white">Customer Matching</h3>
+          <p class="text-xs text-slate-500 mt-1">CRM sync state · unmatched CRM customers (no NICE/ST join) · unmatched quote customers.</p>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
           <button type="button" id="crm-diag-match" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-700 text-white border border-amber-500/60 hover:bg-amber-600 transition-all">Name Matching…</button>
@@ -4611,25 +4610,31 @@
         </div>
       </div>
       <div class="p-5">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 text-xs" id="crm-diag-tiles">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4 text-xs" id="crm-diag-tiles">
           <div class="bg-slate-900/50 border border-slate-700/40 rounded-lg p-3">
-            <p class="text-slate-500 uppercase tracking-wider text-[10px] font-semibold">Customers</p>
+            <p class="text-slate-500 uppercase tracking-wider text-[10px] font-semibold">CRM Customers</p>
             <p class="text-2xl font-bold text-white mt-1" id="crm-diag-count">—</p>
+            <p class="text-slate-500 text-[11px] mt-0.5"><span id="crm-diag-preferred-count">0</span> preferred names</p>
           </div>
           <div class="bg-slate-900/50 border border-slate-700/40 rounded-lg p-3">
-            <p class="text-slate-500 uppercase tracking-wider text-[10px] font-semibold">Open opps</p>
+            <p class="text-slate-500 uppercase tracking-wider text-[10px] font-semibold">Open Opps</p>
             <p class="text-2xl font-bold text-white mt-1" id="crm-diag-opps">—</p>
             <p class="text-slate-500 text-[11px] mt-0.5" id="crm-diag-opps-value">—</p>
           </div>
           <div class="bg-slate-900/50 border border-slate-700/40 rounded-lg p-3">
-            <p class="text-slate-500 uppercase tracking-wider text-[10px] font-semibold">Last sync</p>
+            <p class="text-slate-500 uppercase tracking-wider text-[10px] font-semibold">Last Sync</p>
             <p class="text-base font-bold text-white mt-1" id="crm-diag-age">—</p>
             <p class="text-[11px] mt-0.5" id="crm-diag-age-sub">—</p>
           </div>
           <div class="bg-slate-900/50 border border-slate-700/40 rounded-lg p-3">
-            <p class="text-slate-500 uppercase tracking-wider text-[10px] font-semibold">Unmatched</p>
+            <p class="text-slate-500 uppercase tracking-wider text-[10px] font-semibold">CRM Unmatched</p>
             <p class="text-2xl font-bold text-white mt-1" id="crm-diag-unmatched">—</p>
-            <p class="text-slate-500 text-[11px] mt-0.5"><span id="crm-diag-preferred-count">0</span> preferred · no NICE / ST join</p>
+            <p class="text-slate-500 text-[11px] mt-0.5">no NICE / ST join</p>
+          </div>
+          <div class="bg-slate-900/50 border border-slate-700/40 rounded-lg p-3">
+            <p class="text-slate-500 uppercase tracking-wider text-[10px] font-semibold">Quotes Unmatched</p>
+            <p class="text-2xl font-bold text-white mt-1" id="crm-diag-quotes-unmatched">—</p>
+            <p class="text-slate-500 text-[11px] mt-0.5">no CRM customer match</p>
           </div>
         </div>
         <div id="crm-diag-unmatched-list" class="text-xs"></div>
@@ -6952,9 +6957,18 @@ function renderCrmDiagnostic() {
     ageSubEl.className = 'text-[11px] text-slate-500 mt-0.5';
   }
 
-  // Unmatched customers list — CRM rows that don't join to any NICE/ST row.
+  // Unmatched customers — CRM side and Quotes side.
   const unmatched = getUnmatchedCrmCustomers();
   tile('crm-diag-unmatched').textContent = unmatched.length.toLocaleString();
+  const quoteUnmatchedTile = document.getElementById('crm-diag-quotes-unmatched');
+  if (quoteUnmatchedTile) {
+    const quoteUnmatched = (typeof computeUnmatchedQuoteCustomers === 'function') ? computeUnmatchedQuoteCustomers() : [];
+    quoteUnmatchedTile.textContent = quoteUnmatched.length.toLocaleString();
+    quoteUnmatchedTile.className = 'text-2xl font-bold mt-1 ' + (quoteUnmatched.length > 0 ? 'text-rose-300' : 'text-white');
+  }
+  // Colour CRM unmatched tile to match.
+  const crmUnmatchedEl = tile('crm-diag-unmatched');
+  if (crmUnmatchedEl) crmUnmatchedEl.className = 'text-2xl font-bold mt-1 ' + (unmatched.length > 0 ? 'text-rose-300' : 'text-white');
   const prefEl = document.getElementById('crm-diag-preferred-count');
   if (prefEl) prefEl.textContent = Object.keys(getCrmPreferredNames()).length.toLocaleString();
   const listEl = document.getElementById('crm-diag-unmatched-list');
@@ -13352,7 +13366,7 @@ function buildCrmDisplayList() {
   return [...names].sort((a, b) => a.localeCompare(b));
 }
 
-function renderQuotesUnmatchedPanel() { /* consolidated into openCrmMatcher() Quotes tab */ }
+function renderQuotesUnmatchedPanel() { try { renderCrmDiagnostic(); } catch (_) {} }
 function openQuoteMapDialog(rawName) { openCrmMatcher('quotes'); }
 const openUnmatchedQuotesPanel = renderQuotesUnmatchedPanel;
 const openMapDialog = openQuoteMapDialog;
