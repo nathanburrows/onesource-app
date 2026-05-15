@@ -8745,10 +8745,12 @@ function renderCrmPage() {
         : `<span class="text-[9px] text-slate-400">renewal</span>`;
       const termStr = termYears ? `${termYears % 1 === 0 ? termYears : termYears.toFixed(1)}y` : '—';
       const prevQuoteStr = prevQuote ? fmtMoney(prevQuote) : '—';
+      const orderNoStr = escHtml(r.poNumber || '');
       return `<tr class="border-t border-slate-800 hover:bg-slate-900/40">
         <td class="py-1.5 px-3 text-slate-200 truncate max-w-[200px] text-xs">${custDisplay}</td>
         <td class="py-1.5 px-3 text-slate-400 text-xs truncate max-w-[160px]">${vendors || '—'}</td>
         <td class="py-1.5 px-3 text-xs whitespace-nowrap"><span class="${dtCls} font-mono">${dtStr}</span>${daysBadge}</td>
+        <td class="py-1.5 px-3 font-mono text-xs text-slate-400 whitespace-nowrap">${orderNoStr || '—'}</td>
         <td class="py-1.5 px-3 text-right font-mono text-xs text-slate-300">${prevQuoteStr}</td>
         <td class="py-1.5 px-3 text-center font-mono text-xs text-slate-400">${termStr}</td>
         <td class="py-1.5 px-3 text-right font-mono text-xs text-indigo-300 font-semibold">${fmtMoney(annualized)}</td>
@@ -8763,6 +8765,7 @@ function renderCrmPage() {
             <th class="text-left py-2 px-3 font-semibold">Customer</th>
             <th class="text-left py-2 px-3 font-semibold">Vendor(s)</th>
             <th class="text-left py-2 px-3 font-semibold">Renewal Date</th>
+            <th class="text-left py-2 px-3 font-semibold">Order #</th>
             <th class="text-right py-2 px-3 font-semibold">Prev Quote</th>
             <th class="text-center py-2 px-3 font-semibold">Term</th>
             <th class="text-right py-2 px-3 font-semibold">Annualized $</th>
