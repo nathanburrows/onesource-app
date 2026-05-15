@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:41 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 11:19 AM ET</span>
     </div>
   </div>
 </div>
@@ -1742,9 +1742,13 @@
                class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20"/>
       </div>
       <div>
-        <label class="block text-xs font-semibold text-slate-300 mb-1">Message:</label>
-        <textarea id="ord-email-body" rows="14"
-                  class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20"></textarea>
+        <div class="flex items-center justify-between mb-1">
+          <label class="block text-xs font-semibold text-slate-300">Message:</label>
+          <button id="ord-email-view-toggle" onclick="ordEmailToggleView()" class="text-[10px] font-semibold text-slate-500 hover:text-slate-300 transition-colors">Plain text</button>
+        </div>
+        <div id="ord-email-preview" class="w-full bg-slate-900 border border-slate-700 rounded-lg overflow-auto" style="max-height:300px;min-height:80px;"></div>
+        <textarea id="ord-email-body" rows="12"
+                  class="hidden w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20"></textarea>
       </div>
     </div>
     <div class="px-5 py-3 border-t border-slate-700/60 flex items-center justify-end gap-2">
@@ -1818,7 +1822,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 12:41 AM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 11:19 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2040,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 12:41 AM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 11:19 AM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2234,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:41 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 11:19 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -3099,9 +3103,13 @@
                      class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20"/>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">Message:</label>
-              <textarea id="rn-email-body" rows="14"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20"></textarea>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-semibold text-slate-300">Message:</label>
+                <button id="rn-email-view-toggle" onclick="rnEmailToggleView()" class="text-[10px] font-semibold text-slate-500 hover:text-slate-300 transition-colors">Plain text</button>
+              </div>
+              <div id="rn-email-preview" class="w-full bg-slate-900 border border-slate-700 rounded-lg overflow-auto" style="max-height:300px;min-height:80px;"></div>
+              <textarea id="rn-email-body" rows="12"
+                        class="hidden w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-indigo-500/60 focus:ring-2 focus:ring-indigo-500/20"></textarea>
             </div>
           </div>
           <div class="px-5 py-3 border-t border-slate-700/60 flex items-center justify-end gap-2">
@@ -18157,6 +18165,8 @@ function crtdEmailSelected() {
   if (subjEl) subjEl.value = subject;
   if (bodyEl) bodyEl.value = body.join('\n');
   if (toEl && !toEl.value) toEl.value = '';
+  _ordEmailClipHtml = '';
+  _ordEmailShowPreview(false);
   const m = document.getElementById('ord-email-modal');
   if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
   setTimeout(() => { try { (toEl || subjEl) && (toEl || subjEl).focus(); } catch(_) {} }, 50);
@@ -21958,6 +21968,7 @@ function _ordProject(r) {
     // v1.1.0-dev.25 — shared chain note (lifted out of per-state entries
     // so the same observation survives state transitions).
     _chainNote:           r._chainNote || '',
+    partNo:               r.partNo || '',
   };
 }
 
@@ -22671,7 +22682,7 @@ function cordClearSelection() {
 function cordEmailSelected() {
   if (!_cordSelection.size) return;
   const orders = cordGroupedOrders();
-  const lines = [];
+  const lines  = [];
   orders.forEach(o => {
     o.children.forEach((c, idx) => {
       if (_cordSelection.has(cordLineKey(o.groupValue, idx))) lines.push({ order: o, line: c });
@@ -22686,38 +22697,22 @@ function cordEmailSelected() {
   const subject = byOrder.size === 1
     ? `Order ${[...byOrder.keys()][0]} · ${lines.length} line${lines.length === 1 ? '' : 's'}`
     : `${byOrder.size} orders · ${lines.length} lines selected`;
-  const body = [];
-  body.push(`Selected from Order Search:`);
-  body.push('');
-  let n = 1;
+  const intro  = 'Please start working on getting a quote for the below — for now please mark the deal at the same that we did previous.';
+  const blocks = [];
   for (const [groupKey, { parent, children }] of byOrder) {
-    const ven = parent.vendor || '—';
-    body.push('━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    body.push(`${n++}. ${parent.customer || ''} — ${ven}`);
-    body.push(`   Order: ${groupKey}`);
-    if (parent.poNumber) body.push(`   PO: ${parent.poNumber}`);
-    if (parent.custQuoteNo) body.push(`   Quote: ${parent.custQuoteNo}`);
-    children.forEach(c => {
-      const desc = (c.desc || '').slice(0, 80);
-      body.push(`   • ${desc} · ${commFmtD(Number(c.stSales)||0)}`);
-      if (c._renewalDate) {
-        const term = c._termYears ? ` · ${c._termYears}y term` : '';
-        body.push(`     Renewal: ${c._renewalDate}${term}`);
-      }
-      if (c.estInvoiceDate) body.push(`     Annual bill: ${c.estInvoiceDate}`);
-      if (c.warrantyStart || c.warrantyEnd) body.push(`     Warranty: ${c.warrantyStart || '?'} → ${c.warrantyEnd || '?'}`);
-    });
-    body.push('');
+    blocks.push(_buildEmailOrderBlock(groupKey, parent, children));
   }
-  const subjEl = document.getElementById('ord-email-subject');
-  const bodyEl = document.getElementById('ord-email-body');
-  const toEl   = document.getElementById('ord-email-to');
-  if (subjEl) subjEl.value = subject;
-  if (bodyEl) bodyEl.value = body.join('\n');
-  if (toEl && !toEl.value) toEl.value = '';
+  const { previewHtml, clipHtml, plainText } = _buildEmailWrapper(intro, blocks);
+  document.getElementById('ord-email-subject').value = subject;
+  document.getElementById('ord-email-body').value    = plainText;
+  const prevEl = document.getElementById('ord-email-preview');
+  if (prevEl) prevEl.innerHTML = previewHtml;
+  _ordEmailClipHtml = clipHtml;
+  _ordEmailShowPreview(true);
+  document.getElementById('ord-email-to').value = '';
   const m = document.getElementById('ord-email-modal');
   if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
-  setTimeout(() => { try { (toEl || subjEl) && (toEl || subjEl).focus(); } catch(_) {} }, 50);
+  setTimeout(() => { try { document.getElementById('ord-email-to')?.focus(); } catch(_) {} }, 50);
 }
 
 window.cordToggleLineSelect  = cordToggleLineSelect;
@@ -24162,6 +24157,207 @@ window.ordClearSelection = function() {
   _ordSelection.clear();
   ordRender();
 };
+// ── Shared email template builders ──────────────────────────────────────────
+// Used by Order Search, Client Order Search, Client Timeline, and Renewals.
+
+function _esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Build {previewHtml, clipHtml, plainText} for one order group.
+// parent: aggregate from ordGroupedOrders / cordGroupedOrders
+// children: array of projected _ordProject rows
+// groupKey: displayed as "Sales Order #" (usually the order number)
+function _buildEmailOrderBlock(groupKey, parent, children) {
+  const fmtD = v => typeof commFmtD === 'function'
+    ? commFmtD(v)
+    : '$' + Number(v).toLocaleString('en-US', {minimumFractionDigits:0,maximumFractionDigits:0});
+  const cust      = parent.customer    || '';
+  const ven       = parent.vendor      || '—';
+  const po        = parent.poNumber    || '—';
+  const quote     = parent.custQuoteNo || '';
+  const soNum     = groupKey;
+  const orderDate = parent.custOrderDate || parent.invoiceDate || parent.estInvoiceDate || '';
+  const rnwRaw    = parent._renewalDate || children.find(c => c._renewalDate)?._renewalDate || '';
+  const rnw       = rnwRaw.split('|')[0] || '';
+  const totalSell = children.reduce((s, c) => s + (Number(c.stSales)||0) + (Number(c.openSell)||0), 0);
+
+  // ── Preview HTML (dark, shown in modal) ──────────────────────────────
+  const TH  = 'padding:5px 9px;font-size:9px;font-weight:700;color:#a5b4fc;text-transform:uppercase;letter-spacing:.07em;white-space:nowrap;text-align:left;border-right:1px solid #2e3f5c;';
+  const THR = TH.replace('text-align:left','text-align:right');
+  const TD  = 'padding:5px 9px;font-size:11px;color:#94a3b8;border-right:1px solid #1e2d40;vertical-align:top;';
+  const TDR = 'padding:5px 9px;font-size:11px;color:#94a3b8;border-right:1px solid #1e2d40;vertical-align:top;text-align:right;';
+  const TDG = 'padding:5px 9px;font-size:11px;color:#34d399;font-weight:600;text-align:right;border-right:1px solid #1e2d40;vertical-align:top;';
+  const TDM = 'padding:5px 9px;font-size:11px;color:#334155;text-align:right;border-right:1px solid #1e2d40;vertical-align:top;';
+
+  let prevRows = '';
+  children.forEach((c, i) => {
+    const bg   = i % 2 === 0 ? '#1a2a3d' : '#1e293b';
+    const sell = (Number(c.stSales)||0) + (Number(c.openSell)||0);
+    const mgn  = c.marginPct ? Number(c.marginPct).toFixed(1) + '%' : '—';
+    prevRows += `<tr style="background:${bg};">
+      <td style="${TD}">${_esc(c.vendor || ven)}</td>
+      <td style="${TD}font-family:monospace;font-size:10px;">${_esc(c.partNo || '')}</td>
+      <td style="padding:5px 9px;font-size:11px;color:#e2e8f0;border-right:1px solid #1e2d40;vertical-align:top;">${_esc((c.desc||'').slice(0,120))}</td>
+      <td style="${TDR}">${c.orderQty || '—'}</td>
+      <td style="${TDM}">—</td>
+      <td style="${TDM}">—</td>
+      <td style="${TDR}">${mgn}</td>
+      <td style="${TDG}">${sell > 0 ? fmtD(sell) : '—'}</td>
+      <td style="${TDM}">—</td>
+    </tr>`;
+  });
+
+  const pMeta = (label, val, clr='#e2e8f0', mono=false) =>
+    `<div style="min-width:72px;"><div style="color:#64748b;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px;">${_esc(label)}</div>`+
+    `<div style="color:${clr};font-size:11px;font-weight:600;${mono?'font-family:monospace;':''}">${_esc(val)}</div></div>`;
+
+  const previewHtml =
+`<div style="margin-bottom:14px;border:1px solid #2d3f55;border-radius:8px;overflow:hidden;font-family:ui-sans-serif,system-ui,sans-serif;">
+  <div style="background:#0f172a;padding:8px 14px;border-bottom:1px solid #2d3f55;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <span style="color:#f1f5f9;font-size:12px;font-weight:700;">${_esc(cust)}</span>
+    <span style="color:#64748b;font-size:11px;">${_esc(ven)}</span>
+  </div>
+  <div style="background:#1e293b;padding:10px 14px;display:flex;flex-wrap:wrap;gap:18px;border-bottom:1px solid #2d3f55;">
+    ${pMeta('Customer PO', po, '#e2e8f0', true)}
+    ${quote ? pMeta('ePlus Quote #', quote, '#e2e8f0', true) : ''}
+    ${pMeta('Sales Order #', soNum, '#e2e8f0', true)}
+    ${orderDate ? pMeta('Order Date', orderDate) : ''}
+    ${rnw ? pMeta('Renewal Date', rnw, '#a78bfa') : ''}
+    ${pMeta('Total', fmtD(totalSell), '#34d399')}
+  </div>
+  <table style="width:100%;border-collapse:collapse;">
+    <thead><tr style="background:#1e1b4b;border-bottom:1px solid #3730a3;">
+      <th style="${TH}">Vendor</th><th style="${TH}">SKU</th>
+      <th style="${TH}">Description</th>
+      <th style="${THR}">Qty</th><th style="${THR}">Cost</th>
+      <th style="${THR}">Ext Cost</th><th style="${THR}">Markup%</th>
+      <th style="${THR}">Sell</th><th style="${THR}">Ext Sell</th>
+    </tr></thead>
+    <tbody>${prevRows}</tbody>
+    <tfoot><tr style="background:#0f172a;border-top:1px solid #2d3f55;">
+      <td colspan="7" style="padding:6px 9px;font-size:10px;color:#64748b;font-weight:700;text-align:right;">Total Amount</td>
+      <td style="padding:6px 9px;font-size:12px;color:#34d399;font-weight:700;text-align:right;">${fmtD(totalSell)}</td>
+      <td></td>
+    </tr></tfoot>
+  </table>
+</div>`;
+
+  // ── Clipboard HTML (light/email-safe, inline styles only) ─────────────
+  const ETH  = 'padding:7px 10px;font-size:10px;font-weight:700;color:#4338ca;border-bottom:2px solid #c7d2fe;white-space:nowrap;text-align:left;background:#eef2ff;border-right:1px solid #e0e7ff;';
+  const ETHR = ETH.replace('text-align:left','text-align:right');
+  const ETD  = 'padding:6px 10px;font-size:11px;color:#374151;border-bottom:1px solid #f1f5f9;border-right:1px solid #f8fafc;vertical-align:top;';
+  const ETDR = ETD + 'text-align:right;';
+  const ETDG = ETDR + 'font-weight:600;color:#059669;';
+  const ETDM = ETDR + 'color:#9ca3af;';
+
+  let clipRows = '';
+  children.forEach((c, i) => {
+    const bg   = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+    const sell = (Number(c.stSales)||0) + (Number(c.openSell)||0);
+    const mgn  = c.marginPct ? Number(c.marginPct).toFixed(1) + '%' : '';
+    clipRows += `<tr style="background:${bg};">
+      <td style="${ETD}">${_esc(c.vendor || ven)}</td>
+      <td style="${ETD}font-family:monospace;font-size:10px;">${_esc(c.partNo || '')}</td>
+      <td style="${ETD}">${_esc((c.desc||'').slice(0,120))}</td>
+      <td style="${ETDR}">${c.orderQty || ''}</td>
+      <td style="${ETDM}"></td>
+      <td style="${ETDM}"></td>
+      <td style="${ETDR}">${mgn}</td>
+      <td style="${ETDG}">${sell > 0 ? fmtD(sell) : ''}</td>
+      <td style="${ETDM}"></td>
+    </tr>`;
+  });
+
+  const eMeta = (label, val, vs='font-size:12px;color:#0f172a;font-weight:700;') =>
+    `<td style="padding:10px 12px;vertical-align:top;border-right:1px solid #f1f5f9;">`+
+    `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;margin-bottom:3px;">${_esc(label)}</div>`+
+    `<div style="${vs}">${_esc(val)}</div></td>`;
+
+  const clipHtml =
+`<div style="margin-bottom:24px;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;">
+  <div style="background:#f8fafc;padding:10px 14px;border-bottom:1px solid #e2e8f0;">
+    <strong style="font-size:14px;color:#0f172a;">${_esc(cust)}</strong>
+  </div>
+  <table style="width:100%;border-collapse:collapse;border-bottom:1px solid #e2e8f0;">
+    <tr>
+      ${eMeta('Customer PO',  po,    'font-size:12px;color:#0f172a;font-weight:700;font-family:monospace;')}
+      ${quote ? eMeta('ePlus Quote #', quote, 'font-size:12px;color:#0f172a;font-weight:700;font-family:monospace;') : ''}
+      ${eMeta('Sales Order #', soNum, 'font-size:12px;color:#0f172a;font-weight:700;font-family:monospace;')}
+      ${eMeta('Vendor', ven)}
+      ${orderDate ? eMeta('Order Date', orderDate) : ''}
+      ${rnw ? eMeta('Renewal Date', rnw, 'font-size:12px;color:#6d28d9;font-weight:700;') : ''}
+      ${eMeta('Total Amount', fmtD(totalSell), 'font-size:12px;color:#059669;font-weight:700;')}
+    </tr>
+  </table>
+  <table style="width:100%;border-collapse:collapse;">
+    <thead><tr>
+      <th style="${ETH}">Vendor</th><th style="${ETH}">SKU</th>
+      <th style="${ETH}">Description</th>
+      <th style="${ETHR}">Qty</th><th style="${ETHR}">Cost</th>
+      <th style="${ETHR}">Ext Cost</th><th style="${ETHR}">Markup%</th>
+      <th style="${ETHR}">Sell</th><th style="${ETHR}">Ext Sell</th>
+    </tr></thead>
+    <tbody>${clipRows}</tbody>
+    <tfoot><tr style="background:#f8fafc;border-top:2px solid #e2e8f0;">
+      <td colspan="7" style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;color:#64748b;">Total Amount</td>
+      <td style="padding:7px 10px;text-align:right;font-size:13px;font-weight:700;color:#059669;">${fmtD(totalSell)}</td>
+      <td></td>
+    </tr></tfoot>
+  </table>
+</div>`;
+
+  // ── Plain text (mailto: fallback) ─────────────────────────────────────
+  const pt = [];
+  pt.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  pt.push(`${cust} — ${ven}`);
+  pt.push(`  Customer PO:   ${po}`);
+  if (quote)      pt.push(`  ePlus Quote #: ${quote}`);
+  pt.push(`  Sales Order #: ${soNum}`);
+  if (orderDate)  pt.push(`  Order Date:    ${orderDate}`);
+  if (rnw)        pt.push(`  Renewal Date:  ${rnw}`);
+  pt.push(`  Total:         ${fmtD(totalSell)}`);
+  pt.push('');
+  children.forEach(c => {
+    const sell = (Number(c.stSales)||0) + (Number(c.openSell)||0);
+    const sku  = c.partNo ? ` [${c.partNo}]` : '';
+    const mgn  = c.marginPct ? ` · ${Number(c.marginPct).toFixed(1)}% margin` : '';
+    pt.push(`  • ${(c.desc||'').slice(0,100)}${sku} · ${fmtD(sell)}${mgn}`);
+  });
+  return { previewHtml, clipHtml, plainText: pt.join('\n') };
+}
+
+// Wrap order blocks in the full email envelope.
+function _buildEmailWrapper(intro, blocks) {
+  const previewHtml =
+`<div style="padding:12px;font-family:ui-sans-serif,system-ui,sans-serif;">
+  <p style="color:#94a3b8;font-size:11px;margin:0 0 12px;">${_esc(intro)}</p>
+  ${blocks.map(b => b.previewHtml).join('')}
+</div>`;
+  const clipHtml =
+`<div style="font-family:Arial,Helvetica,sans-serif;max-width:720px;color:#1e293b;">
+  <p style="font-size:13px;color:#475569;margin:0 0 16px;">${_esc(intro)}</p>
+  ${blocks.map(b => b.clipHtml).join('')}
+</div>`;
+  const plainText = intro + '\n\n' + blocks.map(b => b.plainText).join('\n\n');
+  return { previewHtml, clipHtml, plainText };
+}
+
+// ── ord-email-modal view toggle ───────────────────────────────────────────
+let _ordEmailClipHtml = '';
+let _ordEmailViewMode = 'preview';
+function _ordEmailShowPreview(show) {
+  _ordEmailViewMode = show ? 'preview' : 'text';
+  const prev = document.getElementById('ord-email-preview');
+  const ta   = document.getElementById('ord-email-body');
+  const btn  = document.getElementById('ord-email-view-toggle');
+  if (prev) { show ? prev.classList.remove('hidden') : prev.classList.add('hidden'); }
+  if (ta)   { show ? ta.classList.add('hidden')      : ta.classList.remove('hidden'); }
+  if (btn)  btn.textContent = show ? 'Plain text' : 'Preview';
+}
+window.ordEmailToggleView = function() { _ordEmailShowPreview(_ordEmailViewMode === 'text'); };
+
 function ordRenderEmailBar() {
   const bar = document.getElementById('ord-email-bar');
   if (!bar) return;
@@ -24175,18 +24371,14 @@ function ordRenderEmailBar() {
 }
 window.ordEmailSelected = function() {
   if (!_ordSelection.size) return;
-  // Reconstruct selected lines from grouped data.
   const orders = ordGroupedOrders();
-  const lines = [];
+  const lines  = [];
   orders.forEach(o => {
     o.children.forEach((c, idx) => {
-      if (_ordSelection.has(ordLineKey(o.groupValue, idx))) {
-        lines.push({ order: o, line: c });
-      }
+      if (_ordSelection.has(ordLineKey(o.groupValue, idx))) lines.push({ order: o, line: c });
     });
   });
   if (!lines.length) return;
-  // Group lines by their parent order for the message body.
   const byOrder = new Map();
   lines.forEach(({ order, line }) => {
     if (!byOrder.has(order.groupValue)) byOrder.set(order.groupValue, { parent: order.parent, children: [] });
@@ -24195,47 +24387,22 @@ window.ordEmailSelected = function() {
   const subject = byOrder.size === 1
     ? `Order ${[...byOrder.keys()][0]} · ${lines.length} line${lines.length === 1 ? '' : 's'}`
     : `${byOrder.size} orders · ${lines.length} lines selected`;
-  const body = [];
-  body.push(`Selected from Order Search:`);
-  body.push('');
-  let n = 1;
+  const intro  = 'Please start working on getting a quote for the below — for now please mark the deal at the same that we did previous.';
+  const blocks = [];
   for (const [groupKey, { parent, children }] of byOrder) {
-    const ven = parent.vendor || '—';
-    body.push('━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    body.push(`${n++}. ${parent.customer || ''} — ${ven}`);
-    body.push(`   Order: ${groupKey}`);
-    if (parent.poNumber) body.push(`   PO: ${parent.poNumber}`);
-    if (parent.custQuoteNo) body.push(`   Quote: ${parent.custQuoteNo}`);
-    children.forEach(c => {
-      const desc = (c.desc || '').slice(0, 80);
-      body.push(`   • ${desc}${c.partNo ? ` (${c.partNo})` : ''} · ${commFmtD((Number(c.stSales)||0) + (Number(c.openSell)||0))}`);
-      // Renewal date (chain anniversary)
-      if (c._renewalDate) {
-        const term = c._termYears ? ` · ${c._termYears}y term` : '';
-        body.push(`     Renewal: ${c._renewalDate}${term}`);
-      }
-      // Annualized billing date
-      if (c.estInvoiceDate) {
-        body.push(`     Annual bill: ${c.estInvoiceDate}`);
-      }
-      // Warranty coverage
-      if (c.warrantyStart || c.warrantyEnd) {
-        body.push(`     Warranty: ${c.warrantyStart || '?'} → ${c.warrantyEnd || '?'}`);
-      }
-    });
-    body.push('');
+    blocks.push(_buildEmailOrderBlock(groupKey, parent, children));
   }
-  // Populate the in-page composer modal (avoids mailto URL-length limits
-  // that silently swallow large selections).
-  const subjEl = document.getElementById('ord-email-subject');
-  const bodyEl = document.getElementById('ord-email-body');
-  const toEl   = document.getElementById('ord-email-to');
-  if (subjEl) subjEl.value = subject;
-  if (bodyEl) bodyEl.value = body.join('\n');
-  if (toEl && !toEl.value) toEl.value = '';
+  const { previewHtml, clipHtml, plainText } = _buildEmailWrapper(intro, blocks);
+  document.getElementById('ord-email-subject').value = subject;
+  document.getElementById('ord-email-body').value    = plainText;
+  const prevEl = document.getElementById('ord-email-preview');
+  if (prevEl) prevEl.innerHTML = previewHtml;
+  _ordEmailClipHtml = clipHtml;
+  _ordEmailShowPreview(true);
+  document.getElementById('ord-email-to').value = '';
   const m = document.getElementById('ord-email-modal');
   if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
-  setTimeout(() => { try { (toEl || subjEl)?.focus(); } catch(_) {} }, 50);
+  setTimeout(() => { try { document.getElementById('ord-email-to')?.focus(); } catch(_) {} }, 50);
 };
 
 window.ordCloseEmailModal = function() {
@@ -24246,14 +24413,23 @@ window.ordCloseEmailModal = function() {
 window.ordEmailCopy = async function() {
   const subj = document.getElementById('ord-email-subject')?.value || '';
   const body = document.getElementById('ord-email-body')?.value || '';
+  if (_ordEmailClipHtml && navigator.clipboard && window.ClipboardItem) {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html':  new Blob([`<html><body>${_ordEmailClipHtml}</body></html>`], { type:'text/html' }),
+        'text/plain': new Blob([`Subject: ${subj}\n\n${body}`], { type:'text/plain' }),
+      })]);
+      toast('ok', 'Copied as rich text — paste directly into your email');
+      return;
+    } catch(_) {}
+  }
   const text = `Subject: ${subj}\n\n${body}`;
   try {
     await navigator.clipboard.writeText(text);
     toast('ok', 'Copied email content to clipboard');
   } catch(e) {
-    // Fallback — select textarea content
     const ta = document.getElementById('ord-email-body');
-    if (ta) { ta.focus(); ta.select(); document.execCommand('copy'); toast('ok', 'Copied (fallback)'); }
+    if (ta) { _ordEmailShowPreview(false); ta.focus(); ta.select(); document.execCommand('copy'); toast('ok', 'Copied (fallback)'); }
   }
 };
 
@@ -24261,16 +24437,11 @@ window.ordEmailOpenClient = function() {
   const to   = document.getElementById('ord-email-to')?.value || '';
   const subj = document.getElementById('ord-email-subject')?.value || '';
   const body = document.getElementById('ord-email-body')?.value || '';
-  // Cap body length so very long bodies don't get truncated by the OS handler.
-  // ~1800 chars is the safe ceiling for most clients on the body alone.
   const safeBody = body.length > 1800
     ? body.slice(0, 1800) + '\n\n…(truncated — full content was copied to clipboard. Paste in your message body.)'
     : body;
-  if (body.length > 1800) {
-    try { navigator.clipboard.writeText(body); } catch(_) {}
-  }
-  const url = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(safeBody)}`;
-  window.location.href = url;
+  if (body.length > 1800) { try { navigator.clipboard.writeText(body); } catch(_) {} }
+  window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(safeBody)}`;
 };
 
 // Diagnostic: pull every ST row matching an order number — shows the row
@@ -28835,56 +29006,75 @@ function rnDaySyncFooter() {
   if (btn) btn.disabled = n === 0;
 }
 
-// ── Email composition modal — replaces the old mailto: redirect.
-let _rnEmailContext = null;   // { records: [...] }
+// ── Renewals email modal ──────────────────────────────────────────────────
+let _rnEmailClipHtml = '';
+let _rnEmailViewMode = 'preview';
+function _rnEmailShowPreview(show) {
+  _rnEmailViewMode = show ? 'preview' : 'text';
+  const prev = document.getElementById('rn-email-preview');
+  const ta   = document.getElementById('rn-email-body');
+  const btn  = document.getElementById('rn-email-view-toggle');
+  if (prev) { show ? prev.classList.remove('hidden') : prev.classList.add('hidden'); }
+  if (ta)   { show ? ta.classList.add('hidden')      : ta.classList.remove('hidden'); }
+  if (btn)  btn.textContent = show ? 'Plain text' : 'Preview';
+}
+window.rnEmailToggleView = function() { _rnEmailShowPreview(_rnEmailViewMode === 'text'); };
+
+let _rnEmailContext = null;
 function rnOpenEmailModal(records) {
   _rnEmailContext = { records };
-  // Compose subject + body from records.
-  const dates = records.filter(r => r.renewalDate).map(r => r.renewalDate).sort((a,b) => a - b);
+  const dates   = records.filter(r => r.renewalDate).map(r => r.renewalDate).sort((a,b) => a - b);
   const earliest = dates[0] ? rnFmtDate(dates[0]) : '—';
   let subject;
   if (records.length === 1) {
-    const r = records[0];
+    const r   = records[0];
     const ven = r.vendors[0] || '';
     const amt = r.totalRev || r.annualizedRev || 0;
-    const dueTxt = r.renewalDate ? r.renewalDate.toLocaleDateString('en-US') : 'TBD';
-    subject = `${r.customer} - ${ven} (${commFmtD(amt)}) Due Date ${dueTxt}`;
+    const due = r.renewalDate ? r.renewalDate.toLocaleDateString('en-US') : 'TBD';
+    subject = `${r.customer} - ${ven} (${commFmtD(amt)}) Due Date ${due}`;
   } else {
     subject = `Renewal action needed — ${records.length} POs · ${earliest}`;
   }
-  const lines = [];
-  lines.push(records.length === 1
-    ? `${records[0].customer} — ${records[0].vendors[0] || ''} (${commFmtD(records[0].totalRev || records[0].annualizedRev || 0)})`
-    : `Team can we please work on getting renewals for the below —`);
-  lines.push('For now mark at the same markup we did before.');
-  lines.push('Thanks,');
-  lines.push('');
-  lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  records.forEach((r, i) => {
-    const ven = r.vendors[0] || '—';
-    const orderDate = r.firstInvoice ? r.firstInvoice.toLocaleDateString('en-US') : (r.lines[0]?.invoiceDate ? new Date(r.lines[0].invoiceDate).toLocaleDateString('en-US') : 'TBD');
-    const renewDate = r.renewalDate ? r.renewalDate.toLocaleDateString('en-US') : 'TBD';
-    const ePlusQuote = r.lines.find(l => l.custQuoteNo)?.custQuoteNo || r.lines[0]?.invoiceNo || '';
-    const amt = r.totalRev || r.annualizedRev || 0;
-    const flag = r.isMixedTerm ? ' [MIXED-TERM]' : (r.confidence === 'estimated' ? ' [ESTIMATED]' : '');
-    lines.push('');
-    lines.push(`${i + 1}. ${r.customer}${flag}`);
-    lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    lines.push(`    Customer PO: ${r.poNumber}`);
-    if (ePlusQuote) lines.push(`    ePlus Quote #: ${ePlusQuote}`);
-    lines.push(`    Vendor: ${ven}`);
-    lines.push(`    Order Date: ${orderDate}`);
-    lines.push(`    Renewal/Est Date: ${renewDate}`);
-    lines.push(`    Amount: ${commFmtD(amt)}`);
-    if (r.termYears) lines.push(`    Term: ${r.termYears.toFixed(1)} years`);
-    // Each line item summary.
-    r.lines.forEach(line => {
-      const desc = (line.custOrdLineDesc || '').slice(0, 80);
-      if (desc) lines.push(`    • ${desc}`);
-    });
+  const intro = 'Please start working on getting a quote for the below — for now please mark the deal at the same that we did previous.';
+  const blocks = [];
+  records.forEach(r => {
+    const ven       = r.vendors[0] || '—';
+    const renewDate = r.renewalDate ? r.renewalDate.toLocaleDateString('en-US') : '';
+    const orderDate = r.firstInvoice
+      ? r.firstInvoice.toLocaleDateString('en-US')
+      : (r.lines[0]?.invoiceDate ? new Date(r.lines[0].invoiceDate).toLocaleDateString('en-US') : '');
+    const ePlusQuote = r.lines.find(l => l.custQuoteNo)?.custQuoteNo || '';
+    const soNum      = r.lines.find(l => l.orderNumber)?.orderNumber || r.poNumber || '';
+    const flag       = r.isMixedTerm ? ' [MIXED-TERM]' : (r.confidence === 'estimated' ? ' [EST]' : '');
+    const parent = {
+      customer:     (r.customer || '') + flag,
+      vendor:       ven,
+      poNumber:     r.poNumber || '—',
+      custQuoteNo:  ePlusQuote,
+      custOrderDate: orderDate,
+      invoiceDate:  '',
+      estInvoiceDate: '',
+      _renewalDate: renewDate,
+    };
+    const children = r.lines.map(line => ({
+      vendor:    ven,
+      partNo:    line.partNo || '',
+      desc:      line.custOrdLineDesc || '',
+      orderQty:  line.orderQty || '',
+      stSales:   Number(line.stSales)   || 0,
+      openSell:  Number(line.openSell)  || 0,
+      marginPct: Number(line.marginPct) || 0,
+      _renewalDate: renewDate,
+    }));
+    blocks.push(_buildEmailOrderBlock(soNum, parent, children));
   });
+  const { previewHtml, clipHtml, plainText } = _buildEmailWrapper(intro, blocks);
   document.getElementById('rn-email-subject').value = subject;
-  document.getElementById('rn-email-body').value = lines.join('\n');
+  document.getElementById('rn-email-body').value    = plainText;
+  const prevEl = document.getElementById('rn-email-preview');
+  if (prevEl) prevEl.innerHTML = previewHtml;
+  _rnEmailClipHtml = clipHtml;
+  _rnEmailShowPreview(true);
   document.getElementById('rn-email-to').value = '';
   const m = document.getElementById('rn-email-modal');
   if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
@@ -28893,10 +29083,20 @@ window.rnCloseEmailModal = function() {
   const m = document.getElementById('rn-email-modal');
   if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
 };
-window.rnEmailCopy = function() {
+window.rnEmailCopy = async function() {
   const subject = document.getElementById('rn-email-subject').value;
   const body    = document.getElementById('rn-email-body').value;
-  const text    = `Subject: ${subject}\n\n${body}`;
+  if (_rnEmailClipHtml && navigator.clipboard && window.ClipboardItem) {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({
+        'text/html':  new Blob([`<html><body>${_rnEmailClipHtml}</body></html>`], { type:'text/html' }),
+        'text/plain': new Blob([`Subject: ${subject}\n\n${body}`], { type:'text/plain' }),
+      })]);
+      rnToast('Copied as rich text — paste directly into your email ✓');
+      return;
+    } catch(_) {}
+  }
+  const text     = `Subject: ${subject}\n\n${body}`;
   const fallback = () => {
     const ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -28912,9 +29112,11 @@ window.rnEmailOpen = function() {
   const to      = document.getElementById('rn-email-to').value;
   const subject = document.getElementById('rn-email-subject').value;
   const body    = document.getElementById('rn-email-body').value;
-  const url = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  // Use location.href so the mailto: handler triggers in-place, not a new window.
-  window.location.href = url;
+  const safeBody = body.length > 1800
+    ? body.slice(0, 1800) + '\n\n…(truncated — full content was copied to clipboard)'
+    : body;
+  if (body.length > 1800) { try { navigator.clipboard.writeText(body); } catch(_) {} }
+  window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(safeBody)}`;
   rnToast('Opening email client…');
 };
 
@@ -30769,6 +30971,8 @@ window.reconEmailSelected = function() {
   if (subjEl) subjEl.value = subject;
   if (bodyEl) bodyEl.value = body.join('\n');
   if (toEl && !toEl.value) toEl.value = '';
+  _ordEmailClipHtml = '';
+  _ordEmailShowPreview(false);
   const m = document.getElementById('ord-email-modal');
   if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
   setTimeout(() => { try { (toEl || subjEl) && (toEl || subjEl).focus(); } catch(_) {} }, 50);
