@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:00 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:07 PM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 14 · 11:00 PM ET</p>
+          <p class="upload-brand-ver-ts">May 14 · 11:07 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 14 · 11:00 PM ET</div>
+        <div class="ds-brand-ver-ts">May 14 · 11:07 PM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:00 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:07 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -36577,6 +36577,7 @@ Use the response format from SYSTEM_PROMPT.`;
             <div id="ds-modal-meta" style="font-size:12px;color:#94a3b8;margin-top:4px;">loading…</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;">
+            ${(source === 'nice' || source === 'quotes') ? iconBtn('ds-modal-upload', 'Upload file manually', '↑', false) : ''}
             ${iconBtn('ds-modal-resync', source === 'salestrak' ? 'Re-import file' : 'Re-sync from bookmarklet', '↻', false)}
             ${iconBtn('ds-modal-clear', 'Clear data', '🗑', true)}
             <button type="button" id="ds-table-close" title="Close" style="width:30px;height:30px;border:none;background:rgba(148,163,184,0.1);color:#94a3b8;border-radius:7px;cursor:pointer;font-size:18px;line-height:1;font-family:inherit;">×</button>
@@ -36592,9 +36593,15 @@ Use the response format from SYSTEM_PROMPT.`;
     wrap.querySelector('#ds-table-close').addEventListener('click', () => wrap.remove());
     wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.remove(); });
     document.addEventListener('keydown', function esc(e) { if (e.key === 'Escape') { wrap.remove(); document.removeEventListener('keydown', esc); } });
-    // Re-sync handler (per source).
+    // Re-sync (↻) — bookmarklet for NICE/Quotes, file picker for ST/Avant, Dynamics for CRM.
     wrap.querySelector('#ds-modal-resync').addEventListener('click', () => {
-      if (wrap.querySelector('#ds-modal-resync').dataset.disabled === 'true' && source !== 'crm' && source !== 'nice') return;
+      if (wrap.querySelector('#ds-modal-resync').dataset.disabled === 'true' && source !== 'crm' && source !== 'nice' && source !== 'quotes') return;
+      if (source === 'nice' || source === 'quotes') dsTriggerBookmarklet(source);
+      else dsTriggerResync(source);
+    });
+    // Upload (↑) — manual file picker for NICE and Quotes.
+    wrap.querySelector('#ds-modal-upload')?.addEventListener('click', () => {
+      if (wrap.querySelector('#ds-modal-upload')?.dataset.disabled === 'true') return;
       dsTriggerResync(source);
     });
     // Clear handler (per source). Confirms inline.
@@ -36607,8 +36614,10 @@ Use the response format from SYSTEM_PROMPT.`;
 
   function dsEnableActionBtns(modal, { hasData, source }) {
     const re = modal.querySelector('#ds-modal-resync');
+    const up = modal.querySelector('#ds-modal-upload');
     const cl = modal.querySelector('#ds-modal-clear');
     const enable = (btn, on, hoverColor) => {
+      if (!btn) return;
       btn.dataset.disabled = on ? 'false' : 'true';
       btn.style.cursor = on ? 'pointer' : 'not-allowed';
       btn.style.opacity = on ? '1' : '0.5';
@@ -36618,10 +36627,34 @@ Use the response format from SYSTEM_PROMPT.`;
         btn.onmouseleave = () => { btn.style.background = 'rgba(148,163,184,0.06)'; btn.style.color = '#cbd5e1'; };
       } else { btn.onmouseenter = btn.onmouseleave = null; }
     };
-    // Re-sync is always actionable (CRM/NICE → bookmarklet page; ST → file picker).
+    // ↻ always actionable; ↑ upload always actionable when present.
     enable(re, true, 'rgba(99,102,241,0.18)');
+    enable(up, true, 'rgba(99,102,241,0.18)');
     // Clear only when data exists.
     enable(cl, !!hasData, 'rgba(239,68,68,0.18)');
+  }
+
+  // Opens the bookmarklet setup/run page for NICE or Quotes.
+  // Separate from dsTriggerResync so the modal ↻ and ↑ buttons have distinct actions.
+  function dsTriggerBookmarklet(source) {
+    if (source === 'nice') {
+      window.open('https://eplus-spm.nicecloudsvc.com/group/nicm/transaction-summary-report', '_blank', 'noopener');
+      try { dsShowResyncToast('NICE SPM', '📥 Sync Commission Data'); } catch (_) {}
+      return;
+    }
+    if (source === 'quotes') {
+      try {
+        if (window.electronAPI?.shell?.openBookmarkletPage) {
+          window.electronAPI.shell.openBookmarkletPage();
+        } else {
+          window.open('bookmarklet.html', '_blank');
+        }
+      } catch (_) {
+        try { window.open('bookmarklet.html', '_blank'); } catch (_) {}
+      }
+      try { dsShowResyncToast('SalesTrakWeb', '📊 OSIT-Sync'); } catch (_) {}
+      return;
+    }
   }
 
   function dsTriggerResync(source) {
