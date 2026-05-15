@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 02:36 UTC</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 02:58 UTC</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 02:36 UTC</p>
+          <p class="upload-brand-ver-ts">May 15 · 02:58 UTC</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -1930,7 +1930,7 @@
             </div>
             <div style="flex:1;min-width:0;">
               <p class="type-card-title">Quotes <span class="type-card-source">(OSIT)</span></p>
-              <p class="type-card-sub">Open pipeline + fulfillment status — sync via OSIT bookmarklet</p>
+              <p class="type-card-sub">Open pipeline + fulfillment status — upload CSV/XLSX or OSIT bookmarklet</p>
             </div>
           </div>
           <div class="ds-status-block loading" id="ds-status-quotes" data-status-source="quotes">Checking proxy…</div>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 02:36 UTC</div>
+        <div class="ds-brand-ver-ts">May 15 · 02:58 UTC</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 02:36 UTC</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 02:58 UTC</div>
       </div>
     </div>
     <div class="header-actions">
@@ -4512,7 +4512,7 @@
               </div>
               <div style="flex:1;min-width:0;">
                 <p class="type-card-title">Quotes <span class="type-card-source">(OSIT)</span></p>
-                <p class="type-card-sub">Open pipeline + fulfillment status — sync via OSIT bookmarklet</p>
+                <p class="type-card-sub">Open pipeline + fulfillment status — upload CSV/XLSX or OSIT bookmarklet</p>
               </div>
             </div>
             <div class="ds-status-block loading" data-status-source="quotes">Checking proxy…</div>
@@ -36664,20 +36664,10 @@ Use the response format from SYSTEM_PROMPT.`;
       dsShowResyncToast('Dynamics 365', '📥 CRM-Import');
       return;
     }
-    // Quotes — bookmarklet-only path. Pop the bookmarklet setup page in the
-    // user's default browser so they can drag the OSIT-Sync button to their
-    // bookmarks bar, then they run it from a SalesTrakWeb tab.
+    // Quotes — open file picker; classifyFile auto-routes OSIT exports to
+    // importQuotes. Bookmarklet remains available via the empty-state CTA.
     if (source === 'quotes') {
-      try {
-        if (window.electronAPI && window.electronAPI.shell && window.electronAPI.shell.openBookmarkletPage) {
-          window.electronAPI.shell.openBookmarkletPage();
-        } else {
-          window.open('bookmarklet.html', '_blank');
-        }
-      } catch (_) {
-        try { window.open('bookmarklet.html', '_blank'); } catch (_) {}
-      }
-      try { dsShowResyncToast('SalesTrakWeb', '📊 OSIT-Sync'); } catch (_) {}
+      try { pickFiles('.xls,.xlsx,.csv', routeFiles); } catch (_) {}
       return;
     }
   }
@@ -36987,10 +36977,17 @@ Use the response format from SYSTEM_PROMPT.`;
     }
     const fys = (status?.fiscalYears || []).map(f => f.fiscalYear).sort();
     if (!fys.length) {
-      dsRenderEmpty(modal, accent, 'No NICE data cached', 'Run the "Sync Commission Data" bookmarklet from a NICE SPM Transactions report to populate fiscal-year transactions and adjustments.',
-        `<button type="button" id="ds-empty-cta" style="background:linear-gradient(135deg,#10b981,#34d399);color:#0f172a;border:none;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;">Set up NICE bookmarklet →</button>`);
+      dsRenderEmpty(modal, accent, 'No NICE data cached', 'Upload a NICE PortletExport CSV/XLSX, or run the "Sync Commission Data" bookmarklet from a NICE SPM Transactions report.',
+        `<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+          <button type="button" id="ds-empty-cta" style="background:linear-gradient(135deg,#10b981,#34d399);color:#0f172a;border:none;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;">Upload PortletExport →</button>
+          <button type="button" id="ds-empty-cta-bm" style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.3);color:#34d399;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;">Install bookmarklet →</button>
+        </div>`);
       modal.querySelector('#ds-modal-meta').textContent = 'no data';
       modal.querySelector('#ds-empty-cta')?.addEventListener('click', () => dsTriggerResync('nice'));
+      modal.querySelector('#ds-empty-cta-bm')?.addEventListener('click', () => {
+        try { window.electronAPI?.shell?.openBookmarkletPage?.(); } catch (_) {}
+        try { window.open('bookmarklet.html', '_blank'); } catch (_) {}
+      });
       dsEnableActionBtns(modal, { hasData: false, source: 'nice' });
       return;
     }
@@ -37185,14 +37182,16 @@ Use the response format from SYSTEM_PROMPT.`;
     const rows = (cache && Array.isArray(cache.rows)) ? cache.rows : [];
     if (!rows.length) {
       dsRenderEmpty(modal, accent, 'No quote data yet',
-        'OSIT quotes sync via the OSIT bookmarklet — open SalesTrakWeb in your browser, click the OSIT-Sync bookmarklet, and the proxy populates this card automatically. CSV upload is also supported as a fallback.',
-        `<button type="button" id="ds-empty-cta" style="background:linear-gradient(135deg,#fb7185,#f43f5e);color:#fff;border:none;border-radius:10px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(251,113,133,0.3);">
-          Install bookmarklet
-        </button>`);
+        'Upload an OSIT CSV/XLSX export, or install the OSIT-Sync bookmarklet to auto-sync from SalesTrakWeb.',
+        `<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+          <button type="button" id="ds-empty-cta" style="background:linear-gradient(135deg,#fb7185,#f43f5e);color:#fff;border:none;border-radius:10px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(251,113,133,0.3);">Upload CSV/XLSX →</button>
+          <button type="button" id="ds-empty-cta-bm" style="background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);color:#fb7185;border-radius:10px;padding:10px 22px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;">Install bookmarklet →</button>
+        </div>`);
       modal.querySelector('#ds-modal-meta').textContent = 'no data';
-      modal.querySelector('#ds-empty-cta')?.addEventListener('click', () => {
-        try { window.electronAPI?.shell?.openBookmarkletPage?.(); }
-        catch (_) { window.open('bookmarklet.html', '_blank'); }
+      modal.querySelector('#ds-empty-cta')?.addEventListener('click', () => dsTriggerResync('quotes'));
+      modal.querySelector('#ds-empty-cta-bm')?.addEventListener('click', () => {
+        try { window.electronAPI?.shell?.openBookmarkletPage?.(); } catch (_) {}
+        try { window.open('bookmarklet.html', '_blank'); } catch (_) {}
       });
       dsEnableActionBtns(modal, { hasData: false, source: 'quotes' });
       return;
@@ -37387,7 +37386,7 @@ Use the response format from SYSTEM_PROMPT.`;
       </div>`;
     slots.forEach(s => { s.classList.remove('loading'); s.innerHTML = html; });
   }
-  function renderStatusEmpty(source, title, hint, ctaLabel, ctaSource) {
+  function renderStatusEmpty(source, title, hint, ctaLabel, ctaSource, extraCtaHtml) {
     const slots = dsStatusSlots(source);
     if (!slots.length) return;
     const accent = SOURCE_META[source]?.accent || '#94a3b8';
@@ -37399,6 +37398,7 @@ Use the response format from SYSTEM_PROMPT.`;
         <div class="ds-status-empty-hint">${cpEsc(hint)}</div>
       </div>
       ${ctaLabel ? `<button type="button" class="ds-empty-cta" onclick="event.stopPropagation();window.dsTriggerResyncExt&&window.dsTriggerResyncExt('${ctaSource}')">${cpEsc(ctaLabel)}</button>` : ''}
+      ${extraCtaHtml || ''}
       ${bmHtml ? `<div style="display:flex;justify-content:center;">${bmHtml}</div>` : ''}`;
     slots.forEach(s => { s.classList.remove('loading'); s.innerHTML = html; });
     // If bookmarklets weren't loaded yet, fetch and re-render once they are.
@@ -37406,7 +37406,7 @@ Use the response format from SYSTEM_PROMPT.`;
       dsLoadBookmarklets().then(() => {
         if (!_dsBmCache.entries[source]) return;
         // Re-run the empty render so the link appears.
-        renderStatusEmpty(source, title, hint, ctaLabel, ctaSource);
+        renderStatusEmpty(source, title, hint, ctaLabel, ctaSource, extraCtaHtml);
       });
     }
   }
@@ -37510,7 +37510,7 @@ Use the response format from SYSTEM_PROMPT.`;
     }
 
     _dsDetected.nice = { kind:'pending', count:0 };
-    renderStatusEmpty('nice', 'No NICE data yet', 'Run the Sync Commission bookmarklet from NICE SPM, or drop a PortletExport file.', 'Set up bookmarklet →', 'nice');
+    renderStatusEmpty('nice', 'No NICE data yet', 'Upload a NICE PortletExport CSV/XLSX, or use the Sync Commission bookmarklet from NICE SPM.', 'Upload PortletExport →', 'nice');
   }
   async function populateStCard() {
     setCornerEnabled('salestrak', 'clear', false);
@@ -37703,7 +37703,7 @@ Use the response format from SYSTEM_PROMPT.`;
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>')}
           ${card('salestrak', { cls:'amber' }, 'SalesTrak <span class="type-card-source">(Invoice/Order)</span>', 'ePlus billing — Net Sell, GP, invoice chain',
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>')}
-          ${card('quotes', { cls:'rose' }, 'Quotes <span class="type-card-source">(OSIT)</span>', 'Open pipeline + fulfillment status — sync via OSIT bookmarklet',
+          ${card('quotes', { cls:'rose' }, 'Quotes <span class="type-card-source">(OSIT)</span>', 'Open pipeline + fulfillment status — upload CSV/XLSX or OSIT bookmarklet',
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>')}
           ${card('transitions', { cls:'violet' }, 'Customer Transitions <span class="type-card-source">(ST)</span>', 'Visibility-only — excluded from commission/pay totals',
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 4v16"/></svg>')}
@@ -37739,8 +37739,9 @@ Use the response format from SYSTEM_PROMPT.`;
     if (!rowCount) {
       _dsDetected.quotes = { kind: 'pending', count: 0 };
       renderStatusEmpty('quotes', 'No quotes synced',
-        'Install the OSIT-Sync bookmarklet, run it from a SalesTrakWeb tab, and quotes appear here automatically.',
-        'Install bookmarklet →', 'quotes');
+        'Upload an OSIT CSV/XLSX export, or install the OSIT-Sync bookmarklet to auto-sync from SalesTrakWeb.',
+        'Upload CSV/XLSX →', 'quotes',
+        `<button type="button" class="ds-empty-cta" style="margin-top:6px;background:rgba(251,113,133,0.08);border:1px solid rgba(251,113,133,0.3);color:#fb7185;" onclick="event.stopPropagation();try{window.electronAPI?.shell?.openBookmarkletPage?.();}catch(_){};try{window.open('bookmarklet.html','_blank');}catch(_){}">Install bookmarklet →</button>`);
       return;
     }
     setCornerEnabled('quotes', 'clear', true);
