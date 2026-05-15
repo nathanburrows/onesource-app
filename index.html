@@ -12541,7 +12541,7 @@ function handleParsedQuotes(parsed, errors) {
   let overwritten = 0, preserved = 0, added = 0;
   const merged = rows.map(incoming => {
     const prior = existingByNo.get(String(incoming.quoteNo));
-    if (!prior) { added++; return incoming; }
+    if (!prior) { added++; return Object.assign({}, incoming, { _ingestSource: 'manual' }); }
     const statusToOrdered = incoming.quoteStatus === 'closed-won' && prior.quoteStatus !== 'closed-won';
     const saleChanged     = incoming.totalSale !== null && prior.totalSale !== incoming.totalSale;
     const modifiedNewer   = incoming.modified && incoming.modified !== prior.modified;
@@ -12549,6 +12549,7 @@ function handleParsedQuotes(parsed, errors) {
       overwritten++;
       // Preserve canonicalization stamps from the prior row so we don't lose them.
       return Object.assign({}, incoming, {
+        _ingestSource:    'manual',
         custCanonical:    prior.custCanonical    ?? incoming.custCanonical,
         _canonicalSource: prior._canonicalSource ?? incoming._canonicalSource,
       });
