@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:53 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:00 AM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 14 · 11:53 PM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 12:00 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 14 · 11:53 PM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 12:00 AM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:53 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:00 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -3990,7 +3990,8 @@
          Encrypted per-file sync of all user data + API keys to a OneDrive
          profile. Passphrase derives the key (Argon2id) — server-side blob
          is unreadable without it. ───────────────────────────────────────── -->
-    <section id="cloud-sync-section" class="bg-slate-800/60 border border-slate-700/60 rounded-2xl mb-5 p-5">
+    <div class="grid grid-cols-2 gap-4 mb-5 items-start">
+    <section id="cloud-sync-section" class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
         <h3 class="text-lg font-semibold text-white" style="margin:0;">Cloud Sync</h3>
         <span id="cloud-sync-status" style="font-size:12px;color:#94a3b8;">checking…</span>
@@ -4048,7 +4049,7 @@
          Shared encrypted folder under <OneDrive>/OneSourceCMD/teams/<id>/.
          Members share a team passphrase. Every push writes an append-only
          audit entry so attribution survives. ─────────────────────────── -->
-    <section id="team-section" class="bg-slate-800/60 border border-slate-700/60 rounded-2xl mb-5 p-5">
+    <section id="team-section" class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
         <h3 class="text-lg font-semibold text-white" style="margin:0;">Team Database</h3>
         <span id="team-status-badge" style="font-size:12px;color:#94a3b8;">checking…</span>
@@ -4079,12 +4080,17 @@
         </div>
 
         <div style="margin-top:14px;padding-top:14px;border-top:1px solid #334155;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-            <div style="font-size:13px;color:#cbd5e1;font-weight:600;">Recent changes (last 100)</div>
-            <button id="team-audit-refresh-btn" style="padding:4px 10px;border-radius:5px;font-size:11px;background:#0f172a;color:#94a3b8;border:1px solid #334155;cursor:pointer;">Refresh</button>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer;" onclick="(function(){var b=document.getElementById('team-audit-body'),c=document.getElementById('team-audit-chevron');var h=b.style.display==='none';b.style.display=h?'block':'none';c.style.transform=h?'rotate(90deg)':'rotate(0deg)'})()">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <svg id="team-audit-chevron" style="transition:transform .2s;color:#94a3b8;transform:rotate(0deg)" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+              <div style="font-size:13px;color:#cbd5e1;font-weight:600;">Recent changes (last 100)</div>
+            </div>
+            <button id="team-audit-refresh-btn" style="padding:4px 10px;border-radius:5px;font-size:11px;background:#0f172a;color:#94a3b8;border:1px solid #334155;cursor:pointer;" onclick="event.stopPropagation()">Refresh</button>
           </div>
+          <div id="team-audit-body" style="display:none;">
           <div id="team-audit-list" style="max-height:300px;overflow:auto;font-size:12px;color:#94a3b8;background:#0f172a;border:1px solid #1e293b;border-radius:6px;padding:6px 10px;">
             <div style="padding:8px 0;text-align:center;color:#64748b;">loading…</div>
+          </div>
           </div>
         </div>
       </div>
@@ -4104,6 +4110,7 @@
         <div id="team-inactive-status" style="display:none;margin-top:12px;font-size:12px;"></div>
       </div>
     </section>
+    </div><!-- /cloud-team-grid -->
 
     <!-- ── API Keys (Phase 4 plan 04-04) ─────────────────────────────────
          Stored encrypted via Electron safeStorage at <DataDir>/keys.enc.
@@ -4169,7 +4176,8 @@
 
     <!-- ── Show onboarding tour (Phase 09) — relaunches the welcome walkthrough
          without resetting data. Same overlay first-run uses. ──────────────── -->
-    <section id="show-tour-section" class="bg-slate-800/60 border border-indigo-700/30 rounded-2xl mb-5 p-5">
+    <div class="grid grid-cols-2 gap-4 mb-5 items-start">
+    <section id="show-tour-section" class="bg-slate-800/60 border border-indigo-700/30 rounded-2xl p-5">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div style="flex:1;min-width:0;">
           <h3 class="text-lg font-semibold text-white" style="margin:0;">Onboarding tour</h3>
@@ -4191,7 +4199,7 @@
          rep-profile.json via the canonical seed.resetOnboardingState() helper
          (same call path as the tray "Reset onboarding…" item). Auto-relaunches
          on success so the welcome flow re-runs from a fresh substrate. ──── -->
-    <section id="reset-onboarding-section" class="bg-slate-800/60 border border-amber-700/30 rounded-2xl mb-5 p-5">
+    <section id="reset-onboarding-section" class="bg-slate-800/60 border border-amber-700/30 rounded-2xl p-5">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div style="flex:1;min-width:0;">
           <h3 class="text-lg font-semibold text-white" style="margin:0;">Reset onboarding</h3>
@@ -4214,6 +4222,7 @@
       </div>
       <div id="settings-reset-onboarding-status" style="display:none;margin-top:10px;font-size:13px;"></div>
     </section>
+    </div><!-- /onboarding-grid -->
 
 
     <div data-ai-feature style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);border-radius:10px;margin-bottom:16px;">
@@ -4308,7 +4317,8 @@
       <div style="font-size:10.5px;color:#64748b;margin-top:6px;line-height:1.4;">Downloads the same JSON the AI assistant sees in every prompt — app-validated customers, renewals, and recent lines. Useful for review, debugging, and as fine-tune training data.</div>
     </div>
 
-    <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl mb-5">
+    <div class="grid grid-cols-2 gap-4 mb-5 items-start">
+    <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl">
       <div class="px-5 py-4 border-b border-slate-700/50">
         <h3 class="text-lg font-semibold text-white">Account</h3>
         <p class="text-xs text-slate-500 mt-1">Choose which sales rep's data you're viewing.</p>
@@ -4332,7 +4342,7 @@
          picker uses. Switch Rep button re-opens openProfileRepPicker() — single
          UI source of truth for identity picking (no separate Settings-specific
          picker). -->
-    <div id="profile-settings-card" class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 mb-5">
+    <div id="profile-settings-card" class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6">
       <div class="flex items-start justify-between gap-4">
         <button type="button" id="profile-settings-toggle" class="flex items-center gap-2 flex-1 text-left group" title="Toggle profile editor">
           <svg id="profile-settings-chevron" class="shrink-0 text-slate-500 group-hover:text-slate-300 transition-transform duration-200" style="transform:rotate(0deg)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
@@ -4405,6 +4415,7 @@
       </div>
       </div><!-- /profile-settings-body -->
     </div>
+    </div><!-- /account-profile-grid -->
 
     <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl mb-5">
       <div class="px-5 py-4 border-b border-slate-700/50">
@@ -9438,7 +9449,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // CRM Matcher — modal that surfaces every unmatched CRM customer with a
 // searchable picker of ST/NICE customer names so the user can pin manual
 // aliases. Many-to-one supported (multiple CRM customers → one ST customer).
-function openCrmMatcher() {
+// Also surfaces a Quotes tab for mapping raw OSIT quote names to CRM customers.
+function openCrmMatcher(defaultTab) {
   const stNiceCands = getAllStNiceCustomerNames();
   const prospectParents = getProspectParents();
   const aliases = getCrmAliases();
