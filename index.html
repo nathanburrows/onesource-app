@@ -16038,10 +16038,13 @@ function stRowsForActiveRep() {
 // rep's renewal pipeline — they need to see the renewal coming up regardless
 // of whether the dollars count toward pay. So this helper applies the rep
 // filter but ALWAYS keeps `_isTransition` rows.
+// Transition rows also bypass the rep filter entirely — they were explicitly
+// imported for this rep's pipeline and their salesRepTeam column reflects
+// the previous owner, not the current rep.
 function stRowsForRenewals() {
   const rep = STATE.activeRep;
   if (!rep) return STATE.stRaw;
-  return STATE.stRaw.filter(r => (r.salesRepTeam || '').toString().trim() === rep);
+  return STATE.stRaw.filter(r => r._isTransition || (r.salesRepTeam || '').toString().trim() === rep);
 }
 
 // ─────────────────────────────────────────────
