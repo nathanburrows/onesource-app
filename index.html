@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 11:30 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 11:33 AM ET</span>
     </div>
   </div>
 </div>
@@ -1822,7 +1822,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 11:30 AM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 11:33 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2040,7 +2040,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 11:30 AM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 11:33 AM ET</div>
       </div>
     </div>
   </div>
@@ -2234,7 +2234,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 11:30 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 11:33 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -24193,19 +24193,27 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
 
   let prevRows = '';
   children.forEach((c, i) => {
-    const bg   = i % 2 === 0 ? '#1a2a3d' : '#1e293b';
-    const sell = (Number(c.stSales)||0) + (Number(c.openSell)||0);
-    const mgn  = c.marginPct ? Number(c.marginPct).toFixed(1) + '%' : '—';
+    const bg      = i % 2 === 0 ? '#1a2a3d' : '#1e293b';
+    const qty     = Number(c.orderQty) || 0;
+    const margin  = Number(c.marginPct) || 0;
+    const extSell = (Number(c.stSales)||0) + (Number(c.openSell)||0);
+    // Derive cost and markup from margin% (GM% → cost = sell*(1-margin/100))
+    const extCost  = margin > 0 && margin < 100 ? extSell * (1 - margin / 100) : null;
+    const unitSell = qty > 1 ? extSell / qty : extSell;
+    const unitCost = extCost !== null ? (qty > 1 ? extCost / qty : extCost) : null;
+    // Markup% = margin / (1 - margin/100) — converts GM% to cost-based markup
+    const markup   = margin > 0 && margin < 100 ? margin / (1 - margin / 100) : null;
+    const dv = v => v > 0 ? fmtD(v) : '—';
     prevRows += `<tr style="background:${bg};">
       <td style="${TD}">${_esc(c.vendor || ven)}</td>
       <td style="${TD}font-family:monospace;font-size:10px;">${_esc(c.partNo || '')}</td>
       <td style="padding:5px 9px;font-size:11px;color:#e2e8f0;border-right:1px solid #1e2d40;vertical-align:top;">${_esc((c.desc||'').slice(0,120))}</td>
-      <td style="${TDR}">${c.orderQty || '—'}</td>
-      <td style="${TDM}">—</td>
-      <td style="${TDM}">—</td>
-      <td style="${TDR}">${mgn}</td>
-      <td style="${TDG}">${sell > 0 ? fmtD(sell) : '—'}</td>
-      <td style="${TDM}">—</td>
+      <td style="${TDR}">${qty || '—'}</td>
+      <td style="${unitCost !== null ? TDR : TDM}">${unitCost !== null ? dv(unitCost) : '—'}</td>
+      <td style="${extCost  !== null ? TDR : TDM}">${extCost  !== null ? dv(extCost)  : '—'}</td>
+      <td style="${markup   !== null ? TDR : TDM}">${markup   !== null ? markup.toFixed(1) + '%' : '—'}</td>
+      <td style="${TDG}">${extSell > 0 ? dv(unitSell) : '—'}</td>
+      <td style="${extSell > 0 ? TDG : TDM}">${extSell > 0 ? dv(extSell) : '—'}</td>
     </tr>`;
   });
 
@@ -24237,9 +24245,8 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
     </tr></thead>
     <tbody>${prevRows}</tbody>
     <tfoot><tr style="background:#0f172a;border-top:1px solid #2d3f55;">
-      <td colspan="7" style="padding:6px 9px;font-size:10px;color:#64748b;font-weight:700;text-align:right;">Total Amount</td>
+      <td colspan="8" style="padding:6px 9px;font-size:10px;color:#64748b;font-weight:700;text-align:right;">Total Ext Sell</td>
       <td style="padding:6px 9px;font-size:12px;color:#34d399;font-weight:700;text-align:right;">${fmtD(totalSell)}</td>
-      <td></td>
     </tr></tfoot>
   </table>
 </div>`;
@@ -24254,19 +24261,25 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
 
   let clipRows = '';
   children.forEach((c, i) => {
-    const bg   = i % 2 === 0 ? '#ffffff' : '#f8fafc';
-    const sell = (Number(c.stSales)||0) + (Number(c.openSell)||0);
-    const mgn  = c.marginPct ? Number(c.marginPct).toFixed(1) + '%' : '';
+    const bg      = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+    const qty     = Number(c.orderQty) || 0;
+    const margin  = Number(c.marginPct) || 0;
+    const extSell = (Number(c.stSales)||0) + (Number(c.openSell)||0);
+    const extCost  = margin > 0 && margin < 100 ? extSell * (1 - margin / 100) : null;
+    const unitSell = qty > 1 ? extSell / qty : extSell;
+    const unitCost = extCost !== null ? (qty > 1 ? extCost / qty : extCost) : null;
+    const markup   = margin > 0 && margin < 100 ? margin / (1 - margin / 100) : null;
+    const dv = v => v > 0 ? fmtD(v) : '';
     clipRows += `<tr style="background:${bg};">
       <td style="${ETD}">${_esc(c.vendor || ven)}</td>
       <td style="${ETD}font-family:monospace;font-size:10px;">${_esc(c.partNo || '')}</td>
       <td style="${ETD}">${_esc((c.desc||'').slice(0,120))}</td>
-      <td style="${ETDR}">${c.orderQty || ''}</td>
-      <td style="${ETDM}"></td>
-      <td style="${ETDM}"></td>
-      <td style="${ETDR}">${mgn}</td>
-      <td style="${ETDG}">${sell > 0 ? fmtD(sell) : ''}</td>
-      <td style="${ETDM}"></td>
+      <td style="${ETDR}">${qty || ''}</td>
+      <td style="${unitCost !== null ? ETDR : ETDM}">${unitCost !== null ? dv(unitCost) : ''}</td>
+      <td style="${extCost  !== null ? ETDR : ETDM}">${extCost  !== null ? dv(extCost)  : ''}</td>
+      <td style="${markup   !== null ? ETDR : ETDM}">${markup   !== null ? markup.toFixed(1) + '%' : ''}</td>
+      <td style="${ETDG}">${extSell > 0 ? dv(unitSell) : ''}</td>
+      <td style="${ETDG}">${extSell > 0 ? dv(extSell) : ''}</td>
     </tr>`;
   });
 
@@ -24301,9 +24314,8 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
     </tr></thead>
     <tbody>${clipRows}</tbody>
     <tfoot><tr style="background:#f8fafc;border-top:2px solid #e2e8f0;">
-      <td colspan="7" style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;color:#64748b;">Total Amount</td>
+      <td colspan="8" style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;color:#64748b;">Total Ext Sell</td>
       <td style="padding:7px 10px;text-align:right;font-size:13px;font-weight:700;color:#059669;">${fmtD(totalSell)}</td>
-      <td></td>
     </tr></tfoot>
   </table>
 </div>`;
