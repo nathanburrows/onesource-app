@@ -8733,57 +8733,17 @@ function renderCrmPage() {
       : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold ${cls} border whitespace-nowrap">${label}</span>`;
   };
 
-  const gapTableHtml = gapRecords.length === 0 ? `<p class="text-[11px] text-slate-500">All renewal chains have a matched CRM opportunity.</p>` : (() => {
-    const rows = gapRecords.map(({ r, status, url, annualized, renewalDt, daysOut, prevQuote, termYears }) => {
-      const custDisplay = escHtml(r.customer || '');
-      const vendors = (r.vendors || []).slice(0, 2).map(v => escHtml(v)).join(', ') + (r.vendors && r.vendors.length > 2 ? ` +${r.vendors.length - 2}` : '');
-      const dtStr = renewalDt ? `${String(renewalDt.getMonth()+1).padStart(2,'0')}/${String(renewalDt.getDate()).padStart(2,'0')}/${renewalDt.getFullYear()}` : '—';
-      const dtCls = daysOut == null ? 'text-slate-500' : daysOut < 0 ? 'text-rose-400' : daysOut <= 30 ? 'text-amber-300' : daysOut <= 90 ? 'text-yellow-300' : 'text-slate-300';
-      const daysBadge = daysOut == null ? '' : daysOut < 0 ? `<span class="text-rose-400 text-[9px] ml-1">${Math.abs(daysOut)}d past</span>` : `<span class="text-slate-500 text-[9px] ml-1">${daysOut}d</span>`;
-      const typeBadge = r.type === 'estimated'
-        ? `<span class="text-[9px] text-slate-500 italic">~est</span>`
-        : `<span class="text-[9px] text-slate-400">renewal</span>`;
-      const termStr = termYears ? `${termYears % 1 === 0 ? termYears : termYears.toFixed(1)}y` : '—';
-      const prevQuoteStr = prevQuote ? fmtMoney(prevQuote) : '—';
-      const orderNoStr = escHtml(r.poNumber || '');
-      return `<tr class="border-t border-slate-800 hover:bg-slate-900/40">
-        <td class="py-1.5 px-3 text-slate-200 truncate max-w-[200px] text-xs">${custDisplay}</td>
-        <td class="py-1.5 px-3 text-slate-400 text-xs truncate max-w-[160px]">${vendors || '—'}</td>
-        <td class="py-1.5 px-3 text-xs whitespace-nowrap"><span class="${dtCls} font-mono">${dtStr}</span>${daysBadge}</td>
-        <td class="py-1.5 px-3 font-mono text-xs text-slate-400 whitespace-nowrap">${orderNoStr || '—'}</td>
-        <td class="py-1.5 px-3 text-right font-mono text-xs text-slate-300">${prevQuoteStr}</td>
-        <td class="py-1.5 px-3 text-center font-mono text-xs text-slate-400">${termStr}</td>
-        <td class="py-1.5 px-3 text-right font-mono text-xs text-indigo-300 font-semibold">${fmtMoney(annualized)}</td>
-        <td class="py-1.5 px-3 text-xs">${typeBadge}</td>
-        <td class="py-1.5 px-3 text-xs">${gapStatusBadge(status, url)}</td>
-      </tr>`;
-    }).join('');
-    return `<div class="overflow-auto" style="max-height:420px;">
-      <table class="w-full text-xs">
-        <thead class="sticky top-0 z-10 bg-slate-900">
-          <tr class="text-slate-500 uppercase tracking-wider text-[10px]">
-            <th class="text-left py-2 px-3 font-semibold">Customer</th>
-            <th class="text-left py-2 px-3 font-semibold">Vendor(s)</th>
-            <th class="text-left py-2 px-3 font-semibold">Renewal Date</th>
-            <th class="text-left py-2 px-3 font-semibold">Order #</th>
-            <th class="text-right py-2 px-3 font-semibold">Prev Quote</th>
-            <th class="text-center py-2 px-3 font-semibold">Term</th>
-            <th class="text-right py-2 px-3 font-semibold">Annualized $</th>
-            <th class="text-left py-2 px-3 font-semibold">Type</th>
-            <th class="text-left py-2 px-3 font-semibold">Gap</th>
-          </tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
-  })();
+  // Gap table rendered by crmGapTableMount() below.
+
+  // Persist gap records for filter re-renders (filters don't force a full CRM page re-render).
+  STATE._crmGapRecords = gapRecords;
 
   const gapSection = `
-    <div class="mb-6">
+    <div class="mb-6" id="crm-gap-section">
       <div class="flex items-baseline justify-between mb-3 gap-3 flex-wrap">
         <div>
           <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Renewals Without CRM Coverage</h3>
-          <p class="text-[11px] text-slate-500 mt-0.5">${gapRecords.length} renewal chain${gapRecords.length === 1 ? '' : 's'} · ${fmtMoney(gapTotal)} annualized · no matched Dynamics opp</p>
+          <p class="text-[11px] text-slate-500 mt-0.5" id="crm-gap-subtitle">${gapRecords.length} renewal chain${gapRecords.length === 1 ? '' : 's'} · ${fmtMoney(gapTotal)} annualized · no matched Dynamics opp</p>
         </div>
         <div class="flex gap-3 text-[10px] text-slate-500">
           <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-slate-600"></span>Not in CRM</span>
@@ -8792,8 +8752,7 @@ function renderCrmPage() {
           <span class="inline-flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-indigo-700"></span>Date off</span>
         </div>
       </div>
-      <div class="bg-slate-800/40 border border-slate-700/60 rounded-2xl overflow-hidden">
-        ${gapTableHtml}
+      <div class="bg-slate-800/40 border border-slate-700/60 rounded-2xl overflow-hidden" id="crm-gap-table-wrap">
       </div>
     </div>`;
 
@@ -8812,6 +8771,219 @@ function renderCrmPage() {
   // Mount the standard sg-table data engine for the pipeline. Sort + col
   // filter + global search + column hide/order all flow through STATE.crmPage.
   if (allOpps.length) crmPageMountPipelineTable();
+  crmGapTableMount();
+}
+
+// ── Renewals Without CRM Coverage — filterable gap table ───────────────────
+// Mounted after renderCrmPage() sets STATE._crmGapRecords. Filters persist
+// in STATE.crmGapFilters across full-page re-renders so the user's selections
+// survive data refreshes.
+window.crmGapSetFilter = function(col, val) {
+  if (!STATE.crmGapFilters) STATE.crmGapFilters = {};
+  if (val) STATE.crmGapFilters[col] = val;
+  else delete STATE.crmGapFilters[col];
+  crmGapTableMount();
+};
+
+function crmGapTableMount() {
+  const wrap = document.getElementById('crm-gap-table-wrap');
+  if (!wrap) return;
+  const allRecords = STATE._crmGapRecords || [];
+  const filters = STATE.crmGapFilters || {};
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // ── Apply filters ──
+  const records = allRecords.filter(({ r, status, annualized, renewalDt, daysOut, prevQuote, termYears }) => {
+    if (filters.customer) {
+      if (!(r.customer || '').toLowerCase().includes(filters.customer.toLowerCase())) return false;
+    }
+    if (filters.vendor) {
+      const vStr = (r.vendors || []).join(' ').toLowerCase();
+      if (!vStr.includes(filters.vendor.toLowerCase())) return false;
+    }
+    if (filters.orderNo) {
+      if (!(r.poNumber || '').toLowerCase().includes(filters.orderNo.toLowerCase())) return false;
+    }
+    if (filters.date) {
+      if (filters.date === 'past') {
+        if (daysOut == null || daysOut >= 0) return false;
+      } else if (filters.date === 'le30') {
+        if (daysOut == null || daysOut < 0 || daysOut > 30) return false;
+      } else if (filters.date === 'le90') {
+        if (daysOut == null || daysOut < 0 || daysOut > 90) return false;
+      } else if (filters.date === 'gt90') {
+        if (daysOut == null || daysOut <= 90) return false;
+      } else if (filters.date === 'gt180') {
+        if (daysOut == null || daysOut <= 180) return false;
+      }
+    }
+    if (filters.prevQuote) {
+      const thr = Number(filters.prevQuote);
+      if (!isNaN(thr) && prevQuote < thr) return false;
+    }
+    if (filters.term) {
+      const t = Math.round(termYears);
+      if (filters.term === '5plus') { if (t < 5) return false; }
+      else if (String(t) !== filters.term) return false;
+    }
+    if (filters.annualized) {
+      const thr = Number(filters.annualized);
+      if (!isNaN(thr) && annualized < thr) return false;
+    }
+    if (filters.type) {
+      if (r.type !== filters.type) return false;
+    }
+    if (filters.gap) {
+      if (status !== filters.gap) return false;
+    }
+    return true;
+  });
+
+  const filteredTotal = records.reduce((s, g) => s + g.annualized, 0);
+  const subtitle = document.getElementById('crm-gap-subtitle');
+  if (subtitle) {
+    const activeFilterCount = Object.keys(filters).length;
+    const filterNote = activeFilterCount ? ` (${activeFilterCount} filter${activeFilterCount === 1 ? '' : 's'} active · ${records.length} shown)` : '';
+    subtitle.textContent = `${allRecords.length} renewal chain${allRecords.length === 1 ? '' : 's'} · ${fmtMoney(allRecords.reduce((s,g)=>s+g.annualized,0))} annualized · no matched Dynamics opp${filterNote}`;
+  }
+
+  if (allRecords.length === 0) {
+    wrap.innerHTML = '<p class="text-[11px] text-slate-500 p-4">All renewal chains have a matched CRM opportunity.</p>';
+    return;
+  }
+
+  const gapStatusBadge = (status, url) => {
+    const opts = {
+      'not-in-crm':  { cls: 'bg-slate-800 text-slate-400 border-slate-700/60',       label: 'Not in CRM' },
+      'no-opps':     { cls: 'bg-amber-900/30 text-amber-300 border-amber-700/50',     label: 'No Opps'    },
+      'no-match':    { cls: 'bg-rose-900/30 text-rose-300 border-rose-700/50',        label: 'No Match'   },
+      'vendor-only': { cls: 'bg-indigo-900/30 text-indigo-300 border-indigo-700/50',  label: 'Date Off'   },
+    };
+    const { cls, label } = opts[status] || opts['not-in-crm'];
+    return url
+      ? `<a href="${escAttr(url)}" target="_blank" rel="noopener" class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold ${cls} border hover:opacity-80 whitespace-nowrap">${label} ↗</a>`
+      : `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold ${cls} border whitespace-nowrap">${label}</span>`;
+  };
+
+  const selOpt = (val, cur, label) => `<option value="${val}"${cur === val ? ' selected' : ''}>${label}</option>`;
+  const fSel = (col, opts, placeholder) => {
+    const cur = filters[col] || '';
+    return `<th class="filter-cell px-1 py-1">
+      <select class="col-filter-input w-full" style="padding:2px 4px;"
+              onchange="crmGapSetFilter('${col}', this.value)">
+        <option value="">${placeholder}</option>
+        ${opts.map(([v,l]) => selOpt(v, cur, l)).join('')}
+      </select></th>`;
+  };
+  const fTxt = (col, placeholder) => {
+    const cur = escAttr(filters[col] || '');
+    return `<th class="filter-cell px-1 py-1">
+      <span class="col-filter-wrap${cur ? '' : ' is-empty'}" data-col-filter-wrap="gap-${col}">
+        <input type="text" class="col-filter-input" placeholder="${placeholder}" value="${cur}"
+               oninput="crmGapSetFilter('${col}', this.value); this.parentElement.classList.toggle('is-empty',!this.value);"
+               onclick="event.stopPropagation()"/>
+        <button type="button" class="col-filter-clear" tabindex="-1"
+                onclick="event.stopPropagation();crmGapSetFilter('${col}','');var i=this.parentElement.querySelector('input');i.value='';i.focus();" title="Clear">×</button>
+      </span></th>`;
+  };
+
+  const filterRow = `<tr class="filter-row">
+    ${fTxt('customer', 'Customer…')}
+    ${fTxt('vendor',   'Vendor…')}
+    ${fSel('date', [
+      ['past',  'Past due (≤30d)'],
+      ['le30',  'Due ≤30d'],
+      ['le90',  'Due ≤90d'],
+      ['gt90',  '>90d out'],
+      ['gt180', '>180d out'],
+    ], 'Date…')}
+    ${fTxt('orderNo', 'Order…')}
+    ${fSel('prevQuote', [
+      ['10000',  '>$10k'],
+      ['25000',  '>$25k'],
+      ['50000',  '>$50k'],
+      ['100000', '>$100k'],
+      ['250000', '>$250k'],
+    ], 'Quote…')}
+    ${fSel('term', [
+      ['1',     '1y'],
+      ['2',     '2y'],
+      ['3',     '3y'],
+      ['5plus', '5y+'],
+    ], 'Term…')}
+    ${fSel('annualized', [
+      ['10000',  '>$10k'],
+      ['25000',  '>$25k'],
+      ['50000',  '>$50k'],
+      ['100000', '>$100k'],
+      ['250000', '>$250k'],
+    ], 'Ann…')}
+    ${fSel('type', [
+      ['renewal',   'Renewal'],
+      ['estimated', 'Estimated'],
+    ], 'Type…')}
+    ${fSel('gap', [
+      ['not-in-crm',  'Not in CRM'],
+      ['no-opps',     'No Opps'],
+      ['no-match',    'No Match'],
+      ['vendor-only', 'Date Off'],
+    ], 'Gap…')}
+  </tr>`;
+
+  const rows = records.length === 0
+    ? `<tr><td colspan="9" class="py-4 px-3 text-center text-[11px] text-slate-500 italic">No records match the active filters.</td></tr>`
+    : records.map(({ r, status, url, annualized, renewalDt, daysOut, prevQuote, termYears }) => {
+        const custDisplay = escHtml(r.customer || '');
+        const vendors = (r.vendors || []).slice(0, 2).map(v => escHtml(v)).join(', ') + (r.vendors && r.vendors.length > 2 ? ` +${r.vendors.length - 2}` : '');
+        const dtStr = renewalDt ? `${String(renewalDt.getMonth()+1).padStart(2,'0')}/${String(renewalDt.getDate()).padStart(2,'0')}/${renewalDt.getFullYear()}` : '—';
+        const dtCls = daysOut == null ? 'text-slate-500' : daysOut < 0 ? 'text-rose-400' : daysOut <= 30 ? 'text-amber-300' : daysOut <= 90 ? 'text-yellow-300' : 'text-slate-300';
+        const daysBadge = daysOut == null ? '' : daysOut < 0
+          ? `<span class="text-rose-400 text-[9px] ml-1">${Math.abs(daysOut)}d past</span>`
+          : `<span class="text-slate-500 text-[9px] ml-1">${daysOut}d</span>`;
+        const typeBadge = r.type === 'estimated'
+          ? `<span class="text-[9px] text-slate-500 italic">~est</span>`
+          : `<span class="text-[9px] text-slate-400">renewal</span>`;
+        const termLabel = termYears ? `${termYears % 1 === 0 ? termYears : termYears.toFixed(1)}y` : '—';
+        const safeOrd  = String(r.poNumber || '').replace(/'/g,"\'");
+        const safeCust = String(r.customer || '').replace(/'/g,"\'");
+        const safeVend = String(r.vendorPrimary || (r.vendors && r.vendors[0]) || '').replace(/'/g,"\'");
+        const termCell = termYears
+          ? `<button class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-900/20 border border-amber-700/40 hover:bg-amber-800/30 text-amber-300 text-xs font-bold" onclick="event.stopPropagation();openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVend}')" title="Edit term / mark override">${termLabel} ✎</button>`
+          : `<span class="text-slate-500 text-xs">—</span>`;
+        const prevQuoteStr = prevQuote ? fmtMoney(prevQuote) : '—';
+        const orderNoStr = escHtml(r.poNumber || '');
+        return `<tr class="border-t border-slate-800 hover:bg-slate-900/40">
+          <td class="py-1.5 px-3 text-slate-200 truncate max-w-[200px] text-xs">${custDisplay}</td>
+          <td class="py-1.5 px-3 text-slate-400 text-xs truncate max-w-[160px]">${vendors || '—'}</td>
+          <td class="py-1.5 px-3 text-xs whitespace-nowrap"><span class="${dtCls} font-mono">${dtStr}</span>${daysBadge}</td>
+          <td class="py-1.5 px-3 font-mono text-xs text-slate-400 whitespace-nowrap">${orderNoStr || '—'}</td>
+          <td class="py-1.5 px-3 text-right font-mono text-xs text-slate-300">${prevQuoteStr}</td>
+          <td class="py-1.5 px-3 text-center" onclick="event.stopPropagation()">${termCell}</td>
+          <td class="py-1.5 px-3 text-right font-mono text-xs text-indigo-300 font-semibold">${fmtMoney(annualized)}</td>
+          <td class="py-1.5 px-3 text-xs">${typeBadge}</td>
+          <td class="py-1.5 px-3 text-xs">${gapStatusBadge(status, url)}</td>
+        </tr>`;
+      }).join('');
+
+  wrap.innerHTML = `<div class="overflow-auto" style="max-height:460px;">
+    <table class="w-full text-xs">
+      <thead class="sticky top-0 z-10">
+        <tr class="text-slate-500 uppercase tracking-wider text-[10px] bg-slate-900">
+          <th class="text-left py-2 px-3 font-semibold">Customer</th>
+          <th class="text-left py-2 px-3 font-semibold">Vendor(s)</th>
+          <th class="text-left py-2 px-3 font-semibold">Renewal Date</th>
+          <th class="text-left py-2 px-3 font-semibold">Order #</th>
+          <th class="text-right py-2 px-3 font-semibold">Prev Quote</th>
+          <th class="text-center py-2 px-3 font-semibold">Term</th>
+          <th class="text-right py-2 px-3 font-semibold">Annualized $</th>
+          <th class="text-left py-2 px-3 font-semibold">Type</th>
+          <th class="text-left py-2 px-3 font-semibold">Gap</th>
+        </tr>
+        ${filterRow}
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
 }
 
 // State + handlers for the CRM page pipeline table. State is session-scoped
