@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:07 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:09 PM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 14 · 11:07 PM ET</p>
+          <p class="upload-brand-ver-ts">May 14 · 11:09 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 14 · 11:07 PM ET</div>
+        <div class="ds-brand-ver-ts">May 14 · 11:09 PM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:07 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:09 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -37269,8 +37269,9 @@ Use the response format from SYSTEM_PROMPT.`;
     else                         dsOpenSalestrak(modal, accent);
   };
 
-  // Re-sync / clear from card corner buttons (no modal open).
-  window.dsTriggerResyncExt = (source) => dsTriggerResync(source);
+  // Re-sync / clear / bookmarklet from card corner buttons (no modal open).
+  window.dsTriggerResyncExt     = (source) => dsTriggerResync(source);
+  window.dsTriggerBookmarkletExt = (source) => dsTriggerBookmarklet(source);
   window.dsTriggerClearExt  = async (source) => {
     const labels = { crm: 'CRM', nice: 'NICE', salestrak: 'SalesTrak', avant: 'Avant', transitions: 'Customer Transition', quotes: 'Quotes' };
     if (!confirm(`Clear all ${labels[source]} data? This cannot be undone.`)) return;
@@ -37704,10 +37705,14 @@ Use the response format from SYSTEM_PROMPT.`;
     const wrap = document.createElement('div');
     wrap.id = 'ds-overlay';
     wrap.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.85);backdrop-filter:blur(4px);z-index:9990;display:flex;align-items:center;justify-content:center;padding:24px;';
+    const bmBtn = (source) => (source === 'nice' || source === 'quotes')
+      ? `<button type="button" class="ds-corner-btn" data-action="bookmarklet" data-source="${source}" title="Re-sync from bookmarklet" onclick="event.stopPropagation();window.dsTriggerBookmarkletExt&&window.dsTriggerBookmarkletExt('${source}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>`
+      : '';
     const card = (source, accent, title, subtitle, svg) => `
       <div class="type-card ${accent.cls}" data-source="${source}" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn,.ds-empty-cta,.ds-st-drop')){document.getElementById('ds-overlay').remove();openDataSourceTable('${source}');}">
         <div class="type-card-corner">
-          <button type="button" class="ds-corner-btn" data-action="resync" data-source="${source}" title="Upload file to overwrite" onclick="event.stopPropagation();window.dsTriggerResyncExt&&window.dsTriggerResyncExt('${source}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+          ${bmBtn(source)}
+          <button type="button" class="ds-corner-btn" data-action="resync" data-source="${source}" title="Upload file manually" onclick="event.stopPropagation();window.dsTriggerResyncExt&&window.dsTriggerResyncExt('${source}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
           <button type="button" class="ds-corner-btn" data-action="clear" data-source="${source}" data-disabled="true" title="Clear" onclick="event.stopPropagation();window.dsTriggerClearExt&&window.dsTriggerClearExt('${source}')">🗑</button>
         </div>
         <div class="type-card-head">
@@ -37725,7 +37730,7 @@ Use the response format from SYSTEM_PROMPT.`;
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:16px;">
           <div>
             <div style="font-size:18px;font-weight:800;letter-spacing:-0.01em;background:linear-gradient(90deg,#818cf8,#c084fc,#f472b6);-webkit-background-clip:text;background-clip:text;color:transparent;">Data Sources</div>
-            <div style="font-size:11.5px;color:#94a3b8;margin-top:3px;">Click a card to view its table · ↻ to re-sync · 🗑 to clear</div>
+            <div style="font-size:11.5px;color:#94a3b8;margin-top:3px;">Click a card to view its table · ↻ bookmarklet · ↑ upload file · 🗑 to clear</div>
           </div>
           <button type="button" id="ds-overlay-close" title="Close" style="width:30px;height:30px;border:none;background:rgba(148,163,184,0.1);color:#94a3b8;border-radius:7px;cursor:pointer;font-size:18px;line-height:1;font-family:inherit;">×</button>
         </div>
