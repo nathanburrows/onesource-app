@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:02 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:14 AM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 12:02 AM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 12:14 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 12:02 AM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 12:14 AM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:02 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:14 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -4601,7 +4601,7 @@
           <p class="text-xs text-slate-500 mt-1">Cached customers, last sync age, and CRM rows that didn't join to NICE/ST data.</p>
         </div>
         <div class="flex items-center gap-2 flex-shrink-0">
-          <button type="button" id="crm-diag-match" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-700 text-white border border-amber-500/60 hover:bg-amber-600 transition-all">Match Unmatched</button>
+          <button type="button" id="crm-diag-match" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-700 text-white border border-amber-500/60 hover:bg-amber-600 transition-all">Name Matching…</button>
           <button type="button" id="crm-diag-copy-aliases" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-700 text-slate-200 border border-slate-600/60 hover:bg-slate-600 transition-all" title="Copy alias map JSON to clipboard so it can be baked into code">Copy Aliases</button>
           <button type="button" id="crm-diag-copy-preferred" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-700/40 text-amber-100 border border-amber-500/40 hover:bg-amber-700/60 transition-all" title="Copy preferred-name map JSON to clipboard">Copy Preferred Names</button>
           <button type="button" id="crm-diag-refresh" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-700 text-white border border-indigo-500/60 hover:bg-indigo-600 transition-all">
@@ -4636,30 +4636,6 @@
       </div>
     </div>
 
-    <!-- ── Unmatched Quote Customers (QUOTE-08) ─────────────────────────────
-         Lists every OSIT-imported customer where Plan 02's canonicalization
-         failed (custCanonical === null), sorted by quote-row count desc.
-         Click a row → autocomplete dialog backed by current CRM customer
-         list → confirm → POST /crm/aliases/add → re-canonicalize cached
-         quotes in-place → list refreshes via the 'quotes-canonicalized'
-         event seam. Hidden when no quotes-cache exists at all. ──────── -->
-    <div id="quotes-unmatched-card" class="bg-slate-800/60 border border-slate-700/60 rounded-2xl mb-5" style="display:none;">
-      <div class="px-5 py-4 border-b border-slate-700/50 flex items-center justify-between gap-3">
-        <div>
-          <h3 class="text-lg font-semibold text-white">Unmatched Quote Customers <span id="quotes-unmatched-count" class="text-xs font-normal text-rose-300 ml-1"></span></h3>
-          <p class="text-xs text-slate-500 mt-1">OSIT quote rows whose customer name didn't match any CRM record. Click a row to map it to an existing CRM customer; the alias persists and re-canonicalizes the cached quotes immediately.</p>
-        </div>
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <button type="button" id="quotes-unmatched-refresh" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-700 text-white border border-indigo-500/60 hover:bg-indigo-600 transition-all" title="Re-run canonicalization on cached quotes">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
-            Re-canonicalize
-          </button>
-        </div>
-      </div>
-      <div class="p-5">
-        <div id="quotes-unmatched-list" class="text-xs"></div>
-      </div>
-    </div>
   </div><!-- /data-page="settings" -->
 
   <!-- ── PAGE: CLIENT OVERVIEW (Phase 2 stub — picker + scope echo only) ── -->
@@ -9451,6 +9427,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // aliases. Many-to-one supported (multiple CRM customers → one ST customer).
 // Also surfaces a Quotes tab for mapping raw OSIT quote names to CRM customers.
 function openCrmMatcher(defaultTab) {
+  // ── CRM tab data ────────────────────────────────────────────────────────
   const stNiceCands = getAllStNiceCustomerNames();
   const prospectParents = getProspectParents();
   const aliases = getCrmAliases();
@@ -9463,14 +9440,10 @@ function openCrmMatcher(defaultTab) {
     .map(([normKey, display]) => ({ display, normKey, isProspect: true }))
     .sort((a, b) => a.display.localeCompare(b.display));
   const candidates = [...stNiceCands, ...prospectCands];
-  const datalistOptions = candidates
+  const crmDatalistOptions = candidates
     .map(c => `<option value="${escAttr(c.display + (c.isProspect ? ' (prospect)' : ''))}" data-norm="${c.normKey}"></option>`)
     .join('');
 
-  // Build the full list of active CRM customers in the same shape as
-  // getUnmatchedCrmCustomers, plus a `_status` field describing the current
-  // join: 'mapped' (alias to ST/NICE), 'prospect' (alias to prospect parent),
-  // 'auto' (no alias but normKey hits ST/NICE), or 'unmatched'.
   const allActive = (STATE.crmRaw || [])
     .filter(crmEntryHasActivity)
     .map(r => {
@@ -9496,12 +9469,47 @@ function openCrmMatcher(defaultTab) {
     .sort((a, b) => (b.estValue || 0) - (a.estValue || 0));
   const unmatchedOnly = allActive.filter(r => r._status === 'unmatched');
 
-  // Mutable view state — toggled by checkboxes + search box in the modal.
-  // `mode` flips the data source; `filter` is a substring filter over the
-  // CRM customer name; `statusFilter` narrows by current join status.
-  let mode = 'unmatched';        // 'unmatched' | 'all'
+  // ── Quotes tab data ─────────────────────────────────────────────────────
+  const crmDisplayList = buildCrmDisplayList();
+  const quoteDatalistOptions = crmDisplayList
+    .map(n => `<option value="${escAttr(n)}"></option>`).join('');
+
+  function buildQuoteRows() {
+    const rows = (typeof STATE !== 'undefined' && Array.isArray(STATE.quotesRows)) ? STATE.quotesRows : [];
+    const seen = new Map();
+    for (const r of rows) {
+      if (!r) continue;
+      const name = String(r.customer || '').trim();
+      if (!name) continue;
+      const existing = seen.get(name);
+      if (existing) {
+        existing.count++;
+        if (!existing.canonical && r.custCanonical) existing.canonical = r.custCanonical;
+      } else {
+        seen.set(name, { count: 1, canonical: r.custCanonical || null });
+      }
+    }
+    return [...seen.entries()]
+      .map(([name, { count, canonical }]) => ({ name, count, canonical }))
+      .sort((a, b) => (a.canonical ? 1 : 0) - (b.canonical ? 1 : 0) || b.count - a.count);
+  }
+  const allQuoteRows = buildQuoteRows();
+  const unmatchedQuoteRows = allQuoteRows.filter(r => !r.canonical);
+
+  // ── Active tab state ────────────────────────────────────────────────────
+  let activeTab = (defaultTab === 'quotes') ? 'quotes' : 'crm';
+
+  // ── CRM tab view state ───────────────────────────────────────────────────
+  let mode = 'unmatched';
   let filter = '';
-  let statusFilter = 'all';      // 'all' | 'mapped' | 'prospect' | 'auto' | 'unmatched'
+  let statusFilter = 'all';
+
+  // ── Quote tab view state ─────────────────────────────────────────────────
+  let qFilter = '';
+  let qMode = 'unmatched';
+
+  // ── Pending edits ────────────────────────────────────────────────────────
+  const pendingQuoteChanges = new Map();
 
   const overlay = document.createElement('div');
   overlay.id = 'crm-matcher-overlay';
@@ -9527,16 +9535,16 @@ function openCrmMatcher(defaultTab) {
     if (s === 'auto') return `<span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-300 border border-slate-600/40" title="Direct ST/NICE name match (no manual alias)">auto-match</span>`;
     return `<span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-900/40 text-rose-300 border border-rose-700/40">unmatched</span>`;
   };
-  const rowsForView = () => {
+  const crmUnmatchedCount = unmatchedOnly.length;
+  const quoteUnmatchedCount = unmatchedQuoteRows.length;
+
+  const crmRowsForView = () => {
     let src = mode === 'all' ? allActive : unmatchedOnly;
     if (statusFilter !== 'all') src = src.filter(r => r._status === statusFilter);
-    if (filter) {
-      const q = filter.toLowerCase();
-      src = src.filter(r => (r.customer || '').toLowerCase().includes(q));
-    }
+    if (filter) { const q = filter.toLowerCase(); src = src.filter(r => (r.customer || '').toLowerCase().includes(q)); }
     return src;
   };
-  const renderRows = () => rowsForView().map(u => {
+  const renderCrmRows = () => crmRowsForView().map(u => {
     const currentAlias = aliases[u.normKey] || '';
     let currentDisplay = '';
     if (currentAlias) {
@@ -9579,18 +9587,61 @@ function openCrmMatcher(defaultTab) {
     `;
   }).join('');
 
+  const quoteRowsForView = () => {
+    let src = qMode === 'all' ? allQuoteRows : unmatchedQuoteRows;
+    if (qFilter) { const q = qFilter.toLowerCase(); src = src.filter(r => r.name.toLowerCase().includes(q)); }
+    return src;
+  };
+  const renderQuoteRows = () => quoteRowsForView().map(u => {
+    const currentVal = pendingQuoteChanges.has(u.name)
+      ? pendingQuoteChanges.get(u.name)
+      : (u.canonical || '');
+    const isMatched = !!u.canonical;
+    return `
+      <tr data-quote-name="${escAttr(u.name)}" class="border-b border-slate-800/60">
+        <td class="px-4 py-2.5 text-slate-200 font-medium align-top">
+          <div>${escHtml(u.name)}</div>
+          <div class="mt-1">${isMatched
+            ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-300 border border-emerald-700/40">→ ${escHtml(u.canonical.length > 30 ? u.canonical.slice(0,28)+'…' : u.canonical)}</span>`
+            : `<span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-900/40 text-rose-300 border border-rose-700/40">unmatched</span>`
+          }</div>
+        </td>
+        <td class="px-4 py-2.5 text-slate-500 text-[11px] whitespace-nowrap align-top">${u.count} quote${u.count === 1 ? '' : 's'}</td>
+        <td class="px-4 py-2.5 align-top">
+          <input type="text" list="quote-matcher-datalist"
+                 class="quote-matcher-input w-full bg-slate-900 border border-slate-700 rounded-md px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-rose-500"
+                 placeholder="Pick a CRM customer…"
+                 value="${escAttr(currentVal)}"
+                 data-quote-name="${escAttr(u.name)}" />
+        </td>
+        <td class="px-3 py-2.5 align-top text-right whitespace-nowrap">
+          <button type="button" class="quote-matcher-clear text-[11px] text-slate-500 hover:text-rose-300" data-quote-name="${escAttr(u.name)}">clear</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
   modal.innerHTML = `
     <div style="padding:18px 24px;border-bottom:1px solid rgba(148,163,184,0.15);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
       <div>
-        <h2 style="font-size:18px;font-weight:700;color:#fff;margin:0 0 2px 0;">CRM Customer Matcher</h2>
-        <p style="font-size:12px;color:#94a3b8;margin:0;">${allActive.length} active · ${unmatchedOnly.length} unmatched · ${stNiceCands.length} ST/NICE · ${prospectCands.length} prospect parents · ${Object.keys(preferredNames).length} preferred — remap, override display, or clear</p>
+        <h2 style="font-size:18px;font-weight:700;color:#fff;margin:0 0 6px 0;">Customer Name Matching</h2>
+        <div style="display:flex;gap:6px;">
+          <button type="button" id="matcher-tab-crm" style="padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(99,102,241,0.5);background:rgba(99,102,241,0.2);color:#a5b4fc;">
+            CRM → ST/NICE ${crmUnmatchedCount ? `<span style="background:#7f1d1d;color:#fca5a5;border-radius:9999px;padding:1px 6px;font-size:10px;margin-left:4px;">${crmUnmatchedCount}</span>` : ''}
+          </button>
+          <button type="button" id="matcher-tab-quotes" style="padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(148,163,184,0.25);background:transparent;color:#94a3b8;">
+            Quotes → CRM ${quoteUnmatchedCount ? `<span style="background:#7f1d1d;color:#fca5a5;border-radius:9999px;padding:1px 6px;font-size:10px;margin-left:4px;">${quoteUnmatchedCount}</span>` : ''}
+          </button>
+        </div>
       </div>
       <div style="display:flex;gap:8px;">
         <button type="button" id="crm-matcher-save" style="background:#10b981;color:#022c22;border:1px solid #34d399;padding:8px 16px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;">Save All</button>
         <button type="button" id="crm-matcher-close" style="background:#334155;color:#e2e8f0;border:1px solid #475569;padding:8px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;">Close</button>
       </div>
     </div>
-    <div style="padding:10px 24px;border-bottom:1px solid rgba(148,163,184,0.10);display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(15,23,42,0.4);">
+
+    <!-- CRM tab toolbar -->
+    <div id="matcher-crm-toolbar" style="padding:10px 24px;border-bottom:1px solid rgba(148,163,184,0.10);display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:rgba(15,23,42,0.4);">
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#cbd5e1;cursor:pointer;">
         <input type="checkbox" id="crm-matcher-show-all" />
         Show already-mapped customers (allow remap)
@@ -9609,7 +9660,7 @@ function openCrmMatcher(defaultTab) {
              class="flex-1 min-w-[200px] bg-slate-900 border border-slate-700 rounded-md px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500" />
       <span id="crm-matcher-count" style="font-size:11px;color:#64748b;"></span>
     </div>
-    <div style="padding:8px 24px;border-bottom:1px solid rgba(148,163,184,0.10);display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(120,53,15,0.10);">
+    <div id="matcher-crm-bulk" style="padding:8px 24px;border-bottom:1px solid rgba(148,163,184,0.10);display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:rgba(120,53,15,0.10);">
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#fbbf24;cursor:pointer;font-weight:600;">
         <input type="checkbox" id="crm-matcher-select-all" />
         Select all visible
@@ -9622,24 +9673,61 @@ function openCrmMatcher(defaultTab) {
       <button type="button" id="crm-matcher-bulk-clear"
               class="text-[11px] font-semibold px-3 py-1.5 rounded-md bg-slate-700/40 text-slate-300 border border-slate-600/40 hover:bg-slate-700/60" title="Clear preferred name on selected rows">Clear pref on selected</button>
     </div>
-    <div style="flex:1;overflow:auto;">
-      <table class="w-full text-xs"><thead class="bg-slate-900/60 sticky top-0">
-        <tr class="text-slate-400 uppercase tracking-wider text-[10px]">
-          <th class="px-2 py-2.5"></th>
-          <th class="px-4 py-2.5 text-left font-semibold">CRM Customer</th>
-          <th class="px-4 py-2.5 text-left font-semibold">Pipeline</th>
-          <th class="px-4 py-2.5 text-left font-semibold">Map to ST/NICE or prospect parent</th>
-          <th class="px-4 py-2.5 text-left font-semibold text-amber-300">Preferred Display Name</th>
-          <th class="px-3 py-2.5"></th>
-        </tr>
-      </thead>
-      <tbody id="crm-matcher-tbody"></tbody>
-      </table>
-      <div id="crm-matcher-empty" style="padding:40px;text-align:center;color:#64748b;display:none;">No rows match these filters.</div>
-      <datalist id="crm-matcher-datalist">${datalistOptions}</datalist>
+
+    <!-- Quotes tab toolbar -->
+    <div id="matcher-quotes-toolbar" style="display:none;padding:10px 24px;border-bottom:1px solid rgba(148,163,184,0.10);align-items:center;gap:14px;flex-wrap:wrap;background:rgba(15,23,42,0.4);">
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#cbd5e1;cursor:pointer;">
+        <input type="checkbox" id="quote-matcher-show-all" />
+        Show already-matched quotes
+      </label>
+      <input type="search" id="quote-matcher-search" placeholder="Search quote customer name…"
+             class="flex-1 min-w-[200px] bg-slate-900 border border-slate-700 rounded-md px-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-rose-500" />
+      <span id="quote-matcher-count" style="font-size:11px;color:#64748b;"></span>
     </div>
-    <div style="padding:12px 24px;border-top:1px solid rgba(148,163,184,0.15);font-size:11px;color:#64748b;">
-      Tip: <span class="text-amber-300">Preferred Display Name</span> overrides the shown label and groups multiple CRM customers sharing the same preferred name into one bucket — orthogonal to the alias column. Use the checkboxes + bulk bar to apply one preferred name to many rows at once. Clearing the input removes the override.
+
+    <!-- Scrollable body -->
+    <div style="flex:1;overflow:auto;">
+      <!-- CRM table -->
+      <div id="matcher-crm-body">
+        <table class="w-full text-xs"><thead class="bg-slate-900/60 sticky top-0">
+          <tr class="text-slate-400 uppercase tracking-wider text-[10px]">
+            <th class="px-2 py-2.5"></th>
+            <th class="px-4 py-2.5 text-left font-semibold">CRM Customer</th>
+            <th class="px-4 py-2.5 text-left font-semibold">Pipeline</th>
+            <th class="px-4 py-2.5 text-left font-semibold">Map to ST/NICE or prospect parent</th>
+            <th class="px-4 py-2.5 text-left font-semibold text-amber-300">Preferred Display Name</th>
+            <th class="px-3 py-2.5"></th>
+          </tr>
+        </thead>
+        <tbody id="crm-matcher-tbody"></tbody>
+        </table>
+        <div id="crm-matcher-empty" style="padding:40px;text-align:center;color:#64748b;display:none;">No rows match these filters.</div>
+        <datalist id="crm-matcher-datalist">${crmDatalistOptions}</datalist>
+      </div>
+
+      <!-- Quotes table -->
+      <div id="matcher-quotes-body" style="display:none;">
+        <table class="w-full text-xs"><thead class="bg-slate-900/60 sticky top-0">
+          <tr class="text-slate-400 uppercase tracking-wider text-[10px]">
+            <th class="px-4 py-2.5 text-left font-semibold">Quote Customer (raw OSIT name)</th>
+            <th class="px-4 py-2.5 text-left font-semibold">Quotes</th>
+            <th class="px-4 py-2.5 text-left font-semibold">Map to CRM Customer</th>
+            <th class="px-3 py-2.5"></th>
+          </tr>
+        </thead>
+        <tbody id="quote-matcher-tbody"></tbody>
+        </table>
+        <div id="quote-matcher-empty" style="padding:40px;text-align:center;color:#64748b;display:none;">No rows match these filters.</div>
+        <datalist id="quote-matcher-datalist">${quoteDatalistOptions}</datalist>
+      </div>
+    </div>
+
+    <!-- Footer tip (swaps per tab) -->
+    <div id="matcher-footer-crm" style="padding:12px 24px;border-top:1px solid rgba(148,163,184,0.15);font-size:11px;color:#64748b;">
+      Tip: <span style="color:#fbbf24;">Preferred Display Name</span> overrides the shown label and groups multiple CRM customers sharing the same preferred name into one bucket — orthogonal to the alias column. Use the checkboxes + bulk bar to apply one preferred name to many rows at once. Clearing the input removes the override.
+    </div>
+    <div id="matcher-footer-quotes" style="display:none;padding:12px 24px;border-top:1px solid rgba(148,163,184,0.15);font-size:11px;color:#64748b;">
+      Tip: Map each raw OSIT quote customer name to a CRM customer. Existing matches are pre-filled — clear a row to remove the mapping. Save All writes all pending changes and re-canonicalizes quotes immediately.
     </div>
   `;
 
@@ -9653,29 +9741,48 @@ function openCrmMatcher(defaultTab) {
   const tbody = modal.querySelector('#crm-matcher-tbody');
   const emptyEl = modal.querySelector('#crm-matcher-empty');
   const countEl = modal.querySelector('#crm-matcher-count');
-  // Track edits across re-renders. Key = CRM normKey; value = the literal
-  // string the user typed (or '' to denote a cleared alias). Rows the user
-  // never touched stay out of this map and aren't acted on by Save.
+  const qTbody = modal.querySelector('#quote-matcher-tbody');
+  const qEmptyEl = modal.querySelector('#quote-matcher-empty');
+  const qCountEl = modal.querySelector('#quote-matcher-count');
+
   const pendingChanges = new Map();
-  // Sibling map for preferred-name edits. Key = CRM normKey; value = the
-  // typed string ('' means clear). Same survival semantics as pendingChanges.
   const pendingPreferredNames = new Map();
-  // Selection set for the bulk-apply affordance. Tracks which rows are
-  // checked across re-renders. Cleared by "select all" toggle.
   const selectedKeys = new Set();
+
   const updateSelectedCount = () => {
     const el = modal.querySelector('#crm-matcher-selected-count');
     if (el) el.textContent = `${selectedKeys.size} selected`;
   };
-  // Re-render the body when mode/filter/status change. Re-binds row buttons,
-  // and for any row with a pending edit, restores the typed value into the
-  // input so toggling filters doesn't lose unsaved work.
-  const refresh = () => {
-    const rows = rowsForView();
-    tbody.innerHTML = renderRows();
+
+  // ── Tab switching ──────────────────────────────────────────────────────
+  const applyTab = (tab) => {
+    activeTab = tab;
+    const crmActive = tab === 'crm';
+    const tabCrm = modal.querySelector('#matcher-tab-crm');
+    const tabQ   = modal.querySelector('#matcher-tab-quotes');
+    tabCrm.style.background   = crmActive ? 'rgba(99,102,241,0.2)' : 'transparent';
+    tabCrm.style.color        = crmActive ? '#a5b4fc' : '#94a3b8';
+    tabCrm.style.borderColor  = crmActive ? 'rgba(99,102,241,0.5)' : 'rgba(148,163,184,0.25)';
+    tabQ.style.background     = !crmActive ? 'rgba(244,63,94,0.15)' : 'transparent';
+    tabQ.style.color          = !crmActive ? '#fda4af' : '#94a3b8';
+    tabQ.style.borderColor    = !crmActive ? 'rgba(244,63,94,0.4)' : 'rgba(148,163,184,0.25)';
+    modal.querySelector('#matcher-crm-toolbar').style.display  = crmActive ? 'flex' : 'none';
+    modal.querySelector('#matcher-crm-bulk').style.display     = crmActive ? 'flex' : 'none';
+    modal.querySelector('#matcher-crm-body').style.display     = crmActive ? '' : 'none';
+    modal.querySelector('#matcher-footer-crm').style.display   = crmActive ? '' : 'none';
+    modal.querySelector('#matcher-quotes-toolbar').style.display = !crmActive ? 'flex' : 'none';
+    modal.querySelector('#matcher-quotes-body').style.display    = !crmActive ? '' : 'none';
+    modal.querySelector('#matcher-footer-quotes').style.display  = !crmActive ? '' : 'none';
+  };
+  modal.querySelector('#matcher-tab-crm').onclick    = () => { applyTab('crm');    refreshCrm(); };
+  modal.querySelector('#matcher-tab-quotes').onclick = () => { applyTab('quotes'); refreshQuotes(); };
+
+  // ── CRM tab refresh ────────────────────────────────────────────────────
+  const refreshCrm = () => {
+    const rows = crmRowsForView();
+    tbody.innerHTML = renderCrmRows();
     emptyEl.style.display = rows.length === 0 ? '' : 'none';
     countEl.textContent = `showing ${rows.length}`;
-    // Restore pending edits.
     for (const [k, v] of pendingChanges.entries()) {
       const input = tbody.querySelector(`.crm-matcher-input[data-crm-key="${k}"]`);
       if (input) input.value = v;
@@ -9684,23 +9791,19 @@ function openCrmMatcher(defaultTab) {
       const input = tbody.querySelector(`.crm-matcher-pref[data-crm-key="${k}"]`);
       if (input) input.value = v;
     }
-    // Restore selection checkbox state.
     tbody.querySelectorAll('.crm-matcher-select').forEach(cb => {
       cb.checked = selectedKeys.has(cb.dataset.crmKey);
     });
     updateSelectedCount();
-    bindRowHandlers();
+    bindCrmRowHandlers();
   };
-  function bindRowHandlers() {
+
+  function bindCrmRowHandlers() {
     tbody.querySelectorAll('.crm-matcher-input').forEach(input => {
-      input.addEventListener('input', () => {
-        pendingChanges.set(input.dataset.crmKey, input.value || '');
-      });
+      input.addEventListener('input', () => pendingChanges.set(input.dataset.crmKey, input.value || ''));
     });
     tbody.querySelectorAll('.crm-matcher-pref').forEach(input => {
-      input.addEventListener('input', () => {
-        pendingPreferredNames.set(input.dataset.crmKey, input.value || '');
-      });
+      input.addEventListener('input', () => pendingPreferredNames.set(input.dataset.crmKey, input.value || ''));
     });
     tbody.querySelectorAll('.crm-matcher-select').forEach(cb => {
       cb.addEventListener('change', () => {
@@ -9727,9 +9830,35 @@ function openCrmMatcher(defaultTab) {
       };
     });
   }
-  // Bulk apply: write the same preferred-name string to every checked row,
-  // both in the live <input> and in pendingPreferredNames so it survives
-  // filter toggles and gets picked up on Save.
+
+  // ── Quotes tab refresh ─────────────────────────────────────────────────
+  const refreshQuotes = () => {
+    const rows = quoteRowsForView();
+    qTbody.innerHTML = renderQuoteRows();
+    qEmptyEl.style.display = rows.length === 0 ? '' : 'none';
+    qCountEl.textContent = `showing ${rows.length}`;
+    for (const [name, v] of pendingQuoteChanges.entries()) {
+      const input = qTbody.querySelector(`.quote-matcher-input[data-quote-name="${CSS.escape(name)}"]`);
+      if (input) input.value = v;
+    }
+    bindQuoteRowHandlers();
+  };
+
+  function bindQuoteRowHandlers() {
+    qTbody.querySelectorAll('.quote-matcher-input').forEach(input => {
+      input.addEventListener('input', () => pendingQuoteChanges.set(input.dataset.quoteName, input.value || ''));
+    });
+    qTbody.querySelectorAll('.quote-matcher-clear').forEach(btn => {
+      btn.onclick = () => {
+        const name = btn.dataset.quoteName;
+        const input = qTbody.querySelector(`.quote-matcher-input[data-quote-name="${CSS.escape(name)}"]`);
+        if (input) input.value = '';
+        pendingQuoteChanges.set(name, '');
+      };
+    });
+  }
+
+  // ── CRM toolbar wiring ──────────────────────────────────────────────────
   modal.querySelector('#crm-matcher-select-all').onchange = (e) => {
     const checked = e.target.checked;
     if (!checked) selectedKeys.clear();
@@ -9761,23 +9890,34 @@ function openCrmMatcher(defaultTab) {
   };
   modal.querySelector('#crm-matcher-show-all').onchange = (e) => {
     mode = e.target.checked ? 'all' : 'unmatched';
-    refresh();
+    refreshCrm();
   };
   modal.querySelector('#crm-matcher-status').onchange = (e) => {
     statusFilter = e.target.value;
-    refresh();
+    refreshCrm();
   };
   modal.querySelector('#crm-matcher-search').oninput = (e) => {
     filter = (e.target.value || '').trim();
-    refresh();
+    refreshCrm();
   };
-  refresh();
 
-  // Save: walk every PENDING change (rows the user actually edited). ST/NICE
-  // match first; then existing prospect parent; then auto-create a new
-  // prospect parent from the typed display name. Empty string clears the
-  // alias. The "(prospect)" suffix shown in the datalist is stripped first.
-  modal.querySelector('#crm-matcher-save').onclick = () => {
+  // ── Quotes toolbar wiring ───────────────────────────────────────────────
+  modal.querySelector('#quote-matcher-show-all').onchange = (e) => {
+    qMode = e.target.checked ? 'all' : 'unmatched';
+    refreshQuotes();
+  };
+  modal.querySelector('#quote-matcher-search').oninput = (e) => {
+    qFilter = (e.target.value || '').trim();
+    refreshQuotes();
+  };
+
+  // ── Initial render ──────────────────────────────────────────────────────
+  applyTab(activeTab);
+  refreshCrm();
+  refreshQuotes();
+
+  // ── Save All ────────────────────────────────────────────────────────────
+  modal.querySelector('#crm-matcher-save').onclick = async () => {
     const stNiceByDisplay = new Map(stNiceCands.map(c => [c.display.toLowerCase(), c.normKey]));
     const prospectByDisplay = new Map(prospectCands.map(c => [c.display.toLowerCase(), c.normKey]));
     let saved = 0, cleared = 0, prospectsCreated = 0;
@@ -9787,27 +9927,22 @@ function openCrmMatcher(defaultTab) {
         if (aliases[crmKey]) { setCrmAlias(crmKey, null); cleared++; }
         return;
       }
-      // 1) Exact ST/NICE display match.
       let target = stNiceByDisplay.get(v.toLowerCase());
-      // 2) Normalized match against ST/NICE.
       if (!target) {
         const n = normalizeCustomer(v);
         if (stNiceCands.some(c => c.normKey === n)) target = n;
       }
-      // 3) Existing prospect parent (display or normKey).
       if (!target) target = prospectByDisplay.get(v.toLowerCase());
       if (!target) {
         const n = normalizeCustomer(v);
         if (prospectCands.some(c => c.normKey === n)) target = n;
       }
-      // 4) Brand-new prospect parent — register and use it.
       if (!target) {
         target = normalizeCustomer(v);
         if (target) { setProspectParent(target, v); prospectsCreated++; }
       }
       if (target && aliases[crmKey] !== target) { setCrmAlias(crmKey, target); saved++; }
     });
-    // Preferred names — orthogonal pass. Empty string clears.
     let prefSet = 0, prefCleared = 0;
     pendingPreferredNames.forEach((rawVal, crmKey) => {
       const cur = preferredNames[crmKey] || '';
@@ -9816,24 +9951,68 @@ function openCrmMatcher(defaultTab) {
       if (!next) { setCrmPreferredName(crmKey, null); prefCleared++; }
       else       { setCrmPreferredName(crmKey, next); prefSet++; }
     });
-    const parts = [];
-    if (saved)            parts.push(`${saved} saved`);
-    if (prospectsCreated) parts.push(`${prospectsCreated} prospect parent${prospectsCreated === 1 ? '' : 's'} created`);
-    if (cleared)          parts.push(`${cleared} cleared`);
-    if (prefSet)          parts.push(`${prefSet} preferred name${prefSet === 1 ? '' : 's'} set`);
-    if (prefCleared)      parts.push(`${prefCleared} preferred cleared`);
-    const summary = parts.join(' · ') || 'No changes';
+
+    // Quote side
+    const crmDisplaySet = new Set(crmDisplayList);
+    const quoteEntries = [...pendingQuoteChanges.entries()].filter(([, v]) => v !== undefined);
+    let quoteSaved = 0, quoteCleared = 0;
+    const saveBtn = modal.querySelector('#crm-matcher-save');
+    if (quoteEntries.length) {
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving…';
+      for (const [rawName, selectedDisplay] of quoteEntries) {
+        const trimmed = (selectedDisplay || '').trim();
+        const childKey = normalizeCustomer(rawName);
+        if (!trimmed) {
+          if (childKey && aliases[childKey]) { setCrmAlias(childKey, null); quoteCleared++; }
+          continue;
+        }
+        if (!crmDisplaySet.has(trimmed)) continue;
+        const parentKey = normalizeCustomer(trimmed);
+        if (!childKey || !parentKey) continue;
+        try {
+          const r = await fetch(proxyBase() + '/crm/aliases/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ childKey, parentKey, parentDisplay: trimmed }),
+          });
+          if (r.ok) {
+            if (STATE.crmAliases && typeof STATE.crmAliases === 'object') STATE.crmAliases[childKey] = parentKey;
+            quoteSaved++;
+          }
+        } catch (_) {}
+      }
+      if (quoteSaved || quoteCleared) {
+        try {
+          const summary = canonicalizeQuoteCustomers(STATE.quotesRows);
+          await writeQuotesCache({ savedAt: new Date().toISOString(), sourceFile: STATE.quotesSourceFile || '', _sample: !!STATE.quotesSample, rows: STATE.quotesRows });
+          window.dispatchEvent(new CustomEvent('quotes-canonicalized', { detail: { summary } }));
+        } catch (_) {}
+      }
+    }
+
     close();
     renderCrmDiagnostic();
-    // Sync to proxy so other devices pick up the alignment on their next
-    // hydrate. Local state already persisted via setCrmAlias / setProspectParent.
+
+    const parts = [];
+    if (saved)            parts.push(`${saved} CRM alias${saved === 1 ? '' : 'es'} saved`);
+    if (prospectsCreated) parts.push(`${prospectsCreated} prospect parent${prospectsCreated === 1 ? '' : 's'} created`);
+    if (cleared)          parts.push(`${cleared} CRM alias${cleared === 1 ? '' : 'es'} cleared`);
+    if (prefSet)          parts.push(`${prefSet} preferred name${prefSet === 1 ? '' : 's'} set`);
+    if (prefCleared)      parts.push(`${prefCleared} preferred cleared`);
+    if (quoteSaved)       parts.push(`${quoteSaved} quote mapping${quoteSaved === 1 ? '' : 's'} saved`);
+    if (quoteCleared)     parts.push(`${quoteCleared} quote mapping${quoteCleared === 1 ? '' : 's'} cleared`);
+    const summary = parts.join(' · ') || 'No changes';
+
     if (saved || prospectsCreated || cleared || prefSet || prefCleared) {
       pushCrmAliasesToProxy().then(r => {
         if (r.ok) toast('success', 'Aliases saved', summary + ' · synced to proxy');
         else      toast('warn',    'Saved locally — proxy push failed', summary + ' · ' + r.reason);
       });
+    } else if (quoteSaved || quoteCleared) {
+      toast('success', 'Quote mappings saved', summary);
     } else {
-      toast('success', 'Aliases updated', summary);
+      toast('success', 'No changes', summary);
     }
   };
 }
@@ -13173,180 +13352,8 @@ function buildCrmDisplayList() {
   return [...names].sort((a, b) => a.localeCompare(b));
 }
 
-function renderQuotesUnmatchedPanel() {
-  const card = document.getElementById('quotes-unmatched-card');
-  const listEl = document.getElementById('quotes-unmatched-list');
-  const countEl = document.getElementById('quotes-unmatched-count');
-  if (!card || !listEl || !countEl) return;
-  const hasQuotes = (typeof STATE !== 'undefined' && Array.isArray(STATE.quotesRows) && STATE.quotesRows.length > 0);
-  if (!hasQuotes) {
-    card.style.display = 'none';
-    return;
-  }
-  card.style.display = '';
-  const unmatched = computeUnmatchedQuoteCustomers();
-  countEl.textContent = unmatched.length ? `(${unmatched.length})` : '';
-  if (!unmatched.length) {
-    listEl.innerHTML = `<div style="padding:24px;text-align:center;color:#10b981;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:8px;font-weight:500;">All imported quote customers are matched to a CRM customer.</div>`;
-    return;
-  }
-  // Render rows. Mirrors the CRM Diagnostic unmatched list visual style.
-  const rowsHtml = unmatched.map((u, i) => {
-    const safe = String(u.name).replace(/"/g, '&quot;').replace(/</g, '&lt;');
-    return `
-      <div class="qu-row" data-raw="${safe}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border:1px solid rgba(148,163,184,0.15);border-radius:8px;margin-bottom:6px;background:rgba(15,23,42,0.4);">
-        <div style="flex:1;min-width:0;">
-          <div style="color:#e2e8f0;font-weight:500;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${safe}</div>
-          <div style="color:#64748b;font-size:11px;margin-top:2px;">${u.count} quote${u.count === 1 ? '' : 's'}</div>
-        </div>
-        <button type="button" class="qu-map-btn" data-raw="${safe}"
-          style="flex-shrink:0;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;background:linear-gradient(135deg,#fb7185,#f43f5e);color:#fff;border:none;cursor:pointer;">
-          Map…
-        </button>
-      </div>`;
-  }).join('');
-  listEl.innerHTML = rowsHtml;
-  listEl.querySelectorAll('.qu-map-btn').forEach(btn => {
-    btn.addEventListener('click', () => openQuoteMapDialog(btn.dataset.raw));
-  });
-}
-
-function openQuoteMapDialog(rawName) {
-  // Remove any previous dialog (idempotent re-open).
-  const existing = document.getElementById('quotes-map-dialog-overlay');
-  if (existing) existing.remove();
-
-  const overlay = document.createElement('div');
-  overlay.id = 'quotes-map-dialog-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.78);backdrop-filter:blur(6px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:24px;';
-
-  const displayList = buildCrmDisplayList();
-  const datalistOptions = displayList.map(n => `<option value="${String(n).replace(/"/g, '&quot;')}">`).join('');
-  const safeRaw = String(rawName).replace(/</g, '&lt;');
-
-  const dialog = document.createElement('div');
-  dialog.style.cssText = 'background:#0f172a;border:1px solid rgba(148,163,184,0.25);border-radius:14px;padding:24px;max-width:560px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.6);';
-  dialog.innerHTML = `
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;">
-      <div style="flex:1;min-width:0;">
-        <h3 style="color:#fff;font-size:16px;font-weight:600;margin:0 0 4px 0;">Map quote customer to CRM</h3>
-        <div style="color:#94a3b8;font-size:12px;">Raw OSIT name: <span style="color:#e2e8f0;font-weight:500;">${safeRaw}</span></div>
-      </div>
-      <button type="button" id="qmap-close" style="background:none;border:none;color:#64748b;font-size:20px;cursor:pointer;line-height:1;padding:4px 8px;">×</button>
-    </div>
-    <label style="display:block;color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">Map to CRM customer</label>
-    <input type="text" id="qmap-input" list="qmap-datalist" autocomplete="off" placeholder="Start typing a CRM customer name…"
-      style="width:100%;background:#1e293b;border:1px solid rgba(148,163,184,0.25);border-radius:8px;padding:10px 12px;color:#e2e8f0;font-size:13px;outline:none;" />
-    <datalist id="qmap-datalist">${datalistOptions}</datalist>
-    <div id="qmap-status" style="margin-top:10px;font-size:11px;color:#64748b;min-height:16px;"></div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px;">
-      <button type="button" id="qmap-cancel" style="padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;background:#1e293b;color:#cbd5e1;border:1px solid rgba(148,163,184,0.25);cursor:pointer;">Cancel</button>
-      <button type="button" id="qmap-confirm" disabled style="padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;background:linear-gradient(135deg,#fb7185,#f43f5e);color:#fff;border:none;cursor:pointer;opacity:0.5;">Confirm mapping</button>
-    </div>
-  `;
-  overlay.appendChild(dialog);
-  document.body.appendChild(overlay);
-
-  const close = () => overlay.remove();
-  const input = dialog.querySelector('#qmap-input');
-  const confirmBtn = dialog.querySelector('#qmap-confirm');
-  const statusEl = dialog.querySelector('#qmap-status');
-  dialog.querySelector('#qmap-close').onclick = close;
-  dialog.querySelector('#qmap-cancel').onclick = close;
-  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-
-  const displaySet = new Set(displayList);
-  const validateInput = () => {
-    const v = (input.value || '').trim();
-    const ok = v && displaySet.has(v);
-    confirmBtn.disabled = !ok;
-    confirmBtn.style.opacity = ok ? '1' : '0.5';
-    statusEl.textContent = v && !ok ? 'Pick an existing CRM customer from the list (autocomplete shows matches).' : '';
-    statusEl.style.color = '#f59e0b';
-  };
-  input.addEventListener('input', validateInput);
-  setTimeout(() => input.focus(), 50);
-
-  confirmBtn.addEventListener('click', async () => {
-    const selectedDisplay = (input.value || '').trim();
-    if (!selectedDisplay || !displaySet.has(selectedDisplay)) return;
-    confirmBtn.disabled = true;
-    confirmBtn.style.opacity = '0.5';
-    statusEl.style.color = '#94a3b8';
-    statusEl.textContent = 'Saving alias…';
-
-    const childKey = normalizeCustomer(rawName);
-    const parentKey = normalizeCustomer(selectedDisplay);
-    if (!childKey || !parentKey) {
-      statusEl.style.color = '#ef4444';
-      statusEl.textContent = 'Could not derive normalization keys — empty after normalize.';
-      confirmBtn.disabled = false; confirmBtn.style.opacity = '1';
-      return;
-    }
-
-    let proxyOk = false;
-    try {
-      const url = proxyBase() + '/crm/aliases/add';
-      const r = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childKey, parentKey, parentDisplay: selectedDisplay }),
-      });
-      if (!r.ok) {
-        const txt = await r.text().catch(() => '');
-        throw new Error(`HTTP ${r.status} ${txt.slice(0, 120)}`);
-      }
-      proxyOk = true;
-    } catch (err) {
-      statusEl.style.color = '#ef4444';
-      statusEl.textContent = `Alias write failed: ${err.message || err}. Dialog left open for retry.`;
-      confirmBtn.disabled = false; confirmBtn.style.opacity = '1';
-      return;
-    }
-
-    // Mirror in-memory so canonicalizeQuoteCustomers picks up the new alias
-    // without a re-fetch. STATE.crmAliases is a Map (renderer side).
-    try {
-      if (STATE.crmAliases instanceof Map) {
-        STATE.crmAliases.set(childKey, parentKey);
-      }
-      if (STATE.crmPreferredNames instanceof Map && !STATE.crmPreferredNames.get(parentKey)) {
-        STATE.crmPreferredNames.set(parentKey, selectedDisplay);
-      }
-    } catch (_) { /* non-fatal */ }
-
-    // Re-canonicalize and persist.
-    let summary = null;
-    try {
-      summary = canonicalizeQuoteCustomers(STATE.quotesRows);
-      await writeQuotesCache({
-        savedAt: new Date().toISOString(),
-        sourceFile: STATE.quotesSourceFile || '',
-        _sample: !!STATE.quotesSample,
-        rows: STATE.quotesRows,
-      });
-    } catch (err) {
-      statusEl.style.color = '#ef4444';
-      statusEl.textContent = `Alias saved but cache rewrite failed: ${err.message || err}. Page reload will pick up the alias.`;
-      // Still fire the event so the panel re-renders with whatever stuck.
-      window.dispatchEvent(new CustomEvent('quotes-canonicalized', { detail: { summary: { source: 'manual-map', error: String(err && err.message || err) } } }));
-      return;
-    }
-
-    // Count how many quote rows now reference selectedDisplay so the toast
-    // can report the satisfying "N quotes mapped" number.
-    const mappedRows = (STATE.quotesRows || []).filter(r => normalizeCustomer(String(r && r.customer || '')) === childKey).length;
-    const newUnmatched = computeUnmatchedQuoteCustomers().length;
-    toast('success', 'Quote customer mapped',
-      `${mappedRows} quote${mappedRows === 1 ? '' : 's'} from "${rawName}" → "${selectedDisplay}". ${newUnmatched} unmatched remaining.`);
-    window.dispatchEvent(new CustomEvent('quotes-canonicalized', { detail: { summary: summary || { source: 'manual-map' } } }));
-    close();
-  });
-}
-
-// Plan-spec aliases — keep exact names called out in 13-03-PLAN.md verify
-// section so future grep-based smoke checks find them. These point at the
-// implementation functions above.
+function renderQuotesUnmatchedPanel() { /* consolidated into openCrmMatcher() Quotes tab */ }
+function openQuoteMapDialog(rawName) { openCrmMatcher('quotes'); }
 const openUnmatchedQuotesPanel = renderQuotesUnmatchedPanel;
 const openMapDialog = openQuoteMapDialog;
 
