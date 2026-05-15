@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:35 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:41 AM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 12:35 AM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 12:41 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 12:35 AM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 12:41 AM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:35 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:41 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -26461,7 +26461,7 @@ const RN_COLS = [
   { key:'warrantyEnd',   label:'Warr End',                 defaultVisible:false },
   // Vendor / description
   { key:'vendors',       label:'Vendor(s)',                defaultVisible:true  },
-  { key:'desc',          label:'Description',              defaultVisible:false },
+  { key:'desc',          label:'Description',              defaultVisible:true  },
   // Volume / margin
   { key:'lineCount',     label:'Lines',                    defaultVisible:true  },
   { key:'stSales',       label:'Net Sell',                 defaultVisible:false },
@@ -26500,14 +26500,14 @@ const RN_RIGHT_COLS = new Set([
 ]);
 let _rnHiddenCols = (() => {
   try {
-    const saved = JSON.parse(localStorage.getItem('rn.hiddenCols.v3') || 'null');
+    const saved = JSON.parse(localStorage.getItem('rn.hiddenCols.v4') || 'null');
     if (Array.isArray(saved)) return new Set(saved);
   } catch (_) {}
   // First load → seed from defaultVisible flags.
   return new Set(RN_COLS.filter(c => !c.defaultVisible).map(c => c.key));
 })();
 function rnPersistHiddenCols() {
-  try { localStorage.setItem('rn.hiddenCols.v3', JSON.stringify([..._rnHiddenCols])); } catch(_) {}
+  try { localStorage.setItem('rn.hiddenCols.v4', JSON.stringify([..._rnHiddenCols])); } catch(_) {}
 }
 // Column display order — drives both the modal layout and the table render.
 // Any new columns added to RN_COLS that aren't in the saved order get appended.
