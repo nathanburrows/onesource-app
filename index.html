@@ -1111,9 +1111,11 @@
   .gs-brand-divider {
     width: 1px; height: 28px; background: #2a2f37;
   }
-  .gs-brand-ver { display: flex; align-items: baseline; gap: 6px; color: #64748b; font-size: 14px; }
-  .gs-brand-ver-label { text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; }
-  .gs-brand-ver-num { color: #93c5fd; font-weight: 700; font-size: 16px; }
+  .gs-brand-ver { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; }
+  .gs-brand-ver-row { display: flex; align-items: baseline; gap: 5px; }
+  .gs-brand-ver-label { text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; color: #64748b; }
+  .gs-brand-ver-num { color: #93c5fd; font-weight: 700; font-size: 15px; }
+  .gs-brand-ver-ts { font-size: 9px; color: #94a3b8; margin-top: 3px; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
   /* Hide the per-page header brand on dashboard pages — brand now lives in
      the global search bar instead. The page-header keeps its action buttons. */
   body.with-sidebar .page-brand { display: none; }
@@ -1673,8 +1675,8 @@
     <div class="gs-brand-title">OneSourceCMD</div>
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
-      <span class="gs-brand-ver-label">v</span>
-      <span class="gs-brand-ver-num">3.0</span>
+      <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 02:36 UTC</span>
     </div>
   </div>
 </div>
@@ -1816,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 02:29 UTC</p>
+          <p class="upload-brand-ver-ts">May 15 · 02:36 UTC</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2034,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 02:29 UTC</div>
+        <div class="ds-brand-ver-ts">May 15 · 02:36 UTC</div>
       </div>
     </div>
   </div>
@@ -2228,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 02:29 UTC</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 02:36 UTC</div>
       </div>
     </div>
     <div class="header-actions">
