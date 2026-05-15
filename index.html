@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 11:50 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:43 PM ET</span>
     </div>
   </div>
 </div>
@@ -1827,7 +1827,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 11:50 AM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 12:43 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2045,7 +2045,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 11:50 AM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 12:43 PM ET</div>
       </div>
     </div>
   </div>
@@ -2239,7 +2239,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 11:50 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:43 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -32135,8 +32135,9 @@ function syncScreens() {
     try { window.updateStageBanner?.(); } catch (_) {}
     return;
   }
-  uploadEl.style.display = hasData ? 'none' : 'flex';
-  document.getElementById('main-app').style.display      = hasData ? 'block' : 'none';
+  if (uploadEl) uploadEl.style.display = hasData ? 'none' : 'flex';
+  const mainAppEl = document.getElementById('main-app');
+  if (mainAppEl) mainAppEl.style.display = hasData ? 'block' : 'none';
   // When falling back to upload screen (clear-all etc.), reset stage flags so
   // the next import correctly stages instead of auto-transitioning.
   if (!hasData) { STATE._proceedRequested = false; STATE._stagedAtBoot = false; }
@@ -32538,7 +32539,7 @@ try { _ensureBootOverlay(); } catch (_) {}
       if (!proxyUrl) {
         try { proxyUrl = localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || ''; } catch (_) {}
       }
-      if (allEmpty && allFailed && proxyUrl) {
+      if (allEmpty && allFailed && proxyUrl && inDesktopApp) {
         if (!document.getElementById('proxy-blocker-style')) {
           const st = document.createElement('style');
           st.id = 'proxy-blocker-style';
@@ -35268,10 +35269,12 @@ Use the response format from SYSTEM_PROMPT.`;
       this.quick = document.getElementById('ai-quick');
       this.settings = document.getElementById('ai-settings');
 
+      if (!this.fab || !this.panel || !this.log || !this.input || !this.send) return;
+
       this.fab.addEventListener('click', () => AI.ui.toggle(true));
-      document.getElementById('ai-btn-close').addEventListener('click', () => AI.ui.toggle(false));
-      document.getElementById('ai-btn-clear').addEventListener('click', () => AI.ui.clearConversation());
-      document.getElementById('ai-btn-settings').addEventListener('click', () => AI.ui.toggleSettings(true));
+      document.getElementById('ai-btn-close')?.addEventListener('click', () => AI.ui.toggle(false));
+      document.getElementById('ai-btn-clear')?.addEventListener('click', () => AI.ui.clearConversation());
+      document.getElementById('ai-btn-settings')?.addEventListener('click', () => AI.ui.toggleSettings(true));
 
       this.send.addEventListener('click', () => AI.ui.handleSend());
       this.input.addEventListener('keydown', (e) => {
