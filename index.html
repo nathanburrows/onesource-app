@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:27 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:35 PM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 14 · 11:27 PM ET</p>
+          <p class="upload-brand-ver-ts">May 14 · 11:35 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 14 · 11:27 PM ET</div>
+        <div class="ds-brand-ver-ts">May 14 · 11:35 PM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:27 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:35 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -6217,7 +6217,9 @@ async function hydrateNiceFromProxy({ silent = false } = {}) {
   }
   if (!allRows.length) return { ok: false, reason: 'all FY pulls returned empty' };
 
-  STATE.niceRaw = allRows;
+  const _niceManualV1 = (STATE.niceRaw || []).filter(r => r._ingestSource === 'manual');
+  const _niceProxyV1  = allRows.map(r => Object.assign({}, r, { _ingestSource: 'proxy' }));
+  STATE.niceRaw = [..._niceProxyV1, ..._niceManualV1].map((r, i) => Object.assign({}, r, { _id: `N-${i}` }));
   STATE.niceSource = 'proxy';
   STATE.niceProxyMeta = { fiscalYears: fyList, syncedAt: lastSavedAt, rowCount: allRows.length };
 
@@ -6315,7 +6317,9 @@ async function hydrateNiceFromProxyV2({ silent = false } = {}) {
   }
   if (!allRows.length) return { ok: false, reason: 'all FY pulls returned empty' };
 
-  STATE.niceRaw = allRows;
+  const _niceManualV2 = (STATE.niceRaw || []).filter(r => r._ingestSource === 'manual');
+  const _niceProxyV2  = allRows.map(r => Object.assign({}, r, { _ingestSource: 'proxy' }));
+  STATE.niceRaw = [..._niceProxyV2, ..._niceManualV2].map((r, i) => Object.assign({}, r, { _id: `N-${i}` }));
   // Discriminator — RESEARCH Pitfall 7. If /nice contributed at all, mark as
   // proxy:nice (the canonical post-Phase-1 source). Phase 2 removes the
   // /commission/* fallback and this stays 'proxy:nice' permanently.
@@ -6434,7 +6438,9 @@ async function hydrateStFromProxy({ silent = false } = {}) {
   const proxyCount = allRows.length;
   const partialMigration = idbCount > 0 && proxyCount < idbCount * 0.95;
 
-  STATE.stRaw = allRows;
+  const _stManual = (STATE.stRaw || []).filter(r => r._ingestSource === 'manual');
+  const _stProxy  = allRows.map(r => Object.assign({}, r, { _ingestSource: 'proxy' }));
+  STATE.stRaw = [..._stProxy, ..._stManual].map((r, i) => Object.assign({}, r, { _id: `S-${i}` }));
   STATE.stSource = 'proxy';
   STATE.stProxyMeta = { fiscalYears: fyList, syncedAt: lastSavedAt, rowCount: proxyCount };
 
@@ -6543,7 +6549,9 @@ async function hydrateAvantFromProxy({ silent = false } = {}) {
   }
   if (!allRows.length) return { ok: false, reason: 'all FY pulls returned empty' };
 
-  STATE.avantRaw = allRows;
+  const _avantManual = (STATE.avantRaw || []).filter(r => r._ingestSource === 'manual');
+  const _avantProxy  = allRows.map(r => Object.assign({}, r, { _ingestSource: 'proxy' }));
+  STATE.avantRaw = [..._avantProxy, ..._avantManual].map((r, i) => Object.assign({}, r, { _id: `A-${i}` }));
   STATE.avantSource = 'proxy';
   STATE.avantProxyMeta = { fiscalYears: fyList, syncedAt: lastSavedAt, rowCount: allRows.length };
 
@@ -9867,12 +9875,15 @@ function importNiceProceed(list) {
           });
           if (!rows.length) continue;
           fileSheetCount++;
+          const _niceLabel = file.name;
+          const _niceExisting = STATE.niceRaw.filter(r => r._fileLabel !== _niceLabel);
           const projected = rows
-            .map((r, i) => projectNiceRow(r, fileMap, STATE.niceRaw.length + i))
-            .filter(r => !isBlankProjected(r));
+            .map((r, i) => projectNiceRow(r, fileMap, _niceExisting.length + i))
+            .filter(r => !isBlankProjected(r))
+            .map(r => Object.assign(r, { _ingestSource: 'manual', _fileLabel: _niceLabel }));
           const dropped = rows.length - projected.length;
           totalDropped += dropped;
-          STATE.niceRaw = STATE.niceRaw.concat(projected);
+          STATE.niceRaw = [..._niceExisting, ...projected].map((r, i) => Object.assign({}, r, { _id: `N-${i}` }));
           totalAdded += projected.length;
           fileRowsAdded += projected.length;
         }
@@ -10191,11 +10202,14 @@ function applyStBatchPerFile(perFile) {
   STATE._importAsTransition = false; // consume — next import is normal ST again
   let added = 0, dropped = 0;
   perFile.forEach(p => {
+    const _stLabel = p.name || '';
+    const _stExisting = _stLabel ? STATE.stRaw.filter(r => r._fileLabel !== _stLabel) : STATE.stRaw;
     const projected = p.rows
-      .map((r, i) => projectStRow(r, p.mapping, STATE.stRaw.length + i))
+      .map((r, i) => projectStRow(r, p.mapping, _stExisting.length + i))
       .filter(r => !isBlankProjected(r) ? true : (dropped++, false));
     if (asTransition) projected.forEach(r => { r._isTransition = true; });
-    STATE.stRaw = STATE.stRaw.concat(projected);
+    projected.forEach(r => Object.assign(r, { _ingestSource: 'manual', _fileLabel: _stLabel }));
+    STATE.stRaw = [..._stExisting, ...projected].map((r, i) => Object.assign({}, r, { _id: `S-${i}` }));
     added += projected.length;
   });
   enrichStWithRenewals(); // stamp every ST row with renewal/term metadata
@@ -12328,10 +12342,13 @@ function importAvant(list) {
             return obj;
           });
           if (!rows.length) continue;
+          const _avantLabel = file.name;
+          const _avantExisting = STATE.avantRaw.filter(r => r._fileLabel !== _avantLabel);
           const projected = rows
-            .map((r, i) => projectAvantRow(r, fileMap, STATE.avantRaw.length + i))
+            .map((r, i) => projectAvantRow(r, fileMap, _avantExisting.length + i))
             .filter(r => !isBlankAvant(r) ? true : (totalDropped++, false));
-          STATE.avantRaw = STATE.avantRaw.concat(projected);
+          projected.forEach(r => Object.assign(r, { _ingestSource: 'manual', _fileLabel: _avantLabel }));
+          STATE.avantRaw = [..._avantExisting, ...projected].map((r, i) => Object.assign({}, r, { _id: `A-${i}` }));
           totalAdded += projected.length;
         }
       } catch (err) {
@@ -40030,15 +40047,18 @@ Use the response format from SYSTEM_PROMPT.`;
     // lands in scope. Dedupe by opportunityid where present.
     const oppsSeen = new Set();
     const opps = [];
+    let accountId = rootEntry ? (rootEntry.accountId || null) : null;
+    let sourceUrl  = rootEntry ? (rootEntry.sourceUrl  || null) : null;
     const aliases = (state.crmAliases && typeof state.crmAliases === 'object') ? state.crmAliases : {};
     for (const e of (state.crmRaw || [])) {
       const inScope = scope.has(e.normKey) || (aliases[e.normKey] && scope.has(aliases[e.normKey]));
       if (!inScope) continue;
+      if (!accountId && e.accountId) { accountId = e.accountId; sourceUrl = e.sourceUrl || null; }
       for (const o of (e.oppsDetail || [])) {
         const id = o.opportunityid || (o.name + '|' + o.estClose);
         if (oppsSeen.has(id)) continue;
         oppsSeen.add(id);
-        opps.push(o);
+        opps.push({ ...o, _sourceUrl: e.sourceUrl || null });
       }
     }
 
@@ -40089,7 +40109,7 @@ Use the response format from SYSTEM_PROMPT.`;
     }
 
     return { display, key: root, scope, opps, quotes, stRows, niceRows, renewals, _renewalsWindowed,
-             niceMargin, stMargin, nextRenewal };
+             niceMargin, stMargin, nextRenewal, accountId, sourceUrl };
   }
 
   // Per-order expand state for the Orders section, persists across re-renders
@@ -40145,7 +40165,7 @@ Use the response format from SYSTEM_PROMPT.`;
 
     overlay.querySelector('#csc-header').innerHTML = `
       <div>
-        <h3 class="text-lg font-semibold text-white">${escH(d.display)}</h3>
+        <h3 class="text-lg font-semibold text-white">${(() => { const u = crmBuildAccountUrl(d.accountId, d.sourceUrl); return u ? `<a href="${escH(u)}" target="_blank" rel="noopener" class="hover:text-indigo-200 underline decoration-slate-600 hover:decoration-indigo-400 transition-colors" title="Open account in Dynamics">${escH(d.display)}</a>` : escH(d.display); })()}</h3>
         <div class="flex flex-wrap gap-x-5 gap-y-1 mt-1.5 text-[11px] text-slate-400">
           <span><span class="text-slate-500">NICE Margin:</span> <span class="text-emerald-300 font-semibold">${money(d.niceMargin)}</span></span>
           <span><span class="text-slate-500">ST Margin:</span> <span class="text-sky-300 font-semibold">${money(d.stMargin)}</span></span>
@@ -40192,7 +40212,7 @@ Use the response format from SYSTEM_PROMPT.`;
       return ad.localeCompare(bd);
     }).map(o => `
       <tr class="csc-row" data-csc-jump="opp">
-        <td class="py-1 pr-3 text-slate-200">${escH(o.name||'—')}</td>
+        <td class="py-1 pr-3 text-slate-200">${(() => { const u = crmBuildOppUrl(o); const n = escH(o.name||'—'); return u ? `<a href="${escH(u)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" class="text-indigo-300 hover:text-indigo-200 underline decoration-indigo-500/30 hover:decoration-indigo-400" title="Open opportunity in Dynamics">${n}</a>` : n; })()}</td>
         <td class="py-1 pr-3 text-slate-400">${escH(o.solutionArea||'—')}</td>
         <td class="py-1 pr-3 text-slate-400">${escH(o.oem||'—')}</td>
         <td class="py-1 pr-3 text-right text-slate-300 font-mono">${o.probability!=null?o.probability+'%':'—'}</td>
