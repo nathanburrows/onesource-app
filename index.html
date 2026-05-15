@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:09 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:17 PM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 14 · 11:09 PM ET</p>
+          <p class="upload-brand-ver-ts">May 14 · 11:17 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 14 · 11:09 PM ET</div>
+        <div class="ds-brand-ver-ts">May 14 · 11:17 PM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:09 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:17 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -5955,6 +5955,15 @@ async function postProxyIngest(endpoint, rows, { headers = [], replace = true, f
             });
           }
         }, 30);
+      } else if (r.type === 'customer' && meta.crmOnly) {
+        // CRM-only customer (has opps but no order history) — open pipeline view
+        // filtered to this customer rather than dropping into empty Order Search.
+        if (typeof setActivePage === 'function') setActivePage('crm-page');
+        setTimeout(() => {
+          if (typeof crmPageActivateFromSearch === 'function') {
+            crmPageActivateFromSearch({ kind: 'customer', customer: value, value });
+          }
+        }, 30);
       } else {
         // v1.1.0-dev.23 — preserve the user's full input query so multi-token
         // intent survives the click. Typing "Coats axonius" and clicking the
@@ -5991,20 +6000,22 @@ async function postProxyIngest(endpoint, rows, { headers = [], replace = true, f
     // user into Order Search, so the chip reads "Orders" (action-oriented)
     // instead of the raw entity type. Same idea for customer/order/invoice —
     // all four lead to Order Search, so they share the "Orders" chip.
-    const typeLabel = (t) => {
-      switch (t) {
+    // Exception: customers flagged crmOnly (opps but no order history) → "CRM".
+    const typeLabel = (r) => {
+      if (r.type === 'customer' && r.deeplink?.meta?.crmOnly) return 'CRM';
+      switch (r.type) {
         case 'vendor':
         case 'customer':
         case 'order':
         case 'invoice':
           return 'Orders';
         default:
-          return t;
+          return r.type;
       }
     };
     dropdown.innerHTML = results.map((r, i) =>
       `<div class="gs-row" data-type="${escapeHtml(r.type)}" data-idx="${i}">` +
-        `<div class="gs-label">${escapeHtml(r.label)}<span class="gs-type">${escapeHtml(typeLabel(r.type))}</span></div>` +
+        `<div class="gs-label">${escapeHtml(r.label)}<span class="gs-type">${escapeHtml(typeLabel(r))}</span></div>` +
         `<div class="gs-snippet">${escapeHtml(r.snippet || '')}</div>` +
       `</div>`
     ).join('');
@@ -6119,6 +6130,13 @@ async function postProxyIngest(endpoint, rows, { headers = [], replace = true, f
               oppId: meta.oppId || '',
               value,
             });
+          }
+        }, 30);
+      } else if (type === 'customer' && meta.crmOnly) {
+        if (typeof setActivePage === 'function') setActivePage('crm-page');
+        setTimeout(() => {
+          if (typeof crmPageActivateFromSearch === 'function') {
+            crmPageActivateFromSearch({ kind: 'customer', customer: value, value });
           }
         }, 30);
       } else {
@@ -9048,7 +9066,17 @@ function crmPageActivateFromSearch(meta) {
   if (search) search.value = '';
 
   let parent = null;
-  if (meta.kind === 'opp') {
+  if (meta.kind === 'customer') {
+    // Filter the pipeline table to this customer name and mount — don't try to
+    // expand a specific row, just land on the CRM page with the right filter.
+    const custName = meta.customer || meta.value || '';
+    const s = document.getElementById('crm-page-search');
+    if (s) s.value = custName;
+    const pst = crmPagePipelineState();
+    pst.globalSearch = custName.toLowerCase();
+    crmPageMountPipelineTable();
+    return;
+  } else if (meta.kind === 'opp') {
     parent = opps.find(o =>
       (meta.opportunityid && o.opportunityid === meta.opportunityid) ||
       (meta.value && (o.name || '') === meta.value)
