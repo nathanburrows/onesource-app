@@ -1598,7 +1598,7 @@
   // Boot probe: ask the proxy what mode it's in. On a demo-mode build the
   // bundled sample-data is what's loaded; we just need to advertise the fact.
   (function probeDemoMode() {
-    const url = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || localStorage.getItem('vox_proxy_url') || 'https://localhost:8787').replace(/\/+$/, '') + '/mode';
+    const url = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || localStorage.getItem('vox_proxy_url') || 'https://127.0.0.1:8787').replace(/\/+$/, '') + '/mode';
     fetch(url, { signal: AbortSignal.timeout(2500) })
       .then(r => r.ok ? r.json() : null)
       .then(j => {
@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 12:43 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 01:08 PM ET</span>
     </div>
   </div>
 </div>
@@ -1827,7 +1827,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 12:43 PM ET</p>
+          <p class="upload-brand-ver-ts">May 15 · 01:08 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2045,7 +2045,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 12:43 PM ET</div>
+        <div class="ds-brand-ver-ts">May 15 · 01:08 PM ET</div>
       </div>
     </div>
   </div>
@@ -2239,7 +2239,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 12:43 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 01:08 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -5858,7 +5858,9 @@ function toast(level, title, sub) {
 // Returns true if it loaded data, false if proxy was empty/unreachable.
 // ─────────────────────────────────────────────
 function proxyBase() {
-  return (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://localhost:8787').replace(/\/+$/, '');
+  // Fallback uses 127.0.0.1 (not localhost) — proxy binds to IPv4 only;
+  // on Windows/some macOS configs localhost resolves to ::1 first and fails.
+  return (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://127.0.0.1:8787').replace(/\/+$/, '');
 }
 
 // Generic JSON POST to a proxy ingest endpoint. Returns parsed JSON on 2xx,
@@ -5869,7 +5871,7 @@ function proxyBase() {
 // Returns the parsed JSON response on success; throws on non-2xx so the
 // caller (handleParsedQuotes) can toast a clear failure message.
 async function writeQuotesCache(payload) {
-  const base = (typeof proxyBase === 'function') ? proxyBase() : 'https://localhost:8787';
+  const base = (typeof proxyBase === 'function') ? proxyBase() : 'https://127.0.0.1:8787';
   const r = await fetch(base + '/quotes/cache', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -5886,7 +5888,7 @@ async function writeQuotesCache(payload) {
 // returns the canonical empty shape (savedAt:null, rows:[]) — never throws
 // on missing file.
 async function readQuotesCache() {
-  const base = (typeof proxyBase === 'function') ? proxyBase() : 'https://localhost:8787';
+  const base = (typeof proxyBase === 'function') ? proxyBase() : 'https://127.0.0.1:8787';
   const r = await fetch(base + '/quotes/cache');
   if (!r.ok) throw new Error(`/quotes/cache GET failed: ${r.status}`);
   return r.json();
@@ -6059,7 +6061,7 @@ async function postProxyIngest(endpoint, rows, { headers = [], replace = true, f
     try {
       const base = (typeof proxyBase === 'function')
         ? proxyBase()
-        : (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://localhost:8787').replace(/\/+$/, '');
+        : (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://127.0.0.1:8787').replace(/\/+$/, '');
       const res = await fetch(base + '/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -15371,7 +15373,7 @@ function normalizeCustomer(s) {
 let _avantAliasMap = {};
 async function loadAvantAliases() {
   try {
-    const base = (typeof proxyBase === 'function') ? proxyBase() : 'https://localhost:8787';
+    const base = (typeof proxyBase === 'function') ? proxyBase() : 'https://127.0.0.1:8787';
     const r = await fetch(base + '/avant/aliases', { signal: AbortSignal.timeout(3000) });
     if (!r.ok) return;
     const j = await r.json();
@@ -32539,7 +32541,7 @@ try { _ensureBootOverlay(); } catch (_) {}
       if (!proxyUrl) {
         try { proxyUrl = localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || ''; } catch (_) {}
       }
-      if (allEmpty && allFailed && proxyUrl && inDesktopApp) {
+      if (allEmpty && allFailed && proxyUrl && _isElectronApp) {
         if (!document.getElementById('proxy-blocker-style')) {
           const st = document.createElement('style');
           st.id = 'proxy-blocker-style';
@@ -36393,7 +36395,7 @@ Use the response format from SYSTEM_PROMPT.`;
   function getProxyUrl() {
     if (typeof AI !== 'undefined' && AI?.state?.settings?.proxyUrl)
       return AI.state.settings.proxyUrl.replace(/\/+$/, '');
-    return (localStorage.getItem('proxy.url') || localStorage.getItem('vox_proxy_url') || 'https://localhost:8787').replace(/\/+$/, '');
+    return (localStorage.getItem('proxy.url') || localStorage.getItem('vox_proxy_url') || 'https://127.0.0.1:8787').replace(/\/+$/, '');
   }
   function crmStatusRefresh() {
     const btn = document.getElementById('crm-refresh-btn');
@@ -36837,7 +36839,7 @@ Use the response format from SYSTEM_PROMPT.`;
     // (dot) — a stale value in either key could leave the data-source
     // cards silently pointed at a different host than every other fetch.
     if (typeof proxyBase === 'function') return proxyBase();
-    return (localStorage.getItem('vox.proxyUrl') || localStorage.getItem('vox_proxy_url') || 'https://localhost:8787').replace(/\/+$/, '');
+    return (localStorage.getItem('vox.proxyUrl') || localStorage.getItem('vox_proxy_url') || 'https://127.0.0.1:8787').replace(/\/+$/, '');
   }
   function dsFmtNum(v) {
     const n = Number(v);
@@ -39118,7 +39120,7 @@ Use the response format from SYSTEM_PROMPT.`;
   }
 
   function proxyBase() {
-    return (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://localhost:8787').replace(/\/+$/, '');
+    return (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://127.0.0.1:8787').replace(/\/+$/, '');
   }
 
   async function fetchSourcesStatus() {
@@ -39626,7 +39628,7 @@ Use the response format from SYSTEM_PROMPT.`;
     bodyEl.querySelector('[data-onb-action="upload-now"]').addEventListener('click', () => {
       hide(false); // false = don't mark welcomeAcknowledged yet; user is mid-tour
       // Snapshot pre-upload ST state so we can detect the flip.
-      const proxyBase = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://localhost:8787').replace(/\/+$/, '');
+      const proxyBase = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://127.0.0.1:8787').replace(/\/+$/, '');
       let baselineLastIngest = null;
       let baselineMode = null;
       fetch(proxyBase + '/sources/status').then(r => r.ok ? r.json() : null).then(j => {
@@ -39708,7 +39710,7 @@ Use the response format from SYSTEM_PROMPT.`;
     (async () => {
       const checkSt = async () => {
         try {
-          const res = await fetch(((localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://localhost:8787').replace(/\/+$/, '')) + '/sources/status');
+          const res = await fetch(((localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://127.0.0.1:8787').replace(/\/+$/, '')) + '/sources/status');
           if (!res.ok) return null;
           const j = await res.json();
           const status = Array.isArray(j) ? j : (j.sources || j.data || []);
@@ -39780,7 +39782,7 @@ Use the response format from SYSTEM_PROMPT.`;
       // rep-picker against the fresh real-data rep list. If ST is still
       // sample, leave the rep alone — picker would just show sample reps.
       try {
-        const proxyBase = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://localhost:8787').replace(/\/+$/, '');
+        const proxyBase = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://127.0.0.1:8787').replace(/\/+$/, '');
         const res = await fetch(proxyBase + '/sources/status');
         if (res.ok) {
           const j = await res.json();
@@ -39801,7 +39803,7 @@ Use the response format from SYSTEM_PROMPT.`;
       // STATE that was cached when the page first loaded.
       hide(true);
       try {
-        const proxyBase = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://localhost:8787').replace(/\/+$/, '');
+        const proxyBase = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://127.0.0.1:8787').replace(/\/+$/, '');
         const res = await fetch(proxyBase + '/sources/status');
         if (res.ok) {
           const j = await res.json();
@@ -39823,7 +39825,7 @@ Use the response format from SYSTEM_PROMPT.`;
     // intentionally exploring bundled sample data; ingest is locked anyway
     // (proxy returns 423). Surface a toast instead of opening a useless flow.
     try {
-      const proxyBase = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://localhost:8787').replace(/\/+$/, '');
+      const proxyBase = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://127.0.0.1:8787').replace(/\/+$/, '');
       const r = await fetch(proxyBase + '/mode', { signal: AbortSignal.timeout(2000) });
       if (r.ok) {
         const m = await r.json();
@@ -39884,7 +39886,7 @@ Use the response format from SYSTEM_PROMPT.`;
       if (sessionStorage.getItem('onb.welcomeShownThisSession') === '1') return;
     } catch (_) { /* sessionStorage unavailable — fall through */ }
 
-    const proxyBase = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://localhost:8787').replace(/\/+$/, '');
+    const proxyBase = (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://127.0.0.1:8787').replace(/\/+$/, '');
 
     // Demo-mode short-circuit — onboarding is a real-mode-only flow.
     // In demo mode the user is exploring sample data on purpose; the welcome
@@ -40152,7 +40154,7 @@ Use the response format from SYSTEM_PROMPT.`;
   }
 
   function proxyBase() {
-    return (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://localhost:8787').replace(/\/+$/, '');
+    return (localStorage.getItem('proxy.url') || localStorage.getItem('vox.proxyUrl') || 'https://127.0.0.1:8787').replace(/\/+$/, '');
   }
 
   async function fetchStatus() {
