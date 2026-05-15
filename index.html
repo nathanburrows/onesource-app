@@ -8691,10 +8691,21 @@ function renderCrmPage() {
     const { status, url } = rnCrmStatusForRecord(r);
     if (status === 'covered') continue;
     if (status === 'no-crm-data') continue; // CRM data not loaded yet — skip
+    const renewalDt = r.renewalDate || null;
+    const daysOut = renewalDt ? Math.floor((renewalDt - today) / 86400000) : null;
+    if (daysOut !== null && daysOut < -30) continue; // only show up to 30 days past due
     const annualized = r.annualizedRev || (r.termYears ? r.totalRev / Math.max(1, r.termYears) : r.totalRev) || 0;
-    gapRecords.push({ r, status, url, annualized });
+    const prevQuote  = r.totalRev || 0;
+    const termYears  = r.termYears || 0;
+    gapRecords.push({ r, status, url, annualized, renewalDt, daysOut, prevQuote, termYears });
   }
-  gapRecords.sort((a, b) => b.annualized - a.annualized);
+  // Sort: soonest/most-overdue first → farthest out last; null dates go to end
+  gapRecords.sort((a, b) => {
+    if (a.renewalDt == null && b.renewalDt == null) return 0;
+    if (a.renewalDt == null) return 1;
+    if (b.renewalDt == null) return -1;
+    return a.renewalDt - b.renewalDt;
+  });
   const gapTotal = gapRecords.reduce((s, g) => s + g.annualized, 0);
 
   const gapStatusBadge = (status, url) => {
@@ -8711,21 +8722,23 @@ function renderCrmPage() {
   };
 
   const gapTableHtml = gapRecords.length === 0 ? `<p class="text-[11px] text-slate-500">All renewal chains have a matched CRM opportunity.</p>` : (() => {
-    const rows = gapRecords.map(({ r, status, url, annualized }) => {
+    const rows = gapRecords.map(({ r, status, url, annualized, renewalDt, daysOut, prevQuote, termYears }) => {
       const custDisplay = escHtml(r.customer || '');
       const vendors = (r.vendors || []).slice(0, 2).map(v => escHtml(v)).join(', ') + (r.vendors && r.vendors.length > 2 ? ` +${r.vendors.length - 2}` : '');
-      const renewalDt = r.renewalDate ? r.renewalDate : null;
       const dtStr = renewalDt ? `${String(renewalDt.getMonth()+1).padStart(2,'0')}/${String(renewalDt.getDate()).padStart(2,'0')}/${renewalDt.getFullYear()}` : '—';
-      const daysOut = renewalDt ? Math.floor((renewalDt - today) / 86400000) : null;
       const dtCls = daysOut == null ? 'text-slate-500' : daysOut < 0 ? 'text-rose-400' : daysOut <= 30 ? 'text-amber-300' : daysOut <= 90 ? 'text-yellow-300' : 'text-slate-300';
       const daysBadge = daysOut == null ? '' : daysOut < 0 ? `<span class="text-rose-400 text-[9px] ml-1">${Math.abs(daysOut)}d past</span>` : `<span class="text-slate-500 text-[9px] ml-1">${daysOut}d</span>`;
       const typeBadge = r.type === 'estimated'
         ? `<span class="text-[9px] text-slate-500 italic">~est</span>`
         : `<span class="text-[9px] text-slate-400">renewal</span>`;
+      const termStr = termYears ? `${termYears % 1 === 0 ? termYears : termYears.toFixed(1)}y` : '—';
+      const prevQuoteStr = prevQuote ? fmtMoney(prevQuote) : '—';
       return `<tr class="border-t border-slate-800 hover:bg-slate-900/40">
-        <td class="py-1.5 px-3 text-slate-200 truncate max-w-[220px] text-xs">${custDisplay}</td>
-        <td class="py-1.5 px-3 text-slate-400 text-xs truncate max-w-[180px]">${vendors || '—'}</td>
+        <td class="py-1.5 px-3 text-slate-200 truncate max-w-[200px] text-xs">${custDisplay}</td>
+        <td class="py-1.5 px-3 text-slate-400 text-xs truncate max-w-[160px]">${vendors || '—'}</td>
         <td class="py-1.5 px-3 text-xs whitespace-nowrap"><span class="${dtCls} font-mono">${dtStr}</span>${daysBadge}</td>
+        <td class="py-1.5 px-3 text-right font-mono text-xs text-slate-300">${prevQuoteStr}</td>
+        <td class="py-1.5 px-3 text-center font-mono text-xs text-slate-400">${termStr}</td>
         <td class="py-1.5 px-3 text-right font-mono text-xs text-indigo-300 font-semibold">${fmtMoney(annualized)}</td>
         <td class="py-1.5 px-3 text-xs">${typeBadge}</td>
         <td class="py-1.5 px-3 text-xs">${gapStatusBadge(status, url)}</td>
@@ -8738,6 +8751,8 @@ function renderCrmPage() {
             <th class="text-left py-2 px-3 font-semibold">Customer</th>
             <th class="text-left py-2 px-3 font-semibold">Vendor(s)</th>
             <th class="text-left py-2 px-3 font-semibold">Renewal Date</th>
+            <th class="text-right py-2 px-3 font-semibold">Prev Quote</th>
+            <th class="text-center py-2 px-3 font-semibold">Term</th>
             <th class="text-right py-2 px-3 font-semibold">Annualized $</th>
             <th class="text-left py-2 px-3 font-semibold">Type</th>
             <th class="text-left py-2 px-3 font-semibold">Gap</th>
@@ -27672,7 +27687,7 @@ function rnCrmStatusForRecord(r) {
   const vendorMatch   = !fullMatch && vendorNorms.length && opps.find(o => oemMatches(o.oem));
   const fallbackMatch = !fullMatch && !vendorNorms.length && opps.find(o => isRenewalType(o) && closeMatches(o.estClose));
   if (fullMatch || fallbackMatch) return { status: 'covered', entry, url, matchedOpp: fullMatch || fallbackMatch };
-  if (vendorMatch) return { status: 'vendor-only', entry, url, matchedOpp: vendorMatch };
+  if (vendorMatch) return { status: 'vendor-only', entry, url: crmBuildOppUrl(vendorMatch) || url, matchedOpp: vendorMatch };
   return { status: 'no-match', entry, url, matchedOpp: null };
 }
 
