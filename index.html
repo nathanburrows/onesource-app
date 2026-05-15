@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:50 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:53 PM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 14 · 11:50 PM ET</p>
+          <p class="upload-brand-ver-ts">May 14 · 11:53 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 14 · 11:50 PM ET</div>
+        <div class="ds-brand-ver-ts">May 14 · 11:53 PM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:50 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:53 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -4333,13 +4333,16 @@
          UI source of truth for identity picking (no separate Settings-specific
          picker). -->
     <div id="profile-settings-card" class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 mb-5">
-      <div class="flex items-start justify-between gap-4 mb-5">
-        <div>
-          <h3 class="text-base font-semibold text-slate-100">Profile (AI assistant context)</h3>
-          <p class="text-xs text-slate-400 mt-1 max-w-md">
-            How the AI assistant frames responses: your name, region, NICE ID, bio, vendor-stack stance, and voice notes. Edits take effect on the next AI query — no restart needed.
-          </p>
-        </div>
+      <div class="flex items-start justify-between gap-4">
+        <button type="button" id="profile-settings-toggle" class="flex items-center gap-2 flex-1 text-left group" title="Toggle profile editor">
+          <svg id="profile-settings-chevron" class="shrink-0 text-slate-500 group-hover:text-slate-300 transition-transform duration-200" style="transform:rotate(0deg)" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          <div>
+            <h3 class="text-base font-semibold text-slate-100">Profile (AI assistant context)</h3>
+            <p class="text-xs text-slate-400 mt-1 max-w-md">
+              How the AI assistant frames responses: your name, region, NICE ID, bio, vendor-stack stance, and voice notes. Edits take effect on the next AI query — no restart needed.
+            </p>
+          </div>
+        </button>
         <button
           type="button"
           id="profile-settings-switch-rep"
@@ -4347,6 +4350,10 @@
           title="Re-open the NICE-driven rep picker"
         >Switch Rep…</button>
       </div>
+
+      <!-- Collapsible body — hidden by default -->
+      <div id="profile-settings-body" class="hidden">
+      <div class="mt-5"></div>
 
       <!-- Identity fields (5 short inputs in a 2-col grid on wider screens) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
@@ -4396,6 +4403,7 @@
           <button type="button" id="profile-settings-save"  class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 rounded-lg text-xs font-medium text-white transition-all">Save</button>
         </div>
       </div>
+      </div><!-- /profile-settings-body -->
     </div>
 
     <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl mb-5">
@@ -33525,6 +33533,19 @@ window.closeColumnsModal = closeColumnsModal;
     const save      = document.getElementById('profile-settings-save');
     const switchRep = document.getElementById('profile-settings-switch-rep');
     const reset     = document.getElementById('profile-settings-reset');
+
+    // Collapse toggle — hidden by default; chevron rotates 90° when expanded
+    const toggle  = document.getElementById('profile-settings-toggle');
+    const body    = document.getElementById('profile-settings-body');
+    const chevron = document.getElementById('profile-settings-chevron');
+    if (toggle && body && chevron) {
+      toggle.addEventListener('click', () => {
+        const expanded = !body.classList.contains('hidden');
+        body.classList.toggle('hidden', expanded);
+        chevron.style.transform = expanded ? 'rotate(0deg)' : 'rotate(90deg)';
+      });
+    }
+
     if (save)  save.addEventListener('click', profileSettingsSave);
     if (reset) reset.addEventListener('click', profileSettingsDiscard);
     if (switchRep) switchRep.addEventListener('click', () => {
