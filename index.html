@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:19 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 14 · 11:22 PM ET</span>
     </div>
   </div>
 </div>
@@ -1818,7 +1818,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 14 · 11:19 PM ET</p>
+          <p class="upload-brand-ver-ts">May 14 · 11:22 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2036,7 +2036,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 14 · 11:19 PM ET</div>
+        <div class="ds-brand-ver-ts">May 14 · 11:22 PM ET</div>
       </div>
     </div>
   </div>
@@ -2230,7 +2230,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:19 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 14 · 11:22 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -12515,18 +12515,46 @@ function handleParsedQuotes(parsed, errors) {
     }
   }
 
-  STATE.quotesRows = rows;
+  // Merge with existing bookmarklet-synced rows. A manual upload should only
+  // replace an existing row when something meaningful changed: status flipped
+  // to ordered, the sale $ moved, or the modified date is newer. Everything
+  // else preserves whatever the bookmarklet wrote (notes, crosslinks, etc.).
+  const existing = Array.isArray(STATE.quotesRows) ? STATE.quotesRows : [];
+  const existingByNo = new Map(existing.map(r => [String(r.quoteNo), r]));
+  let overwritten = 0, preserved = 0, added = 0;
+  const merged = rows.map(incoming => {
+    const prior = existingByNo.get(String(incoming.quoteNo));
+    if (!prior) { added++; return incoming; }
+    const statusToOrdered = incoming.quoteStatus === 'closed-won' && prior.quoteStatus !== 'closed-won';
+    const saleChanged     = incoming.totalSale !== null && prior.totalSale !== incoming.totalSale;
+    const modifiedNewer   = incoming.modified && incoming.modified !== prior.modified;
+    if (statusToOrdered || saleChanged || modifiedNewer) {
+      overwritten++;
+      // Preserve canonicalization stamps from the prior row so we don't lose them.
+      return Object.assign({}, incoming, {
+        custCanonical:    prior.custCanonical    ?? incoming.custCanonical,
+        _canonicalSource: prior._canonicalSource ?? incoming._canonicalSource,
+      });
+    }
+    preserved++;
+    return prior;
+  });
+  // Append any incoming quotes that don't exist yet (already counted as added above).
+  // The map() above handles all incoming rows; existing-only rows not in the upload
+  // are intentionally dropped — the upload represents the current snapshot from OSIT.
+
+  STATE.quotesRows = merged;
   STATE.quotesSourceFile = sourceFile;
   // Persist to <userData>/quotes-cache.json via the proxy. _sample:false
   // marker explicitly stamped so the SEED-04/05 pattern (sample → real
   // promotion) flips correctly on first real ingest.
-  writeQuotesCache({ savedAt: new Date().toISOString(), sourceFile, _sample: false, rows })
+  writeQuotesCache({ savedAt: new Date().toISOString(), sourceFile, _sample: false, rows: merged })
     .then(() => {
-      const oCount = rows.filter(r => r.quoteStatus === 'closed-won').length;
-      toast('info','Quotes imported', `${rows.length} rows from ${sourceFile} · ${oCount} ordered. Customer canonicalization runs next.`);
+      const oCount = merged.filter(r => r.quoteStatus === 'closed-won').length;
+      toast('info','Quotes imported', `${merged.length} rows from ${sourceFile} · ${oCount} ordered · ${overwritten} updated, ${preserved} preserved, ${added} new. Canonicalization runs next.`);
       // Plan 02 integration seam — canonicalization pipeline subscribes to
       // this event, mutates STATE.quotesRows in-place, and re-persists.
-      window.dispatchEvent(new CustomEvent('quotes-imported', { detail: { rows, sourceFile } }));
+      window.dispatchEvent(new CustomEvent('quotes-imported', { detail: { rows: merged, sourceFile } }));
     })
     .catch(err => toast('error','Quote cache write failed', err.message));
 }
