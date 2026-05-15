@@ -10660,7 +10660,8 @@ function _ooRenderRenewalCell(v, r) {
     // chains never appear as upcoming dots, only in the table audit row.
     const dateTxt = v ? fmtDate(v) : (r._origRenewalDate ? fmtDate(r._origRenewalDate) : '—');
     const covSuffix = covBy ? ` by ${cpEsc(covBy)}` : '';
-    const tip = cpEsc(`Renewal covered${covSuffix} — original renewal ${dateTxt} retained for audit (set by user)`);
+    const _covNote = String((r && r._chainNote) || '').trim();
+    const tip = cpEsc(`Renewal covered${covSuffix} — original renewal ${dateTxt} retained for audit (set by user)${_covNote ? ' · ' + _covNote : ''}`);
     return `<div data-override="covered" title="${tip}" style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.1;">
       <span style="color:#94a3b8;font-size:12px;text-decoration:line-through;">${dateTxt}</span>
       <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-900/30 border border-emerald-700/50 text-emerald-300" style="font-size:10px;font-weight:600;line-height:1;">✓ Covered</span>
@@ -10756,7 +10757,8 @@ function _ooRenderTermCell(r) {
     if (r._origRenewalDate) origBits.push(`renewal ${fmtDate(r._origRenewalDate)}`);
     if (r._origTermYears)   origBits.push(`${r._origTermYears}y term`);
     const origNote = origBits.length ? ` · was ${origBits.join(', ')}` : '';
-    const tip = cpEsc(`Renewal covered by new purchase${origNote} — set by user`);
+    const _covTermNote = String((r && r._chainNote) || '').trim();
+    const tip = cpEsc(`Renewal covered by new purchase${origNote} — set by user${_covTermNote ? ' · ' + _covTermNote : ''}`);
     return editable
       ? `<button data-override="covered" onclick="event.stopPropagation();openOrderOverrideModal('${safeOrd}','${safeCust}','${safeVendor}')" title="${tip}" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-900/30 border border-emerald-700/50 hover:bg-emerald-800/40 text-emerald-300 text-xs font-bold tracking-wide">${lbl}</button>`
       : `<span data-override="covered" title="${tip}" class="text-emerald-300 font-bold text-xs">${lbl}</span>`;
