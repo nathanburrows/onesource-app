@@ -10842,6 +10842,7 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
   // mark this chain Covered or Did-not-renew).
   const notesEntry       = _ovLookup(overrides.notes);
   const initialNote      = (notesEntry && notesEntry.text) || '';
+  const initialNoteUpdatedAt = (notesEntry && notesEntry.updatedAt) || null;
   // Determine the active state — drives whether the modal opens in compact
   // (single-state) view or picker (all-options) view. Compact view shows
   // ONLY the active state's panel plus the shared note; a "Change state"
@@ -10903,7 +10904,14 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
             <div style="font-size:10px;color:#64748b;">Saved per ${vendorRaw ? 'vendor' : 'order'} · survives state changes</div>
           </div>
           <textarea id="__my-chain-note" rows="2" placeholder="Add a note about this chain — e.g. 'customer evaluating Cisco DUO replacement'" style="width:100%;padding:8px;background:#0f172a;border:1px solid #334155;border-radius:4px;color:#f1f5f9;font:13px -apple-system,system-ui,sans-serif;resize:vertical;">${esc(initialNote)}</textarea>
-          <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+          <div id="__my-chain-note-meta" style="margin-top:4px;font-size:10px;color:#475569;min-height:14px;">${initialNoteUpdatedAt ? (() => {
+            const d = new Date(initialNoteUpdatedAt);
+            const author = (typeof AI !== 'undefined' && AI.prompts && AI.prompts.profile && (AI.prompts.profile.REP_FIRST_NAME || AI.prompts.profile.REP_NAME)) || 'you';
+            const datePart = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+            const timePart = d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+            return `Last updated by <span style="color:#94a3b8;font-weight:600;">${esc(author)}</span> · ${datePart} ${timePart}`;
+          })() : ''}</div>
+          <div style="display:flex;gap:8px;margin-top:6px;align-items:center;">
             <button id="__my-chain-note-save" style="padding:6px 12px;background:#334155;color:#e2e8f0;border:none;border-radius:6px;font:600 12px -apple-system,system-ui,sans-serif;cursor:pointer;">Save note</button>
             ${initialNote ? '<button id="__my-chain-note-clear" style="padding:6px 12px;background:transparent;color:#94a3b8;border:1px solid #334155;border-radius:6px;font:12px -apple-system,system-ui,sans-serif;cursor:pointer;">Clear</button>' : ''}
             <div id="__my-chain-note-hint" style="font-size:11px;color:#64748b;flex:1;text-align:right;"></div>
@@ -11378,6 +11386,16 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
     chainHintEl.style.color = color || '#86efac';
     if (msg) setTimeout(() => { if (chainHintEl.textContent === msg) chainHintEl.textContent = ''; }, 1800);
   };
+  const noteMetaEl = $('__my-chain-note-meta');
+  const updateNoteMeta = (isoTs) => {
+    if (!noteMetaEl) return;
+    if (!isoTs) { noteMetaEl.innerHTML = ''; return; }
+    const d = new Date(isoTs);
+    const author = (typeof AI !== 'undefined' && AI.prompts && AI.prompts.profile && (AI.prompts.profile.REP_FIRST_NAME || AI.prompts.profile.REP_NAME)) || 'you';
+    const datePart = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    const timePart = d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+    noteMetaEl.innerHTML = `Last updated by <span style="color:#94a3b8;font-weight:600;">${cpEsc(author)}</span> · ${datePart} ${timePart}`;
+  };
   if (chainSaveEl) {
     chainSaveEl.addEventListener('click', async () => {
       const text = chainNoteEl ? chainNoteEl.value : '';
@@ -11389,6 +11407,9 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
           applyOrderOverridesState(x.state);
           enrichStWithRenewals();
           try { refreshAfterOverrideChange(); } catch (_) {}
+          // Reflect the new timestamp immediately without re-reading overrides.
+          const savedEntry = _ovLookup((x.state && x.state.notes) ? x.state.notes : {});
+          updateNoteMeta(savedEntry && savedEntry.updatedAt ? savedEntry.updatedAt : new Date().toISOString());
           showNoteHint('Saved', '#86efac');
         } else { showNoteHint(x && x.error || 'Save failed', '#fca5a5'); }
       } catch (e) { showNoteHint('Save failed: ' + e.message, '#fca5a5'); }
@@ -11406,6 +11427,7 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
           try { refreshAfterOverrideChange(); } catch (_) {}
           if (chainNoteEl) chainNoteEl.value = '';
           chainClearEl.style.display = 'none';
+          updateNoteMeta(null);
           showNoteHint('Cleared', '#86efac');
         } else { showNoteHint(x && x.error || 'Clear failed', '#fca5a5'); }
       } catch (e) { showNoteHint('Clear failed: ' + e.message, '#fca5a5'); }
