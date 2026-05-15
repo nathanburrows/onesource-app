@@ -10692,10 +10692,19 @@ function _ooRenderRenewalCell(v, r) {
     const dateTxt = v ? fmtDate(v) : (r._origRenewalDate ? fmtDate(r._origRenewalDate) : '—');
     const covSuffix = covBy ? ` by ${cpEsc(covBy)}` : '';
     const _covNote = String((r && r._chainNote) || '').trim();
-    const tip = cpEsc(`Renewal covered${covSuffix} — ${dateTxt}${_covNote ? ' · ' + _covNote : ''}${_setBy ? ' · ' + _setBy : ''}`);
+    // Look up the new renewal date from the covering order's ST rows.
+    let newRenewalTxt = '';
+    if (covBy && STATE && STATE.stRaw) {
+      const covRow = STATE.stRaw.find(row =>
+        ((row.orderNumber || row.orderNo || '').toString().trim() === covBy) && row._renewalDate
+      );
+      if (covRow) newRenewalTxt = fmtDate(covRow._renewalDate);
+    }
+    const tip = cpEsc(`Renewal covered${covSuffix} — ${dateTxt}${newRenewalTxt ? ' → ' + newRenewalTxt : ''}${_covNote ? ' · ' + _covNote : ''}${_setBy ? ' · ' + _setBy : ''}`);
     return `<div data-override="covered" data-tip="${tip}" style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.1;">
       <span style="color:#94a3b8;font-size:12px;text-decoration:line-through;">${dateTxt}</span>
       <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-900/30 border border-emerald-700/50 text-emerald-300" style="font-size:10px;font-weight:600;line-height:1;">✓ Covered</span>
+      ${newRenewalTxt ? `<span class="text-emerald-200 font-semibold" style="font-size:11px;">${newRenewalTxt}</span>` : ''}
     </div>`;
   }
   // v1.1.0-dev.20 — "customer did not renew" closure state. Same stacked
@@ -27849,10 +27858,12 @@ function rnRenderRecordRows(r, visCols, today, opts) {
           ? `${String(r.renewalDate.getMonth()+1).padStart(2,'0')}/${String(r.renewalDate.getDate()).padStart(2,'0')}/${r.renewalDate.getFullYear()}`
           : (covRow._origRenewalDate ? fmtDate(covRow._origRenewalDate) : '—');
         const _crmSetBy = (typeof AI !== 'undefined' && AI.prompts && AI.prompts.profile && (AI.prompts.profile.REP_FIRST_NAME || AI.prompts.profile.REP_NAME)) || '';
-        const tip = cpEsc(`Renewal covered${covBy ? ' by ' + covBy : ''} — ${dateTxt}${_crmSetBy ? ' · ' + _crmSetBy : ''}`);
+        const newRenewalTxt = r.coveringRenewalDate ? fmtDate(r.coveringRenewalDate) : '';
+        const tip = cpEsc(`Renewal covered${covBy ? ' by ' + covBy : ''} — ${dateTxt}${newRenewalTxt ? ' → ' + newRenewalTxt : ''}${_crmSetBy ? ' · ' + _crmSetBy : ''}`);
         return `<td class="text-right"><div data-override="covered" data-tip="${tip}" style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.1;">
           <span style="color:#94a3b8;font-size:12px;text-decoration:line-through;">${dateTxt}</span>
           <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-900/30 border border-emerald-700/50 text-emerald-300" style="font-size:10px;font-weight:600;line-height:1;">✓ Covered</span>
+          ${newRenewalTxt ? `<span class="text-emerald-200 font-semibold" style="font-size:11px;">${newRenewalTxt}</span>` : ''}
         </div></td>`;
       }
       // v1.1.0-dev.20 — did-not-renew badge. Slate styling distinguishes
