@@ -17832,7 +17832,7 @@ function renderRepRenewalsTimeline() {
   const host = document.getElementById('rep-renewals-timeline-list');
   if (!host) return;
   detectRebillCol();
-  const repRows = stRowsForActiveRep();
+  const repRows = stRowsForRenewals();
   const map = new Map();
   for (const r of repRows) {
     if (isRebillRow(r)) continue;
@@ -21207,7 +21207,7 @@ function ordRenderGroupSelector() {
 function renderOrderSearch() {
   // Subtitle shows active rep + total ST line count.
   const total = (STATE.stRaw || []).length;
-  const repTotal = (stRowsForActiveRep() || []).length;
+  const repTotal = (stRowsForRenewals() || []).length;
   const sub = document.getElementById('ord-subtitle');
   if (sub) sub.textContent = `${STATE.activeRep || '—'} · ${repTotal.toLocaleString()} of ${total.toLocaleString()} ST lines`;
   ordInitPeriod();
@@ -21479,7 +21479,7 @@ window.ordSetPeriodMonth = function(ym) {
 //   recon uses when it builds STATE.unified.
 function ordSourceRows() {
   const nice = STATE && STATE.niceRaw ? STATE.niceRaw : [];
-  const st   = stRowsForActiveRep() || [];
+  const st   = stRowsForRenewals() || [];
   const win  = ordPeriodWindow();
   if (!win) return nice.concat(st);
   return nice.concat(st).filter(r => ordRowInPeriod(r, win));
