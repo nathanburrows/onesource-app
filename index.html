@@ -37063,6 +37063,15 @@ Use the response format from SYSTEM_PROMPT.`;
   function dsTriggerBookmarklet(source) {
     if (source === 'nice') {
       window.open('https://eplus-spm.nicecloudsvc.com/group/nicm/transaction-summary-report', '_blank', 'noopener');
+      try {
+        if (window.electronAPI?.shell?.openBookmarkletPage) {
+          window.electronAPI.shell.openBookmarkletPage();
+        } else {
+          window.open('bookmarklet.html', '_blank');
+        }
+      } catch (_) {
+        try { window.open('bookmarklet.html', '_blank'); } catch (_) {}
+      }
       try { dsShowResyncToast('NICE SPM', '📥 Sync Commission Data'); } catch (_) {}
       return;
     }
@@ -37140,11 +37149,23 @@ Use the response format from SYSTEM_PROMPT.`;
       '<div style="flex:1;">' +
         '<div style="font-weight:700;color:#a5b4fc;margin-bottom:4px;">Opened ' + cpEsc(siteName) + ' in a new tab</div>' +
         '<div style="color:#cbd5e1;">Sign in if needed, then click your <strong style="color:#fff;">' + cpEsc(bookmarkLabel) + '</strong> bookmark in that tab. Sync runs there and posts back to the app.</div>' +
-        '<div style="color:#64748b;font-size:11px;margin-top:8px;">Don\'t have the bookmark yet? <a href="bookmarklet.html" target="_blank" style="color:#a5b4fc;">Set up bookmarklets →</a></div>' +
+        '<div style="color:#64748b;font-size:11px;margin-top:8px;">Don\'t have the bookmark yet? <a href="#" id="ds-resync-toast-bm-link" style="color:#a5b4fc;">Set up bookmarklets →</a></div>' +
       '</div>' +
       '<button type="button" id="ds-resync-toast-close" style="background:rgba(148,163,184,0.1);border:none;color:#94a3b8;width:24px;height:24px;border-radius:6px;cursor:pointer;font-size:14px;line-height:1;flex-shrink:0;">×</button>';
     document.body.appendChild(toast);
     toast.querySelector('#ds-resync-toast-close').addEventListener('click', () => toast.remove());
+    toast.querySelector('#ds-resync-toast-bm-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      try {
+        if (window.electronAPI?.shell?.openBookmarkletPage) {
+          window.electronAPI.shell.openBookmarkletPage();
+        } else {
+          window.open('bookmarklet.html', '_blank');
+        }
+      } catch (_) {
+        try { window.open('bookmarklet.html', '_blank'); } catch (_) {}
+      }
+    });
     setTimeout(() => { toast.remove(); }, 18000);
   }
   // Single source-of-truth clear. Wipes proxy cache (CRM/NICE) AND the local
