@@ -4379,8 +4379,10 @@
         >Switch Rep…</button>
       </div>
 
-      <!-- Collapsible body — hidden by default -->
-      <div id="profile-settings-body" class="hidden">
+      <!-- Collapsible body — hidden by default. Inline display:none so the
+           collapse doesn't depend on Tailwind's hidden utility being loaded
+           (FOUC-safe). The toggle JS manages style.display directly. -->
+      <div id="profile-settings-body" style="display:none;">
       <div class="mt-5"></div>
 
       <!-- Identity fields (5 short inputs in a 2-col grid on wider screens) -->
@@ -33839,14 +33841,16 @@ window.closeColumnsModal = closeColumnsModal;
     const switchRep = document.getElementById('profile-settings-switch-rep');
     const reset     = document.getElementById('profile-settings-reset');
 
-    // Collapse toggle — hidden by default; chevron rotates 90° when expanded
+    // Collapse toggle — hidden by default; chevron rotates 90° when expanded.
+    // Uses inline style.display so the initial collapsed state is robust
+    // against Tailwind's hidden utility not yet being loaded.
     const toggle  = document.getElementById('profile-settings-toggle');
     const body    = document.getElementById('profile-settings-body');
     const chevron = document.getElementById('profile-settings-chevron');
     if (toggle && body && chevron) {
       toggle.addEventListener('click', () => {
-        const expanded = !body.classList.contains('hidden');
-        body.classList.toggle('hidden', expanded);
+        const expanded = body.style.display !== 'none';
+        body.style.display = expanded ? 'none' : '';
         chevron.style.transform = expanded ? 'rotate(0deg)' : 'rotate(90deg)';
       });
     }
