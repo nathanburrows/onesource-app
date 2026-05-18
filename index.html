@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 15 · 01:11 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 12:21 PM ET</span>
     </div>
   </div>
 </div>
@@ -1827,7 +1827,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 15 · 01:11 PM ET</p>
+          <p class="upload-brand-ver-ts">May 18 · 12:21 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2045,7 +2045,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 15 · 01:11 PM ET</div>
+        <div class="ds-brand-ver-ts">May 18 · 12:21 PM ET</div>
       </div>
     </div>
   </div>
@@ -2239,7 +2239,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 15 · 01:11 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 12:21 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -4166,30 +4166,6 @@
         </button>
       </div>
       <div id="api-keys-clear-all-status" style="display:none;margin-top:10px;font-size:12px;"></div>
-    </section>
-
-    <!-- ── Launch at login (Phase 5 plan 03 — TRAY-06) ───────────────────
-         Opt-in toggle for app.setLoginItemSettings({openAtLogin, openAsHidden:true}).
-         Browser path falls back to a notice (mirrors api-keys-section pattern).
-         First-time enable on macOS shows a Background Items pre-warn dialog
-         from main process. ─────────────────────────────────────────────── -->
-    <section id="launch-at-login-section" class="bg-slate-800/60 border border-slate-700/60 rounded-2xl mb-5 p-5">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div style="flex:1;min-width:0;">
-          <h3 class="text-lg font-semibold text-white" style="margin:0;">Launch at login</h3>
-          <p style="margin:6px 0 0;font-size:12px;color:#94a3b8;">
-            Open OneSourceCMD automatically when you sign in. Window stays hidden in the menu bar / system tray until you click the tray icon.
-          </p>
-        </div>
-        <label id="settings-launch-at-login-label" style="position:relative;display:inline-block;width:42px;height:24px;cursor:pointer;flex-shrink:0;">
-          <input type="checkbox" id="settings-launch-at-login-toggle" style="opacity:0;width:0;height:0;">
-          <span id="settings-launch-at-login-track" style="position:absolute;inset:0;background:#334155;border-radius:12px;transition:background .2s;"></span>
-          <span id="settings-launch-at-login-thumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;"></span>
-        </label>
-      </div>
-      <div id="settings-launch-at-login-no-app-notice" style="display:none;margin-top:10px;font-size:13px;color:#94a3b8;">
-        Launch-at-login is only available in the desktop app.
-      </div>
     </section>
 
     <!-- ── Show onboarding tour (Phase 09) — relaunches the welcome walkthrough
@@ -38826,56 +38802,6 @@ Use the response format from SYSTEM_PROMPT.`;
         if (status) status.style.display = 'none';
       }
     }, 5000);
-  });
-})();
-
-// ── Launch at login (Phase 5 plan 03 — TRAY-06) ─────────────────────
-// Pure UI shim over window.electronAPI.loginItem.{get,set}. Browser path
-// (no electronAPI surface) disables the toggle and shows the notice — same
-// fallback shape as the API-keys panel above. Optimistic-paint + revert is
-// because the main-process pre-warn dialog wraps setLoginItemSettings in an
-// async UX; the renderer paints the wanted state immediately, then reverts
-// if the IPC returns ok:false (user cancelled the dialog) or throws.
-(function setupLaunchAtLogin() {
-  const toggle = document.getElementById('settings-launch-at-login-toggle');
-  const track  = document.getElementById('settings-launch-at-login-track');
-  const thumb  = document.getElementById('settings-launch-at-login-thumb');
-  const notice = document.getElementById('settings-launch-at-login-no-app-notice');
-  if (!toggle || !track || !thumb) return;
-
-  const inApp = !!(window.electronAPI && window.electronAPI.loginItem);
-  if (!inApp) {
-    // Browser path — disable + show notice (mirrors api-keys-section).
-    toggle.disabled = true;
-    if (notice) notice.style.display = 'block';
-    return;
-  }
-
-  function paint(checked) {
-    toggle.checked = !!checked;
-    track.style.background = checked ? '#10b981' : '#334155';
-    thumb.style.transform  = checked ? 'translateX(18px)' : 'translateX(0)';
-  }
-
-  // Initial state — read from main, never trust the unchecked default.
-  // Survives app restart because main reads app.getLoginItemSettings().
-  window.electronAPI.loginItem.get().then((res) => {
-    if (res && res.ok) paint(res.openAtLogin);
-  }).catch(() => { /* main not ready — leave unchecked */ });
-
-  toggle.addEventListener('change', async () => {
-    const wanted = !!toggle.checked;
-    // Optimistic paint — revert on cancel/error.
-    paint(wanted);
-    try {
-      const res = await window.electronAPI.loginItem.set(wanted);
-      if (!res || !res.ok) {
-        // Revert (cancelled pre-warn dialog OR API error).
-        paint(!wanted);
-      }
-    } catch (_) {
-      paint(!wanted);
-    }
   });
 })();
 
