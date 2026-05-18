@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 01:19 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 02:48 PM ET</span>
     </div>
   </div>
 </div>
@@ -1827,7 +1827,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 18 · 01:19 PM ET</p>
+          <p class="upload-brand-ver-ts">May 18 · 02:48 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2045,7 +2045,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 18 · 01:19 PM ET</div>
+        <div class="ds-brand-ver-ts">May 18 · 02:48 PM ET</div>
       </div>
     </div>
   </div>
@@ -2239,7 +2239,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 01:19 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 02:48 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -14214,9 +14214,12 @@ function renderQuotesPipeline() {
     <div id="qpipe-drill-stack" style="margin-top:10px;display:flex;flex-direction:column;gap:10px;"></div>
   `;
 
+  window._qpToggleDrill = function(key) { try { toggleQuoteCustomerDrill(key); } catch(_) {} };
+
   const masterHost = host.querySelector('#qpipe-master-host');
   masterHost.querySelector('#ds-modal-controls').innerHTML = dsControlsHtml({ placeholder: 'Filter customers…' });
-  const masterTable = dsRenderTable(masterHost, '#a5b4fc', customerCols, groups, 'No open quotes match.');
+  const masterTable = dsRenderTable(masterHost, '#a5b4fc', customerCols, groups, 'No open quotes match.',
+    { rowKey: g => g.key, onRowClick: '_qpToggleDrill' });
   masterHost.querySelector('#ds-modal-filter').addEventListener('input', dsDebounce(e => masterTable.setFilter(e.target.value), 200));
   // dsRenderTable's modal-context max-height (calc(92vh-220px)) inline-traps
   // scrolling inside the master table; reset to natural height.
@@ -14228,18 +14231,6 @@ function renderQuotesPipeline() {
     tables: [masterTable],
     cols: customerCols,
     storageKey: 'qpipe.master.hiddenCols',
-  });
-
-  // Delegated click — first cell carries data-customer-key. This survives the
-  // sort/filter re-renders that dsRenderTable triggers internally because the
-  // listener lives on the persistent host element.
-  masterHost.addEventListener('click', (ev) => {
-    const tr = ev.target.closest('tbody tr');
-    if (!tr || !masterHost.contains(tr)) return;
-    const td = tr.querySelector('td[data-customer-key]');
-    if (!td) return;
-    const key = td.getAttribute('data-customer-key');
-    if (key) toggleQuoteCustomerDrill(key);
   });
 
   // Drill stack — one panel per expanded customer, each with its own
@@ -37268,7 +37259,7 @@ Use the response format from SYSTEM_PROMPT.`;
     strip.onclick = () => { onExpand(); };
   }
 
-  function dsRenderTable(modal, accent, cols, rows, emptyMsg) {
+  function dsRenderTable(modal, accent, cols, rows, emptyMsg, opts) {
     const body = modal.querySelector('#ds-modal-body');
     const tableId = 'ds-table-' + Math.random().toString(36).slice(2, 8);
     const sortFnName = '__dsSort_' + tableId.replace(/-/g, '_');
@@ -37280,9 +37271,10 @@ Use the response format from SYSTEM_PROMPT.`;
     const state = { sort: { col: cols[0]?.key || null, dir: 'asc' }, colFilters: {}, hiddenCols: new Set(), globalSearch: '' };
     const config = {
       columns: cols, data: () => rows,
-      rowKey: (_r, i) => String(i),
+      rowKey: opts?.rowKey || ((_r, i) => String(i)),
       filterableHeader: false,
       onSort: sortFnName,
+      ...(opts?.onRowClick ? { onRowClick: opts.onRowClick } : {}),
       summary: r => `${r.length.toLocaleString()} of ${rows.length.toLocaleString()} row${rows.length === 1 ? '' : 's'}`,
       summaryHostId: tableId + '-summary',
       emptyMessage: emptyMsg || 'No rows.',
