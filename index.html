@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 12:25 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 01:19 PM ET</span>
     </div>
   </div>
 </div>
@@ -1827,7 +1827,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 18 · 12:25 PM ET</p>
+          <p class="upload-brand-ver-ts">May 18 · 01:19 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -1839,7 +1839,7 @@
 
       <div class="type-card indigo" id="ds-card-crm" data-source="crm" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn,.ds-empty-cta,.ds-st-drop'))openDataSourceTable('crm')">
         <div class="type-card-corner">
-          <button type="button" class="ds-corner-btn" data-action="refresh" data-source="crm" title="Refresh from proxy (after re-running CRM bookmarklet)" onclick="event.stopPropagation();window.dsTriggerRefreshExt&&window.dsTriggerRefreshExt('crm')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+          <button type="button" class="ds-corner-btn" data-action="refresh" data-source="crm" title="Resync CRM" onclick="event.stopPropagation();window.dsShowRefreshPopup&&window.dsShowRefreshPopup('crm',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
           <button type="button" class="ds-corner-btn" data-action="bookmarklet" data-source="crm" title="Open bookmarklet installer" onclick="event.stopPropagation();if(window.electronAPI?.shell?.openBookmarkletPage){window.electronAPI.shell.openBookmarkletPage();}else{try{window.open('bookmarklet.html','_blank');}catch(_){}}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>
           <button type="button" class="ds-corner-btn" data-action="clear" data-source="crm" data-disabled="true" data-demo-disable title="Clear CRM cache" onclick="event.stopPropagation();window.dsTriggerClearExt&&window.dsTriggerClearExt('crm')">🗑</button>
         </div>
@@ -1865,7 +1865,7 @@
 
       <div class="type-card emerald" id="ds-card-nice" data-source="nice" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn,.ds-empty-cta,.ds-st-drop'))openDataSourceTable('nice')">
         <div class="type-card-corner">
-          <button type="button" class="ds-corner-btn" data-action="refresh" data-source="nice" title="Refresh from proxy (after re-running NICE bookmarklet)" onclick="event.stopPropagation();window.dsTriggerRefreshExt&&window.dsTriggerRefreshExt('nice')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+          <button type="button" class="ds-corner-btn" data-action="refresh" data-source="nice" title="Resync NICE" onclick="event.stopPropagation();window.dsShowRefreshPopup&&window.dsShowRefreshPopup('nice',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
           <button type="button" class="ds-corner-btn" data-action="resync" data-source="nice" title="Upload file to overwrite NICE proxy data" onclick="event.stopPropagation();window.dsTriggerResyncExt&&window.dsTriggerResyncExt('nice')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
           <button type="button" class="ds-corner-btn" data-action="clear" data-source="nice" data-disabled="true" title="Clear NICE cache" onclick="event.stopPropagation();window.dsTriggerClearExt&&window.dsTriggerClearExt('nice')">🗑</button>
         </div>
@@ -1927,7 +1927,7 @@
 
         <div class="type-card rose" id="ds-card-quotes" data-source="quotes" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn,.ds-empty-cta,.ds-st-drop'))openDataSourceTable('quotes')">
           <div class="type-card-corner">
-            <button type="button" class="ds-corner-btn" data-action="refresh" data-source="quotes" title="Refresh from proxy (after re-running OSIT bookmarklet)" onclick="event.stopPropagation();window.dsTriggerRefreshExt&&window.dsTriggerRefreshExt('quotes')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+            <button type="button" class="ds-corner-btn" data-action="refresh" data-source="quotes" title="Resync Quotes" onclick="event.stopPropagation();window.dsShowRefreshPopup&&window.dsShowRefreshPopup('quotes',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
             <button type="button" class="ds-corner-btn" data-action="resync" data-source="quotes" title="Upload OSIT quote CSV/XLSX export" onclick="event.stopPropagation();window.dsTriggerResyncExt&&window.dsTriggerResyncExt('quotes')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
             <button type="button" class="ds-corner-btn" data-action="clear" data-source="quotes" data-disabled="true" title="Clear quotes cache" onclick="event.stopPropagation();window.dsTriggerClearExt&&window.dsTriggerClearExt('quotes')">🗑</button>
           </div>
@@ -2045,7 +2045,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 18 · 12:25 PM ET</div>
+        <div class="ds-brand-ver-ts">May 18 · 01:19 PM ET</div>
       </div>
     </div>
   </div>
@@ -2239,7 +2239,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 12:25 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 01:19 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -4450,7 +4450,7 @@
 
           <div class="type-card indigo" data-source="crm" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn,.ds-empty-cta,.ds-st-drop,.ds-bm-block'))openDataSourceTable('crm')">
             <div class="type-card-corner">
-              <button type="button" class="ds-corner-btn" data-action="refresh" data-source="crm" title="Refresh from proxy (after re-running CRM bookmarklet)" onclick="event.stopPropagation();window.dsTriggerRefreshExt&&window.dsTriggerRefreshExt('crm')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+              <button type="button" class="ds-corner-btn" data-action="refresh" data-source="crm" title="Resync CRM" onclick="event.stopPropagation();window.dsShowRefreshPopup&&window.dsShowRefreshPopup('crm',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
               <button type="button" class="ds-corner-btn" data-action="bookmarklet" data-source="crm" title="Open bookmarklet installer" onclick="event.stopPropagation();if(window.electronAPI?.shell?.openBookmarkletPage){window.electronAPI.shell.openBookmarkletPage();}else{try{window.open('bookmarklet.html','_blank');}catch(_){}}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg></button>
               <button type="button" class="ds-corner-btn" data-action="clear" data-source="crm" data-disabled="true" data-demo-disable title="Clear CRM cache" onclick="event.stopPropagation();window.dsTriggerClearExt&&window.dsTriggerClearExt('crm')">🗑</button>
             </div>
@@ -4472,7 +4472,7 @@
 
           <div class="type-card emerald" data-source="nice" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn,.ds-empty-cta,.ds-st-drop,.ds-bm-block'))openDataSourceTable('nice')">
             <div class="type-card-corner">
-              <button type="button" class="ds-corner-btn" data-action="refresh" data-source="nice" title="Refresh from proxy (after re-running NICE bookmarklet)" onclick="event.stopPropagation();window.dsTriggerRefreshExt&&window.dsTriggerRefreshExt('nice')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+              <button type="button" class="ds-corner-btn" data-action="refresh" data-source="nice" title="Resync NICE" onclick="event.stopPropagation();window.dsShowRefreshPopup&&window.dsShowRefreshPopup('nice',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
               <button type="button" class="ds-corner-btn" data-action="resync" data-source="nice" title="Upload file to overwrite NICE proxy data" onclick="event.stopPropagation();window.dsTriggerResyncExt&&window.dsTriggerResyncExt('nice')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
               <button type="button" class="ds-corner-btn" data-action="clear" data-source="nice" data-disabled="true" title="Clear NICE cache" onclick="event.stopPropagation();window.dsTriggerClearExt&&window.dsTriggerClearExt('nice')">🗑</button>
             </div>
@@ -4515,7 +4515,7 @@
 
           <div class="type-card rose" data-source="quotes" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn,.ds-empty-cta,.ds-st-drop,.ds-bm-block'))openDataSourceTable('quotes')">
             <div class="type-card-corner">
-              <button type="button" class="ds-corner-btn" data-action="refresh" data-source="quotes" title="Refresh from proxy (after re-running OSIT bookmarklet)" onclick="event.stopPropagation();window.dsTriggerRefreshExt&&window.dsTriggerRefreshExt('quotes')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+              <button type="button" class="ds-corner-btn" data-action="refresh" data-source="quotes" title="Resync Quotes" onclick="event.stopPropagation();window.dsShowRefreshPopup&&window.dsShowRefreshPopup('quotes',this)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
               <button type="button" class="ds-corner-btn" data-action="resync" data-source="quotes" title="Upload OSIT quote CSV/XLSX export" onclick="event.stopPropagation();window.dsTriggerResyncExt&&window.dsTriggerResyncExt('quotes')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
               <button type="button" class="ds-corner-btn" data-action="clear" data-source="quotes" data-disabled="true" title="Clear quotes cache" onclick="event.stopPropagation();window.dsTriggerClearExt&&window.dsTriggerClearExt('quotes')">🗑</button>
             </div>
@@ -38274,6 +38274,10 @@ Use the response format from SYSTEM_PROMPT.`;
       } else if (source === 'nice') {
         const r = await hydrateNiceFromProxyV2({ silent: false });
         if (r?.ok !== false) try { window.populateDataSourceCards?.(); } catch (_) {}
+      } else if (source === 'quotes') {
+        await bootLoadQuotesCache();
+        try { window.populateDataSourceCards?.(); } catch (_) {}
+        try { window.rebuild?.(); } catch (_) {}
       }
     } catch (e) {
       try { toast('error', 'Refresh failed', e.message || String(e)); } catch (_) { console.error(e); }
@@ -40957,6 +40961,73 @@ Use the response format from SYSTEM_PROMPT.`;
     hide();
   });
   document.addEventListener('click', () => hide());
+})();
+</script>
+
+<!-- ── ds-refresh-popup: two-step resync mini-popup ──────────────────── -->
+<div id="ds-refresh-popup" style="display:none;position:fixed;z-index:10100;background:#1e293b;border:1px solid #334155;border-radius:11px;padding:14px 15px;min-width:232px;box-shadow:0 10px 32px rgba(0,0,0,0.55);">
+  <div id="ds-rp-title" style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:11px;"></div>
+  <div style="font-size:10px;color:#475569;margin-bottom:5px;">Step 1 — run in browser</div>
+  <button id="ds-rp-bm-btn" style="display:flex;align-items:center;gap:8px;width:100%;background:rgba(99,102,241,0.10);border:1px solid rgba(99,102,241,0.28);color:#a5b4fc;border-radius:7px;padding:8px 10px;font-size:12px;cursor:pointer;text-align:left;margin-bottom:10px;">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+    <span id="ds-rp-bm-label">Open bookmarklet page</span>
+  </button>
+  <div style="font-size:10px;color:#475569;margin-bottom:5px;">Step 2 — pull fresh data</div>
+  <button id="ds-rp-refresh-btn" style="display:flex;align-items:center;gap:8px;width:100%;background:rgba(16,185,129,0.10);border:1px solid rgba(16,185,129,0.28);color:#34d399;border-radius:7px;padding:8px 10px;font-size:12px;cursor:pointer;text-align:left;">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+    <span>Refresh from proxy</span>
+  </button>
+</div>
+<script>
+(function setupDsRefreshPopup() {
+  const popup = document.getElementById('ds-refresh-popup');
+  if (!popup) return;
+  let _src = null;
+
+  function closePopup() {
+    popup.style.display = 'none';
+    _src = null;
+    document.removeEventListener('click', outsideClick, true);
+    document.removeEventListener('keydown', escKey);
+  }
+  function outsideClick(e) { if (!popup.contains(e.target)) closePopup(); }
+  function escKey(e) { if (e.key === 'Escape') closePopup(); }
+
+  window.dsShowRefreshPopup = function(source, btn) {
+    if (popup.style.display !== 'none' && _src === source) { closePopup(); return; }
+    _src = source;
+
+    const titles = { crm: 'CRM — Dynamics 365', nice: 'NICE Commission', quotes: 'Quotes — OSIT Sync' };
+    const bmLabels = { crm: 'Open bookmarklet page', nice: 'Open NICE SPM page', quotes: 'Open bookmarklet page' };
+    document.getElementById('ds-rp-title').textContent = titles[source] || source;
+    document.getElementById('ds-rp-bm-label').textContent = bmLabels[source] || 'Open bookmarklet page';
+
+    popup.style.display = 'block';
+    const rect = btn.getBoundingClientRect();
+    const pw = popup.offsetWidth || 232;
+    popup.style.top  = (rect.bottom + 6) + 'px';
+    popup.style.left = Math.max(8, Math.min(rect.right - pw, window.innerWidth - pw - 8)) + 'px';
+
+    setTimeout(() => {
+      document.addEventListener('click', outsideClick, true);
+      document.addEventListener('keydown', escKey);
+    }, 0);
+  };
+
+  document.getElementById('ds-rp-bm-btn')?.addEventListener('click', () => {
+    const src = _src; closePopup();
+    if (src === 'nice') {
+      window.open('https://eplus-spm.nicecloudsvc.com/group/nicm/transaction-summary-report', '_blank', 'noopener');
+    } else {
+      if (window.electronAPI?.shell?.openBookmarkletPage) { window.electronAPI.shell.openBookmarkletPage(); }
+      else { try { window.open('bookmarklet.html', '_blank'); } catch (_) {} }
+    }
+  });
+
+  document.getElementById('ds-rp-refresh-btn')?.addEventListener('click', () => {
+    const src = _src; closePopup();
+    window.dsTriggerRefreshExt?.(src);
+  });
 })();
 </script>
 </body>
