@@ -1676,7 +1676,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 04:27 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 04:35 PM ET</span>
     </div>
   </div>
 </div>
@@ -1827,7 +1827,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 18 · 04:27 PM ET</p>
+          <p class="upload-brand-ver-ts">May 18 · 04:35 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2045,7 +2045,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 18 · 04:27 PM ET</div>
+        <div class="ds-brand-ver-ts">May 18 · 04:35 PM ET</div>
       </div>
     </div>
   </div>
@@ -2239,7 +2239,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 04:27 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 04:35 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -5110,7 +5110,7 @@ const STATE = {
   // masterOrderNumber } }. enrichStWithRenewals consumes this to
   // (1) splice user-linked rebills into the master's chain, and
   // (2) override renewalDate with masterStart + termMonths.
-  orderOverrides: { masters: {}, links: {}, coveredBy: {}, didNotRenew: {}, quoted: {}, notes: {} },
+  orderOverrides: { masters: {}, links: {}, coveredBy: {}, didNotRenew: {}, quoted: {}, soldPendingInvoice: {}, notes: {} },
   // OSIT Quote import (Phase 13 / QUOTE-01..07). Renderer-side parse;
   // persisted via POST /quotes/cache → <userData>/quotes-cache.json.
   // Plan 02 stamps custCanonical / _canonicalSource on these rows in-place
@@ -11178,6 +11178,15 @@ function _ooRenderRenewalCell(v, r) {
   // Only applies to upcoming renewals (renewal/estimated types).
   const t = r && r._renewalType;
   if (t === 'renewal' || t === 'estimated') {
+    if (r._isSoldPendingInvoice) {
+      const qnRaw = String(r._soldPIQuoteNo || '').trim();
+      const note = String(r._chainNote || '').trim();
+      const tip = cpEsc(`Sold · PO placed — awaiting invoice${qnRaw ? ' · Quote ' + qnRaw : ''}.${note ? ' ' + note : ''}`);
+      return `<div data-override="sold-pending-invoice" data-tip="${tip}" style="display:inline-flex;flex-direction:column;align-items:flex-end;gap:2px;line-height:1.1;">
+        <span class="text-violet-300 font-semibold" style="font-size:12px;">${fmtDate(v)}</span>
+        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-900/30 border border-amber-700/50 text-amber-300" style="font-size:10px;font-weight:600;line-height:1;white-space:nowrap;">Sold · Pending Invoice</span>
+      </div>`;
+    }
     if (r._isQuoted) {
       const qnRaw = String(r._quotedQuoteNo || '').trim();
       const note = String(r._chainNote || r._quotedNote || '').trim();
@@ -11323,9 +11332,10 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
     if (vendorKey !== '*' && bucket[vendorKey]) return bucket[vendorKey];
     return bucket['*'] || null;
   };
-  const coveredEntry     = _ovLookup(overrides.coveredBy);
-  const didNotRenewEntry = _ovLookup(overrides.didNotRenew);
-  const quotedEntry      = _ovLookup(overrides.quoted);
+  const coveredEntry          = _ovLookup(overrides.coveredBy);
+  const didNotRenewEntry      = _ovLookup(overrides.didNotRenew);
+  const quotedEntry           = _ovLookup(overrides.quoted);
+  const soldPendingEntry      = _ovLookup(overrides.soldPendingInvoice);
   // v1.1.0-dev.25 — shared per-(order, vendor) chain note. Lifted out of
   // the individual override entries so the same observation survives state
   // changes ("customer pivoted to Cisco" still reads correctly whether we
@@ -11337,13 +11347,12 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
   // (single-state) view or picker (all-options) view. Compact view shows
   // ONLY the active state's panel plus the shared note; a "Change state"
   // button reveals the picker.
-  // Priority: closure states (covered, did-not-renew) > in-flight (quoted)
-  // > structural (linked-rebill, master). One chain can't be both covered
-  // AND did-not-renew, so this is mostly a tie-break heuristic for
-  // master+quoted-style combinations.
-  const activeState = coveredEntry    ? 'covered'
-                    : didNotRenewEntry ? 'did-not-renew'
-                    : quotedEntry      ? 'quoted'
+  // Priority: closure (covered, did-not-renew) > in-flight (sold-pending-invoice > quoted)
+  // > structural (linked-rebill, master).
+  const activeState = coveredEntry        ? 'covered'
+                    : didNotRenewEntry    ? 'did-not-renew'
+                    : soldPendingEntry    ? 'sold-pending-invoice'
+                    : quotedEntry         ? 'quoted'
                     : (overrides.links[ord] ? 'linked-rebill'
                     : (overrides.masters[ord] ? 'master'
                     : 'unset'));
@@ -11418,11 +11427,13 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
               <span style="font:600 13px -apple-system,system-ui,sans-serif;color:${
                 activeState === 'covered' ? '#34d399'
                 : activeState === 'did-not-renew' ? '#cbd5e1'
+                : activeState === 'sold-pending-invoice' ? '#fbbf24'
                 : activeState === 'quoted' ? '#7dd3fc'
                 : activeState === 'linked-rebill' ? '#a5b4fc'
                 : '#c4b5fd'};">${
                 activeState === 'covered' ? '✓ Covered by new purchase'
                 : activeState === 'did-not-renew' ? '✗ Customer did not renew'
+                : activeState === 'sold-pending-invoice' ? '◉ Sold · Pending Invoice'
                 : activeState === 'quoted' ? '◷ Quoted'
                 : activeState === 'linked-rebill' ? '↳ Linked as rebill'
                 : '⟲ Multi-year master'}</span>
@@ -11438,6 +11449,9 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
             }
             if (activeState === 'linked-rebill' && linkedTo) {
               chips.push({ label: 'Master order', value: linkedTo, color: '#a5b4fc' });
+            }
+            if (activeState === 'sold-pending-invoice' && soldPendingEntry && soldPendingEntry.quoteNumber) {
+              chips.push({ label: 'Quote #', value: soldPendingEntry.quoteNumber, color: '#fbbf24' });
             }
             if (activeState === 'quoted' && quotedEntry && quotedEntry.quoteNumber) {
               chips.push({ label: 'Quote #', value: quotedEntry.quoteNumber, color: '#7dd3fc' });
@@ -11481,6 +11495,10 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
             <button data-step-pick="quoted" style="text-align:left;padding:12px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font:600 13px -apple-system,system-ui,sans-serif;cursor:pointer;display:flex;flex-direction:column;gap:4px;">
               <span style="color:#7dd3fc;">◷ Quoted</span>
               <span style="font:400 11px -apple-system,system-ui,sans-serif;color:#94a3b8;">Quote provided, awaiting customer PO.</span>
+            </button>
+            <button data-step-pick="sold-pi" style="grid-column:1 / -1;text-align:left;padding:12px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font:600 13px -apple-system,system-ui,sans-serif;cursor:pointer;display:flex;flex-direction:column;gap:4px;">
+              <span style="color:#fbbf24;">◉ Sold · Pending Invoice</span>
+              <span style="font:400 11px -apple-system,system-ui,sans-serif;color:#94a3b8;">PO placed (Ordered in OSIT) — awaiting ST invoice to materialize.</span>
             </button>
             <button data-step-pick="dnr" style="grid-column:1 / -1;text-align:left;padding:12px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font:600 13px -apple-system,system-ui,sans-serif;cursor:pointer;display:flex;flex-direction:column;gap:4px;">
               <span style="color:#cbd5e1;">✗ Customer did not renew</span>
@@ -11550,6 +11568,17 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
           <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
             <button id="__my-quoted-btn" style="padding:7px 14px;background:#0ea5e9;color:#fff;border:none;border-radius:6px;font:600 13px -apple-system,system-ui,sans-serif;cursor:pointer;">${quotedEntry ? 'Update quote' : 'Mark as Quoted'}</button>
             ${quotedEntry ? '<button id="__my-quoted-remove-btn" style="padding:7px 14px;background:transparent;color:#fca5a5;border:1px solid #991b1b;border-radius:6px;font:13px -apple-system,system-ui,sans-serif;cursor:pointer;">Remove quote</button>' : ''}
+          </div>
+          <button data-step-back="1" style="margin-top:14px;padding:4px 0;background:transparent;border:none;color:#94a3b8;font:600 11px -apple-system,system-ui,sans-serif;cursor:pointer;align-self:flex-start;">← Back to options</button>
+        </div>
+
+        <div id="__my-step-sold-pi" data-step-panel="sold-pi" style="display:none;background:#1e293b;border:1px solid ${soldPendingEntry ? '#d97706' : '#334155'};border-radius:8px;padding:14px;">
+          <div style="font:600 13px -apple-system,system-ui,sans-serif;color:#e2e8f0;margin-bottom:4px;">${soldPendingEntry ? '◉ Sold · Pending Invoice · ' + esc((soldPendingEntry.quoteNumber||'')) : 'Mark as Sold · Pending Invoice'}</div>
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:8px;">PO is placed (Ordered in OSIT) but the ST invoice hasn't materialized yet. ${vendorRaw ? 'Applies to <b>' + esc(vendorRaw) + '</b> lines on this PO only.' : 'Applies to every line on this PO.'} Chain stays in the upcoming-renewals calendar until the invoice lands.</div>
+          <input type="text" id="__my-sold-pi-no" placeholder="Quote # (optional — auto-filled if previously Quoted)" value="${esc((soldPendingEntry && soldPendingEntry.quoteNumber) || (quotedEntry && quotedEntry.quoteNumber) || '')}" autocomplete="off" style="width:100%;padding:6px 8px;background:#0f172a;border:1px solid #334155;border-radius:4px;color:#f1f5f9;font:13px ui-monospace,monospace;">
+          <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
+            <button id="__my-sold-pi-btn" style="padding:7px 14px;background:#d97706;color:#fff;border:none;border-radius:6px;font:600 13px -apple-system,system-ui,sans-serif;cursor:pointer;">${soldPendingEntry ? 'Update' : 'Mark as Sold · Pending Invoice'}</button>
+            ${soldPendingEntry ? '<button id="__my-sold-pi-remove-btn" style="padding:7px 14px;background:transparent;color:#fca5a5;border:1px solid #991b1b;border-radius:6px;font:13px -apple-system,system-ui,sans-serif;cursor:pointer;">Remove</button>' : ''}
           </div>
           <button data-step-back="1" style="margin-top:14px;padding:4px 0;background:transparent;border:none;color:#94a3b8;font:600 11px -apple-system,system-ui,sans-serif;cursor:pointer;align-self:flex-start;">← Back to options</button>
         </div>
@@ -11863,6 +11892,49 @@ function openOrderOverrideModal(orderNumber, customer, vendor) {
     });
   }
 
+  // "Sold · Pending Invoice" save / remove wiring.
+  const soldPiNoIn = $('__my-sold-pi-no');
+  const soldPiBtn  = $('__my-sold-pi-btn');
+  const soldPiRm   = $('__my-sold-pi-remove-btn');
+  if (soldPiBtn) {
+    soldPiBtn.addEventListener('click', async () => {
+      const qn = String((soldPiNoIn && soldPiNoIn.value) || '').trim();
+      const _cn = $('__my-chain-note');
+      const n = String((_cn && _cn.value) || '').trim();
+      try {
+        const x = await window.electronAPI.orderOverrides.setSoldPendingInvoice({
+          renewingOrderNumber: ord, vendorKey, quoteNumber: qn, note: n,
+        });
+        if (x && x.ok) {
+          // Remove the Quoted mark if present — SPI supersedes it.
+          if (quotedEntry) {
+            await window.electronAPI.orderOverrides.removeQuoted({ renewingOrderNumber: ord, vendorKey });
+          }
+          applyOrderOverridesState(x.state);
+          enrichStWithRenewals();
+          try { refreshAfterOverrideChange(); } catch (_) {}
+          _close();
+        } else { alert('Save failed: ' + (x && x.error)); }
+      } catch (e) { alert('Save failed: ' + e.message); }
+    });
+  }
+  if (soldPiRm) {
+    soldPiRm.addEventListener('click', async () => {
+      if (!confirm('Remove "Sold · Pending Invoice" mark?')) return;
+      try {
+        const x = await window.electronAPI.orderOverrides.removeSoldPendingInvoice({
+          renewingOrderNumber: ord, vendorKey,
+        });
+        if (x && x.ok) {
+          applyOrderOverridesState(x.state);
+          enrichStWithRenewals();
+          try { refreshAfterOverrideChange(); } catch (_) {}
+          _close();
+        } else { alert('Remove failed: ' + (x && x.error)); }
+      } catch (e) { alert('Remove failed: ' + e.message); }
+    });
+  }
+
   // v1.1.0-dev.25 — shared chain-note wiring. Save / clear independently of
   // any state. Saves via setChainNote so the user can record observations
   // without first picking a state, and notes survive state transitions.
@@ -12080,6 +12152,8 @@ function enrichStWithRenewals() {
     delete r._isUserDidNotRenew; delete r._didNotRenewNote;
     // v1.1.0-dev.24 — "Quoted" pipeline state stamps.
     delete r._isQuoted; delete r._quotedQuoteNo; delete r._quotedNote;
+    // "Sold · Pending Invoice" pipeline state stamps.
+    delete r._isSoldPendingInvoice; delete r._soldPIQuoteNo;
     // v1.1.0-dev.25 — shared per-(order, vendor) chain note. Independent of
     // which override state is active so it survives state transitions.
     delete r._chainNote;
@@ -12094,12 +12168,13 @@ function enrichStWithRenewals() {
   // the row joins the master's chain via _rnChainKey. Never overwrite a
   // real ST signal — only fill blanks. _isUserLinkedRebill is the audit
   // marker so we can distinguish from source-populated rebills.
-  const _ooState = (STATE.orderOverrides && typeof STATE.orderOverrides === 'object') ? STATE.orderOverrides : { masters: {}, links: {}, coveredBy: {}, didNotRenew: {}, quoted: {}, notes: {} };
+  const _ooState = (STATE.orderOverrides && typeof STATE.orderOverrides === 'object') ? STATE.orderOverrides : { masters: {}, links: {}, coveredBy: {}, didNotRenew: {}, quoted: {}, soldPendingInvoice: {}, notes: {} };
   const _ooLinks = _ooState.links || {};
   const _ooMasters = _ooState.masters || {};
   const _ooCoveredBy = _ooState.coveredBy || {};
   const _ooDidNotRenew = _ooState.didNotRenew || {};
   const _ooQuoted = _ooState.quoted || {};
+  const _ooSoldPendingInvoice = _ooState.soldPendingInvoice || {};
   const _ooNotes = _ooState.notes || {};
   // v1.1.0-dev.20 — overrides are vendor-keyed (`{ ord: { vendorCanon: {...}, '*': {...} } }`).
   // This helper resolves the effective entry for a given (orderNo, vendorCanon):
@@ -12456,6 +12531,29 @@ function enrichStWithRenewals() {
       line._isQuoted       = true;
       line._quotedQuoteNo  = entry.quoteNumber || '';
       line._quotedNote     = entry.note || '';
+    }
+  }
+  // "Sold · Pending Invoice" — ordered in OSIT, ST invoice not yet materialized.
+  // Same priority as Quoted (in-flight, chain stays in calendar), but takes
+  // precedence over Quoted when both are present (shouldn't happen, but guard anyway).
+  for (const g of groups.values()) {
+    const vendorCanon = g.lines.length ? _rnVendorCanon(g.lines[0]) : '_';
+    if (g.lines.some(l => l._isCoveredByPurchase || l._isUserDidNotRenew)) continue;
+    let entry = null;
+    for (const line of g.lines) {
+      const ord = (line.orderNumber || '').toString().trim();
+      if (!ord) continue;
+      const found = _ooLookup(_ooSoldPendingInvoice, ord, vendorCanon);
+      if (found) { entry = found; break; }
+    }
+    if (!entry) continue;
+    for (const line of g.lines) {
+      line._isSoldPendingInvoice = true;
+      line._soldPIQuoteNo        = entry.quoteNumber || '';
+      // Suppress the Quoted badge if this chain was also in quoted store
+      // (transition period — auto-promote may have written SPI without
+      // yet removing the quoted entry).
+      line._isQuoted = false;
     }
   }
   // v1.1.0-dev.25 — stamp the shared chain note onto every line. Notes are
@@ -13122,55 +13220,112 @@ function computeQuoteCrosslink() {
     detail: { ts: nowMs, closedWonCount, matchedStCount, matchedNiceCount, distribution: dist },
   }));
 
-  // Fire-and-forget: if any Quoted chains now point at closed-won quotes
-  // with materialized ST orders, promote them to Covered with the new
-  // order's renewal date pulled in via the standard coveredBy path.
+  // Fire-and-forget stage 1: Quoted → Sold·Pending Invoice when quote is
+  // closed-won (no ST order required). Stage 2: SPI/Quoted → Covered when
+  // closed-won AND linkedSt has materialized.
+  try { autoPromoteSoldPendingFromClosedQuotes().catch(e => console.warn('[auto-spi] failed', e)); } catch (_) {}
   try { autoPromoteCoveredFromClosedQuotes().catch(e => console.warn('[auto-cover] failed', e)); } catch (_) {}
 
   return { closedWonCount, matchedStCount, matchedNiceCount, distribution: dist };
 }
 window.computeQuoteCrosslink = computeQuoteCrosslink;
 
-// v1.1.0-dev.34 — auto-flip Quoted → Covered when the linked quote import
-// shows the quote as closed-won with a materialized ST order. Persists the
-// override (writes coveredBy, drops quoted) so subsequent rebuilds see the
-// promotion as a sticky user-style override. Idempotent: once promoted, the
-// entry is no longer in `quoted` so the next run no-ops.
-//
-// Loop safety: setCoverage/removeQuoted call applyOrderOverridesState +
-// enrichStWithRenewals (neither recomputes crosslink), so re-entry from
-// the crosslink hook is impossible.
-async function autoPromoteCoveredFromClosedQuotes() {
-  if (window._autoPromoteRunning) return; // re-entry guard
-  if (!window.electronAPI || !window.electronAPI.orderOverrides || !window.electronAPI.orderOverrides.setCoverage) return;
+// Auto-promote Quoted → Sold·Pending Invoice when the linked quote is
+// closed-won in OSIT (regardless of whether an ST order has materialized).
+// Fills the gap where a quote is Ordered in OSIT but linkedSt is still
+// empty (fulfillmentStatus: "pending-materialization").
+async function autoPromoteSoldPendingFromClosedQuotes() {
+  if (window._autoSPIRunning) return;
+  if (!window.electronAPI || !window.electronAPI.orderOverrides) return;
   const ov = STATE.orderOverrides || {};
   const quotedStore = ov.quoted || {};
   const ordKeys = Object.keys(quotedStore);
   if (!ordKeys.length) return;
-  // Build quoteNo → quoteRow index from closed-won quotes that have an ST order.
+  // All closed-won quotes — no linkedSt requirement.
   const wonByNo = new Map();
   for (const r of (STATE.quotesRows || [])) {
     if (r.quoteStatus !== 'closed-won') continue;
-    if (!r.linkedSt || !r.linkedSt.length) continue;
-    const ord = (r.linkedSt[0] && r.linkedSt[0].orderNumber || '').toString().trim();
-    if (!ord) continue;
     const k = String(r.quoteNo || '').toLowerCase().trim();
-    if (k) wonByNo.set(k, { coveringOrderNumber: ord, quoteNo: r.quoteNo });
+    if (k) wonByNo.set(k, { quoteNo: r.quoteNo });
   }
   if (!wonByNo.size) return;
-  // Collect promotions before mutating so we can persist sequentially.
   const promotions = [];
   for (const ord of ordKeys) {
     const bucket = quotedStore[ord];
     if (!bucket || typeof bucket !== 'object') continue;
+    // Skip if already in soldPendingInvoice or coveredBy.
+    if ((ov.soldPendingInvoice || {})[ord] || (ov.coveredBy || {})[ord]) continue;
     for (const vendorKey of Object.keys(bucket)) {
       const entry = bucket[vendorKey];
       const qNo = String((entry && entry.quoteNumber) || '').toLowerCase().trim();
       if (!qNo) continue;
       const hit = wonByNo.get(qNo);
       if (!hit) continue;
-      if (String(hit.coveringOrderNumber) === String(ord)) continue; // self-cover safety
-      promotions.push({ ord, vendorKey, coveringOrderNumber: hit.coveringOrderNumber, quoteNo: hit.quoteNo });
+      promotions.push({ ord, vendorKey, quoteNo: hit.quoteNo });
+    }
+  }
+  if (!promotions.length) return;
+  window._autoSPIRunning = true;
+  let lastState = null;
+  try {
+    for (const p of promotions) {
+      const setRes = await window.electronAPI.orderOverrides.setSoldPendingInvoice({
+        renewingOrderNumber: p.ord, vendorKey: p.vendorKey, quoteNumber: p.quoteNo,
+      });
+      if (setRes && setRes.ok && setRes.state) lastState = setRes.state;
+      else { console.warn('[auto-spi] setSoldPendingInvoice failed', p, setRes); continue; }
+      const rmRes = await window.electronAPI.orderOverrides.removeQuoted({
+        renewingOrderNumber: p.ord, vendorKey: p.vendorKey,
+      });
+      if (rmRes && rmRes.ok && rmRes.state) lastState = rmRes.state;
+    }
+    console.info(`[auto-spi] promoted ${promotions.length} chain(s) Quoted → Sold·Pending Invoice`);
+    if (lastState) {
+      applyOrderOverridesState(lastState);
+      try { enrichStWithRenewals(); } catch (e) { console.warn('[auto-spi] enrich failed', e); }
+      try { refreshAfterOverrideChange(); } catch (_) {}
+    }
+  } finally {
+    window._autoSPIRunning = false;
+  }
+}
+window.autoPromoteSoldPendingFromClosedQuotes = autoPromoteSoldPendingFromClosedQuotes;
+
+// Auto-promote Quoted/SoldPendingInvoice → Covered when the linked quote
+// is closed-won AND a materialized ST order (linkedSt) exists.
+async function autoPromoteCoveredFromClosedQuotes() {
+  if (window._autoPromoteRunning) return;
+  if (!window.electronAPI || !window.electronAPI.orderOverrides || !window.electronAPI.orderOverrides.setCoverage) return;
+  const ov = STATE.orderOverrides || {};
+  // Check both stores — either can advance to Covered once ST materializes.
+  const candidateStores = [
+    { store: ov.quoted || {}, removeMethod: 'removeQuoted' },
+    { store: ov.soldPendingInvoice || {}, removeMethod: 'removeSoldPendingInvoice' },
+  ];
+  const wonByNo = new Map();
+  for (const r of (STATE.quotesRows || [])) {
+    if (r.quoteStatus !== 'closed-won') continue;
+    if (!r.linkedSt || !r.linkedSt.length) continue;
+    const stOrd = (r.linkedSt[0] && r.linkedSt[0].orderNumber || '').toString().trim();
+    if (!stOrd) continue;
+    const k = String(r.quoteNo || '').toLowerCase().trim();
+    if (k) wonByNo.set(k, { coveringOrderNumber: stOrd, quoteNo: r.quoteNo });
+  }
+  if (!wonByNo.size) return;
+  const promotions = [];
+  for (const { store, removeMethod } of candidateStores) {
+    for (const ord of Object.keys(store)) {
+      const bucket = store[ord];
+      if (!bucket || typeof bucket !== 'object') continue;
+      for (const vendorKey of Object.keys(bucket)) {
+        const entry = bucket[vendorKey];
+        const qNo = String((entry && entry.quoteNumber) || '').toLowerCase().trim();
+        if (!qNo) continue;
+        const hit = wonByNo.get(qNo);
+        if (!hit) continue;
+        if (String(hit.coveringOrderNumber) === String(ord)) continue;
+        promotions.push({ ord, vendorKey, coveringOrderNumber: hit.coveringOrderNumber, quoteNo: hit.quoteNo, removeMethod });
+      }
     }
   }
   if (!promotions.length) return;
@@ -13184,12 +13339,12 @@ async function autoPromoteCoveredFromClosedQuotes() {
       });
       if (setRes && setRes.ok && setRes.state) lastState = setRes.state;
       else { console.warn('[auto-cover] setCoverage failed', p, setRes); continue; }
-      const rmRes = await window.electronAPI.orderOverrides.removeQuoted({
+      const rmRes = await window.electronAPI.orderOverrides[p.removeMethod]({
         renewingOrderNumber: p.ord, vendorKey: p.vendorKey,
       });
       if (rmRes && rmRes.ok && rmRes.state) lastState = rmRes.state;
     }
-    console.info(`[auto-cover] promoted ${promotions.length} chain(s) from Quoted → Covered`);
+    console.info(`[auto-cover] promoted ${promotions.length} chain(s) to Covered`);
     if (lastState) {
       applyOrderOverridesState(lastState);
       try { enrichStWithRenewals(); } catch (e) { console.warn('[auto-cover] enrich failed', e); }
@@ -21944,12 +22099,15 @@ function _ordProject(r) {
     _isUserDidNotRenew:   !!r._isUserDidNotRenew,
     _didNotRenewNote:     r._didNotRenewNote || '',
     // v1.1.0-dev.24 — "Quoted" pipeline-state stamps.
-    _isQuoted:            !!r._isQuoted,
-    _quotedQuoteNo:       r._quotedQuoteNo || '',
-    _quotedNote:          r._quotedNote || '',
+    _isQuoted:                !!r._isQuoted,
+    _quotedQuoteNo:           r._quotedQuoteNo || '',
+    _quotedNote:              r._quotedNote || '',
+    // "Sold · Pending Invoice" pipeline-state stamps.
+    _isSoldPendingInvoice:    !!r._isSoldPendingInvoice,
+    _soldPIQuoteNo:           r._soldPIQuoteNo || '',
     // v1.1.0-dev.25 — shared chain note (lifted out of per-state entries
     // so the same observation survives state transitions).
-    _chainNote:           r._chainNote || '',
+    _chainNote:               r._chainNote || '',
     partNo:               r.partNo || '',
   };
 }
@@ -23568,6 +23726,8 @@ function crvUpcoming(stRows) {
       _isQuoted:              !!r._isQuoted,
       _quotedQuoteNo:         (r._quotedQuoteNo || '').toString().trim(),
       _quotedNote:            (r._quotedNote || '').toString().trim(),
+      _isSoldPendingInvoice:  !!r._isSoldPendingInvoice,
+      _soldPIQuoteNo:         (r._soldPIQuoteNo || '').toString().trim(),
       _isCoveredByPurchase:   !!r._isCoveredByPurchase,
       _coveredByOrderNo:      (r._coveredByOrderNo || '').toString().trim(),
       _coveredByNote:         (r._coveredByNote || '').toString().trim(),
@@ -23888,18 +24048,21 @@ function renderClientReview() {
           if (!g.coveredByNote && u._coveredByNote)        g.coveredByNote = u._coveredByNote;
           if (!g.didNotRenewNote && u._didNotRenewNote)    g.didNotRenewNote = u._didNotRenewNote;
           if (!g.chainNote && u._chainNote)                g.chainNote = u._chainNote;
-          if (u._isQuoted)         g.isQuoted = true;
-          if (u._isCoveredByPurchase) g.isCovered = true;
-          if (u._isUserDidNotRenew)   g.isDidNotRenew = true;
+          if (!g.soldPIQuoteNo && u._soldPIQuoteNo)        g.soldPIQuoteNo = u._soldPIQuoteNo;
+          if (u._isQuoted)              g.isQuoted = true;
+          if (u._isSoldPendingInvoice)  g.isSoldPendingInvoice = true;
+          if (u._isCoveredByPurchase)   g.isCovered = true;
+          if (u._isUserDidNotRenew)     g.isDidNotRenew = true;
         }
         const groupArr = [...groups.values()].sort((a, b) => a.when - b.when);
         const shown = groupArr.slice(0, 25);
         const hidden = groupArr.length - shown.length;
 
         const statusPill = g => {
-          if (g.isCovered)      return `<span class="crv-tp-pill pos" title="Covered by another purchase">Covered</span>`;
-          if (g.isDidNotRenew)  return `<span class="crv-tp-pill high" title="Customer did not renew">Did Not Renew</span>`;
-          if (g.isQuoted)       return `<span class="crv-tp-pill med" title="Quote pending — in flight">Quoted</span>`;
+          if (g.isCovered)             return `<span class="crv-tp-pill pos" title="Covered by another purchase">Covered</span>`;
+          if (g.isDidNotRenew)         return `<span class="crv-tp-pill high" title="Customer did not renew">Did Not Renew</span>`;
+          if (g.isSoldPendingInvoice)  return `<span class="crv-tp-pill" style="background:rgba(251,191,36,0.15);color:#fbbf24;border-color:rgba(217,119,6,0.4);" title="PO placed — awaiting invoice">Sold · Pending Invoice</span>`;
+          if (g.isQuoted)              return `<span class="crv-tp-pill med" title="Quote pending — in flight">Quoted</span>`;
           return `<span class="crv-tp-pill low">Open</span>`;
         };
         const quoteCell = g => {
