@@ -1544,6 +1544,42 @@
     #client-review-root canvas { max-height: 280px !important; }
   }
 
+  /* ── OneDrive sync card — hidden on desktop, shown on mobile ── */
+  #onedrive-sync-card {
+    display: none; /* shown via mobile media query */
+    width: 100%; margin-bottom: 20px;
+    padding: 20px 20px 18px;
+    background: linear-gradient(135deg, #1e2d4a 0%, #1a2540 100%);
+    border: 1px solid #2563eb44;
+    border-radius: 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color .15s, box-shadow .15s;
+    text-align: left;
+  }
+  #onedrive-sync-card:active { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+  .od-card-top { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+  .od-card-icon { width: 44px; height: 44px; border-radius: 10px; background: #0f2044; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .od-card-title { font-size: 17px; font-weight: 700; color: #e2e8f0; line-height: 1.2; }
+  .od-card-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
+  .od-card-hint {
+    font-size: 12px; color: #94a3b8; line-height: 1.5;
+    padding: 10px 12px;
+    background: rgba(15,23,42,0.5); border-radius: 10px;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .od-card-hint-icon { flex-shrink: 0; margin-top: 1px; }
+  .od-card-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; margin-top: 14px; padding: 13px 0;
+    border: none; border-radius: 12px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff; font-size: 15px; font-weight: 600;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: opacity .12s;
+  }
+  .od-card-btn:active { opacity: 0.85; }
+
   /* ── Hamburger button — hidden on desktop ────────────────── */
   #mob-menu-btn {
     display: none;
@@ -1617,6 +1653,9 @@
 
     /* Electron-mac overrides don't apply on mobile Safari */
     body.electron-mac #global-search-bar { top: 0; left: 0; padding-left: 4px; }
+
+    /* OneDrive sync card — shown on mobile only */
+    #onedrive-sync-card { display: block; }
   }
 
   /* ── GitHub Pages PIN gate ───────────────────────────────── */
@@ -1848,7 +1887,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 10:58 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 11:02 PM ET</span>
     </div>
   </div>
 </div>
@@ -2000,10 +2039,37 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 18 · 10:58 PM ET</p>
+          <p class="upload-brand-ver-ts">May 18 · 11:02 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
+    </div>
+
+    <!-- OneDrive sync card — mobile only, loads all exports in one tap -->
+    <div id="onedrive-sync-card" onclick="pickFiles('.csv,.xlsx,.xls', routeFiles)">
+      <div class="od-card-top">
+        <div class="od-card-icon">
+          <!-- OneDrive cloud icon -->
+          <svg width="26" height="20" viewBox="0 0 28 20" fill="none">
+            <path d="M16.5 19H5.5C3.0 19 1 17.0 1 14.5C1 12.3 2.6 10.5 4.7 10.1C4.6 9.7 4.5 9.3 4.5 8.9C4.5 6.1 6.8 3.8 9.7 3.8C11.1 3.8 12.3 4.3 13.2 5.2C14.0 3.3 15.9 2 18.1 2C21.3 2 23.9 4.5 23.9 7.8C23.9 8.0 23.9 8.2 23.8 8.4C25.6 8.8 27 10.5 27 12.5C27 15.5 24.6 18 21.6 18L21.5 19H16.5Z" fill="#0078D4" stroke="none"/>
+            <path d="M16.5 19H5.5C3.0 19 1 17.0 1 14.5C1 12.3 2.6 10.5 4.7 10.1C4.6 9.7 4.5 9.3 4.5 8.9C4.5 6.1 6.8 3.8 9.7 3.8C11.1 3.8 12.3 4.3 13.2 5.2" stroke="none" fill="#0078D4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="od-card-title">Load from OneDrive</div>
+          <div class="od-card-sub">Select your exports in one tap</div>
+        </div>
+      </div>
+      <div class="od-card-hint">
+        <span class="od-card-hint-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </span>
+        <span>Tap below → Files app opens → navigate to your OneDrive folder → select your NICE, SalesTrak, and any other export files. The app auto-detects each one.</span>
+      </div>
+      <button class="od-card-btn" type="button">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Select Files from OneDrive
+      </button>
     </div>
 
     <!-- Type guide cards -->
@@ -2217,7 +2283,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 18 · 10:58 PM ET</div>
+        <div class="ds-brand-ver-ts">May 18 · 11:02 PM ET</div>
       </div>
     </div>
   </div>
@@ -2411,7 +2477,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 10:58 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 11:02 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
