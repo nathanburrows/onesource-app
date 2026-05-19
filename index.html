@@ -1618,9 +1618,102 @@
     /* Electron-mac overrides don't apply on mobile Safari */
     body.electron-mac #global-search-bar { top: 0; left: 0; padding-left: 4px; }
   }
+
+  /* ── GitHub Pages PIN gate ───────────────────────────────── */
+  #pin-gate {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #0f172a;
+    display: flex; align-items: center; justify-content: center;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  #pin-gate.hidden { display: none; }
+  .pin-card {
+    text-align: center; padding: 40px 32px;
+    background: #1e293b; border: 1px solid #334155;
+    border-radius: 20px; width: 100%; max-width: 320px; margin: 16px;
+  }
+  .pin-mark { font-size: 40px; margin-bottom: 20px; line-height: 1; }
+  .pin-title { font-size: 18px; font-weight: 700; color: #e2e8f0; margin: 0 0 6px; }
+  .pin-sub { font-size: 13px; color: #64748b; margin: 0 0 24px; }
+  .pin-dots { display: flex; gap: 12px; justify-content: center; margin-bottom: 24px; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; background: #334155; transition: background .15s; }
+  .pin-dot.filled { background: #818cf8; }
+  .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .pin-key {
+    padding: 16px 0; border: none; border-radius: 12px;
+    background: #0f172a; color: #e2e8f0; font-size: 20px; font-weight: 600;
+    cursor: pointer; transition: background .12s, transform .08s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pin-key:hover { background: #1e3a5f; }
+  .pin-key:active { transform: scale(0.93); background: #1e3a5f; }
+  .pin-key.del { font-size: 16px; color: #94a3b8; }
+  .pin-error { color: #f87171; font-size: 13px; margin-top: 14px; min-height: 18px; }
 </style>
 </head>
 <body>
+
+<!-- GitHub Pages PIN gate — hidden immediately if not on github.io or already authed -->
+<div id="pin-gate" class="hidden">
+  <div class="pin-card">
+    <div class="pin-mark">⌘</div>
+    <h1 class="pin-title">OneSourceCMD</h1>
+    <p class="pin-sub">Enter your PIN to continue</p>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-keypad">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key del" onclick="pinDel()">⌫</button>
+      <button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key del" onclick="pinClear()" style="font-size:12px;color:#64748b">CLR</button>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+  </div>
+</div>
+<script>
+(function() {
+  var PIN = '1988'; // ← change this to update the PIN
+  var KEY = 'osc_pin_ok';
+  var onGH = window.location.hostname.endsWith('.github.io');
+  if (!onGH || localStorage.getItem(KEY) === '1') return;
+  document.getElementById('pin-gate').classList.remove('hidden');
+  var entry = '';
+  function render() {
+    for (var i = 0; i < 4; i++) {
+      document.getElementById('pd' + i).classList.toggle('filled', i < entry.length);
+    }
+  }
+  window.pinKey = function(d) {
+    if (entry.length >= 4) return;
+    entry += d;
+    render();
+    document.getElementById('pin-error').textContent = '';
+    if (entry.length === 4) {
+      if (entry === PIN) {
+        localStorage.setItem(KEY, '1');
+        document.getElementById('pin-gate').classList.add('hidden');
+      } else {
+        document.getElementById('pin-error').textContent = 'Incorrect PIN';
+        setTimeout(function() { entry = ''; render(); }, 800);
+      }
+    }
+  };
+  window.pinDel = function() { entry = entry.slice(0, -1); render(); };
+  window.pinClear = function() { entry = ''; render(); document.getElementById('pin-error').textContent = ''; };
+})();
+</script>
 
 <!-- Demo Mode banner — proxy GET /mode returns { mode: 'real'|'demo' }.
      When demo, render a sticky banner across the very top of the dashboard
@@ -1755,7 +1848,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 10:48 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 10:58 PM ET</span>
     </div>
   </div>
 </div>
@@ -1907,7 +2000,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 18 · 10:48 PM ET</p>
+          <p class="upload-brand-ver-ts">May 18 · 10:58 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2124,7 +2217,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 18 · 10:48 PM ET</div>
+        <div class="ds-brand-ver-ts">May 18 · 10:58 PM ET</div>
       </div>
     </div>
   </div>
@@ -2318,7 +2411,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 10:48 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 10:58 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
