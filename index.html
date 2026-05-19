@@ -12,7 +12,8 @@
   var APP_TOKEN = '2hGSjvExlzKItTkcGmgpkLGDB2xLwbCOx3VYv93xqkI';
   var inElectron = typeof window !== 'undefined' && window.navigator &&
     window.navigator.userAgent && window.navigator.userAgent.indexOf('Electron') !== -1;
-  if (inElectron) return; // Electron always allowed regardless of URL
+  var onGithubPages = window.location.hostname.endsWith('.github.io');
+  if (inElectron || onGithubPages) return; // Electron and GitHub Pages always allowed
   var params = new URLSearchParams(window.location.search);
   if (params.get('token') === APP_TOKEN) {
     // Valid token — strip it from the URL so it doesn't show in the address bar
@@ -1542,6 +1543,81 @@
     #client-review-root .crv-section { page-break-inside: avoid; }
     #client-review-root canvas { max-height: 280px !important; }
   }
+
+  /* ── Hamburger button — hidden on desktop ────────────────── */
+  #mob-menu-btn {
+    display: none;
+    align-items: center; justify-content: center;
+    width: 40px; height: 40px; flex-shrink: 0;
+    border: none; background: transparent; color: #94a3b8;
+    cursor: pointer; border-radius: 8px;
+  }
+  #mob-menu-btn:hover { background: #1e293b; color: #e2e8f0; }
+
+  /* ── Mobile sidebar overlay ──────────────────────────────── */
+  #mob-sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 79;
+    background: rgba(0,0,0,0.55);
+  }
+  body.mob-menu-open #mob-sidebar-overlay { display: block; }
+
+  /* ── Mobile / responsive ≤768px ─────────────────────────── */
+  @media (max-width: 768px) {
+    /* Show hamburger, adjust search bar */
+    #mob-menu-btn { display: flex; }
+    body.with-sidebar #global-search-bar { left: 0; padding-left: 4px; }
+
+    /* Sidebar becomes a left-side drawer */
+    body.with-sidebar #dash-sidebar {
+      top: 56px !important;
+      width: 260px !important;
+      padding: 16px 12px;
+      transform: translateX(-260px);
+      transition: transform 0.22s ease-out;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    body.with-sidebar #dash-sidebar:hover,
+    body.with-sidebar #dash-sidebar:focus-within { width: 260px !important; }
+    body.mob-menu-open.with-sidebar #dash-sidebar { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.5); }
+
+    /* No persistent left-padding — sidebar is now a drawer */
+    body.with-sidebar #main-app { padding-left: 16px !important; padding-right: 16px !important; }
+    .page-shell { padding: 16px !important; }
+
+    /* Section navs: horizontal scroll, no wrap */
+    #ov-section-nav, #cp-section-nav, #rn-section-nav, #recon-section-nav, #cpay-section-nav {
+      flex-wrap: nowrap !important;
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    #ov-section-nav::-webkit-scrollbar, #cp-section-nav::-webkit-scrollbar,
+    #rn-section-nav::-webkit-scrollbar, #recon-section-nav::-webkit-scrollbar,
+    #cpay-section-nav::-webkit-scrollbar { display: none; }
+
+    /* Upload screen */
+    .upload-screen { padding: 24px 16px 16px !important; }
+    .upload-cards { grid-template-columns: 1fr !important; }
+    .upload-cards-optional { grid-template-columns: 1fr !important; }
+    .upload-title { font-size: 24px !important; }
+    .upload-hero { margin-bottom: 20px; }
+
+    /* Page header — hide version stamp, keep brand name + actions */
+    .page-brand-divider, .page-brand-ver { display: none !important; }
+    .page-header { margin-bottom: 14px; }
+
+    /* Hide less-critical header action buttons on small screens */
+    #btn-columns { display: none !important; }
+
+    /* Tables get horizontal scroll rather than clipping */
+    .sg-table-wrap, [class*="table-wrap"], .overflow-x-auto { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+
+    /* Electron-mac overrides don't apply on mobile Safari */
+    body.electron-mac #global-search-bar { top: 0; left: 0; padding-left: 4px; }
+  }
 </style>
 </head>
 <body>
@@ -1668,6 +1744,9 @@
 
 <!-- Global search bar (Variant B per Phase 2 CONTEXT decision 11) — Cmd+K toggle, 150ms debounce. -->
 <div id="global-search-bar">
+  <button id="mob-menu-btn" onclick="toggleMobileMenu()" aria-label="Open navigation">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
   <input id="global-search-input" type="search"
          placeholder="Search customers, vendors, orders, invoices…  (⌘K)"
          autocomplete="off" spellcheck="false" />
@@ -1676,11 +1755,12 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 05:06 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 10:48 PM ET</span>
     </div>
   </div>
 </div>
 <div id="global-search-results" role="listbox"></div>
+<div id="mob-sidebar-overlay" onclick="toggleMobileMenu()"></div>
 
 <!-- Floating email-action bar for Commission Recon — appears when rows are
      selected. Body-level. -->
@@ -1827,7 +1907,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 18 · 05:06 PM ET</p>
+          <p class="upload-brand-ver-ts">May 18 · 10:48 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2044,7 +2124,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 18 · 05:06 PM ET</div>
+        <div class="ds-brand-ver-ts">May 18 · 10:48 PM ET</div>
       </div>
     </div>
   </div>
@@ -2238,7 +2318,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 05:06 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 10:48 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -16208,7 +16288,12 @@ function onSearch(v) {
 // Only the live "recon-visual" page is wired today; other pages are visual
 // shells (cloned components) and will get their own data hooks as they
 // graduate from placeholder → wired view.
+function toggleMobileMenu() {
+  document.body.classList.toggle('mob-menu-open');
+}
+
 function setActivePage(name) {
+  document.body.classList.remove('mob-menu-open'); // close drawer on mobile nav
   const targetIsClient = String(name || '').startsWith('client-');
   // Client → rep crossing guard. Show the in-page leave-customer-view modal
   // and abort this navigation. The Yes button on the modal calls setActivePage
