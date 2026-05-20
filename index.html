@@ -1754,6 +1754,25 @@
 })();
 </script>
 
+<!-- Snapshot passphrase modal — shown when loading a v2 .osc file on web -->
+<div id="snap-auth-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:#1e293b;border:1px solid #334155;border-radius:14px;padding:28px 28px 24px;width:min(380px,92vw);box-shadow:0 24px 64px rgba(0,0,0,0.6);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5eead4" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      <h3 style="margin:0;font-size:16px;font-weight:700;color:#f1f5f9;">Authenticate to load snapshot</h3>
+    </div>
+    <p style="margin:0 0 18px;font-size:13px;color:#94a3b8;line-height:1.5;">This snapshot is protected with your cloud sync passphrase. Enter it below to decrypt and load your data.</p>
+    <input id="snap-auth-input" type="password" placeholder="Cloud sync passphrase"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#f1f5f9;font-size:14px;outline:none;margin-bottom:8px;"
+      autocomplete="current-password" />
+    <div id="snap-auth-error" style="display:none;font-size:12px;color:#f87171;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button id="snap-auth-cancel" style="flex:1;padding:10px;border-radius:7px;border:1px solid #475569;background:transparent;color:#94a3b8;font-size:13px;font-weight:600;cursor:pointer;">Cancel</button>
+      <button id="snap-auth-submit" style="flex:2;padding:10px;border-radius:7px;border:none;background:#0d9488;color:#ccfbf1;font-size:13px;font-weight:600;cursor:pointer;">Decrypt &amp; Load</button>
+    </div>
+  </div>
+</div>
+
 <!-- Demo Mode banner — proxy GET /mode returns { mode: 'real'|'demo' }.
      When demo, render a sticky banner across the very top of the dashboard
      so it's impossible to miss while presenting. Real data stays untouched
@@ -1887,7 +1906,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 08:52 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 08:56 AM ET</span>
     </div>
   </div>
 </div>
@@ -2039,7 +2058,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 20 · 08:52 AM ET</p>
+          <p class="upload-brand-ver-ts">May 20 · 08:56 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2284,7 +2303,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 20 · 08:52 AM ET</div>
+        <div class="ds-brand-ver-ts">May 20 · 08:56 AM ET</div>
       </div>
     </div>
   </div>
@@ -2478,7 +2497,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 08:52 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 08:56 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -5335,35 +5354,69 @@ window.addEventListener('unhandledrejection', (e) => {
    added in subsequent commits.
    ============================================================ */
 
-// ── Snapshot sync (OneDrive encrypted export / mobile load) ──────────────
-const SNAP_PIN = '1988';
+// ── Snapshot sync (OneDrive encrypted export / desktop + web load) ────────
+//
+// Format v2 (passphrase-protected, written when cloud sync is configured):
+//   [4 bytes magic "OSC2"][16-byte salt][12-byte IV][AES-GCM ciphertext]
+//   Key: PBKDF2(passphrase, salt, 200000, SHA-256) → AES-GCM-256
+//
+// Format v1 (legacy PIN, read-only backward compat):
+//   [16-byte salt][12-byte IV][AES-GCM ciphertext]
+//   Key: PBKDF2("1988", salt, 100000, SHA-256) → AES-GCM-256
 
-async function snapshotEncrypt(obj) {
-  const enc = new TextEncoder();
+const SNAP_MAGIC = new Uint8Array([0x4F, 0x53, 0x43, 0x32]); // "OSC2"
+const SNAP_PIN   = '1988';
+
+function _snapIsV2(arr) {
+  return arr.length > 4 && arr[0] === 0x4F && arr[1] === 0x53 && arr[2] === 0x43 && arr[3] === 0x32;
+}
+
+async function _snapDeriveKey(passphrase, salt, usage, iterations) {
+  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
+    km, { name: 'AES-GCM', length: 256 }, false, [usage]
+  );
+}
+
+// passphrase: user's cloud sync passphrase (string), or null → v1 PIN fallback
+async function snapshotEncrypt(obj, passphrase) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv   = crypto.getRandomValues(new Uint8Array(12));
-  const km   = await crypto.subtle.importKey('raw', enc.encode(SNAP_PIN), 'PBKDF2', false, ['deriveKey']);
-  const key  = await crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-    km, { name: 'AES-GCM', length: 256 }, false, ['encrypt']
-  );
-  const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(obj)));
+  const body = new TextEncoder().encode(JSON.stringify(obj));
+  if (passphrase) {
+    const key = await _snapDeriveKey(passphrase, salt, 'encrypt', 200000);
+    const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, body);
+    const out = new Uint8Array(4 + 16 + 12 + ct.byteLength);
+    out.set(SNAP_MAGIC, 0); out.set(salt, 4); out.set(iv, 20); out.set(new Uint8Array(ct), 32);
+    return out;
+  }
+  // v1 — no cloud sync configured
+  const key = await _snapDeriveKey(SNAP_PIN, salt, 'encrypt', 100000);
+  const ct  = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, body);
   const out = new Uint8Array(16 + 12 + ct.byteLength);
   out.set(salt, 0); out.set(iv, 16); out.set(new Uint8Array(ct), 28);
   return out;
 }
 
-async function snapshotDecrypt(bytes) {
-  const arr  = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
-  const salt = arr.slice(0, 16);
-  const iv   = arr.slice(16, 28);
-  const ct   = arr.slice(28);
-  const enc  = new TextEncoder();
-  const km   = await crypto.subtle.importKey('raw', enc.encode(SNAP_PIN), 'PBKDF2', false, ['deriveKey']);
-  const key  = await crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-    km, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
-  );
+// passphrase: required for v2 files. v1 files ignore it (PIN used automatically).
+// Throws 'PASSPHRASE_REQUIRED' if v2 detected but no passphrase provided.
+async function snapshotDecrypt(bytes, passphrase) {
+  const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  if (_snapIsV2(arr)) {
+    if (!passphrase) throw new Error('PASSPHRASE_REQUIRED');
+    const salt  = arr.slice(4, 20);
+    const iv    = arr.slice(20, 32);
+    const ct    = arr.slice(32);
+    const key   = await _snapDeriveKey(passphrase, salt, 'decrypt', 200000);
+    const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+  // v1 — PIN
+  const salt  = arr.slice(0, 16);
+  const iv    = arr.slice(16, 28);
+  const ct    = arr.slice(28);
+  const key   = await _snapDeriveKey(SNAP_PIN, salt, 'decrypt', 100000);
   const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
   return JSON.parse(new TextDecoder().decode(plain));
 }
@@ -5394,7 +5447,13 @@ function scheduleSnapshotExport() {
     try {
       const data = buildSnapshot();
       if (!data.niceRaw.length && !data.stRaw.length) return;
-      const encrypted = await snapshotEncrypt(data);
+      let snapPassphrase = null;
+      try {
+        if (window.electronAPI && window.electronAPI.cloud && window.electronAPI.cloud.getSnapshotPassphrase) {
+          snapPassphrase = await window.electronAPI.cloud.getSnapshotPassphrase();
+        }
+      } catch (_) {}
+      const encrypted = await snapshotEncrypt(data, snapPassphrase);
       const resp = await fetch('http://localhost:8787/snapshot/write', {
         method: 'POST',
         headers: { 'Content-Type': 'application/octet-stream' },
@@ -5412,10 +5471,50 @@ function scheduleSnapshotExport() {
   }, 3000);
 }
 
+function _snapPromptPassphrase(resolve, reject) {
+  const modal  = document.getElementById('snap-auth-modal');
+  const input  = document.getElementById('snap-auth-input');
+  const errEl  = document.getElementById('snap-auth-error');
+  const submit = document.getElementById('snap-auth-submit');
+  const cancel = document.getElementById('snap-auth-cancel');
+  if (!modal) { reject(new Error('modal missing')); return; }
+  modal.style.display = 'flex';
+  input.value = ''; errEl.style.display = 'none';
+  input.focus();
+  function cleanup() { modal.style.display = 'none'; submit.removeEventListener('click', onSubmit); cancel.removeEventListener('click', onCancel); input.removeEventListener('keydown', onKey); }
+  function onSubmit() {
+    const p = input.value.trim();
+    if (!p) { errEl.textContent = 'Passphrase required'; errEl.style.display = 'block'; return; }
+    cleanup(); resolve(p);
+  }
+  function onCancel() { cleanup(); reject(new Error('cancelled')); }
+  function onKey(e) { if (e.key === 'Enter') onSubmit(); if (e.key === 'Escape') onCancel(); }
+  submit.addEventListener('click', onSubmit);
+  cancel.addEventListener('click', onCancel);
+  input.addEventListener('keydown', onKey);
+}
+
 async function loadSnapshot(file) {
   try {
     const buf  = await file.arrayBuffer();
-    const snap = await snapshotDecrypt(new Uint8Array(buf));
+    const bytes = new Uint8Array(buf);
+    let snap;
+    if (_snapIsV2(bytes)) {
+      let passphrase;
+      try { passphrase = await new Promise((res, rej) => _snapPromptPassphrase(res, rej)); }
+      catch (e) { if (e.message === 'cancelled') return; throw e; }
+      try { snap = await snapshotDecrypt(bytes, passphrase); }
+      catch (_) {
+        // Wrong passphrase — re-show modal once with error
+        const modal = document.getElementById('snap-auth-modal');
+        const errEl = document.getElementById('snap-auth-error');
+        if (modal && errEl) { modal.style.display = 'flex'; errEl.textContent = 'Incorrect passphrase — try again'; errEl.style.display = 'block'; }
+        try { toast('error', 'Wrong passphrase', 'Check your cloud sync passphrase and try again'); } catch (_) {}
+        return;
+      }
+    } else {
+      snap = await snapshotDecrypt(bytes);
+    }
     if (!snap || !snap.v) throw new Error('Unrecognized snapshot format');
 
     STATE.niceRaw       = snap.niceRaw       || [];
@@ -5450,7 +5549,7 @@ async function loadSnapshot(file) {
       }
     } catch (_) {}
   } catch (e) {
-    try { toast('error', 'Snapshot load failed', e.message === 'The operation failed for an operation-specific reason' ? 'Wrong PIN or corrupted file' : e.message); } catch (_) {}
+    try { toast('error', 'Snapshot load failed', e.message === 'The operation failed for an operation-specific reason' ? 'Wrong passphrase or corrupted file' : e.message); } catch (_) {}
     console.error('[snapshot] load failed:', e);
   }
 }
