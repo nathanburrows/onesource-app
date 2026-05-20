@@ -1906,7 +1906,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 11:03 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 11:09 AM ET</span>
     </div>
   </div>
 </div>
@@ -2058,7 +2058,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 20 · 11:03 AM ET</p>
+          <p class="upload-brand-ver-ts">May 20 · 11:09 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2303,7 +2303,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 20 · 11:03 AM ET</div>
+        <div class="ds-brand-ver-ts">May 20 · 11:09 AM ET</div>
       </div>
     </div>
   </div>
@@ -2501,7 +2501,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 11:03 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 11:09 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -17541,10 +17541,10 @@ function clientAggRenewalEvents(parent, customer) {
     const v = (r.vendor || '').trim() || '(unknown)';
     if (clientIsEPlusVendor(v)) continue;
     const rt = r._renewalType;
-    // Filter: 'renewal' and 'estimated' are pipeline events. 'covered' and
-    // 'did-not-renew' are closure states — drop from timeline (mirrors KPI
-    // gating; user has explicitly said these aren't action items).
-    if (rt !== 'renewal' && rt !== 'estimated') continue;
+    // 'covered' and 'did-not-renew' are closure states — drop from timeline.
+    // All other types ('renewal', 'estimated', 'billing', null) are pipeline
+    // events and may carry warrantyEnd / invoiceDate for the fallback heuristic.
+    if (rt === 'covered' || rt === 'did-not-renew') continue;
     const chainKey = r._renewalChainKey || r._renewalKey || (r.poNumber + '|' + cust);
     if (!chainBills.has(chainKey)) {
       chainBills.set(chainKey, {
@@ -24828,16 +24828,15 @@ function crvUpcoming(stRows) {
     ? STATE.quotesByOrderNo : null;
   const out = [];
   for (const r of stRows) {
-    // Parse renewal date first — rows with a future _renewalDate must NOT be
-    // skipped by the invoiceDate check below. Renewal dates live on past-invoiced
-    // orders; invoiceDate is the original sale date, not the upcoming event.
+    // Parse forward-event dates first — past-invoiced rows must NOT be skipped
+    // when they carry a future _renewalDate (hard/estimated renewal anchor) or
+    // a future estInvoiceDate ('billing'-type rows with open sell but no warranty
+    // cycle). invoiceDate is the original sale date, not the upcoming event.
     const renewal = _crvParseRowDate(r, ['_renewalDate']);
-    // Skip rows already invoiced in the past — UNLESS they carry a future
-    // renewal date (in which case the upcoming event is the renewal, not a
-    // re-invoice of the original order).
-    const inv = _crvParseRowDate(r, ['invoiceDate']);
-    if (inv && inv <= today && (!renewal || renewal <= today)) continue;
     const est     = _crvParseRowDate(r, ['estInvoiceDate']);
+    const inv     = _crvParseRowDate(r, ['invoiceDate']);
+    // Skip if already invoiced AND no future event date remains.
+    if (inv && inv <= today && (!renewal || renewal <= today) && (!est || est <= today)) continue;
     let when = null, kind = '';
     if (renewal && renewal >= today && renewal <= horizon) { when = renewal; kind = 'Renewal'; }
     else if (est && est >= today && est <= horizon)        { when = est;     kind = 'Est. Bill'; }
