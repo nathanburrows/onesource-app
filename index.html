@@ -1887,7 +1887,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 08:47 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 08:52 AM ET</span>
     </div>
   </div>
 </div>
@@ -2039,7 +2039,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 20 · 08:47 AM ET</p>
+          <p class="upload-brand-ver-ts">May 20 · 08:52 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2284,7 +2284,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 20 · 08:47 AM ET</div>
+        <div class="ds-brand-ver-ts">May 20 · 08:52 AM ET</div>
       </div>
     </div>
   </div>
@@ -2478,7 +2478,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 08:47 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 08:52 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -2527,7 +2527,8 @@
         <a href="#ov-sec-vendors"  data-target="ov-sec-vendors"  class="ov-nav-pill px-3 py-1.5 rounded-md font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition">Vendors</a>
         <a href="#ov-sec-margin"   data-target="ov-sec-margin"   class="ov-nav-pill px-3 py-1.5 rounded-md font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition">Margin Health</a>
         <a href="#ov-sec-quota"    data-target="ov-sec-quota"    class="ov-nav-pill px-3 py-1.5 rounded-md font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition">Quota & Tier</a>
-        <a href="#ov-sec-activity" data-target="ov-sec-activity" class="ov-nav-pill px-3 py-1.5 rounded-md font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition">Activity</a>
+        <a href="#ov-sec-activity"     data-target="ov-sec-activity"     class="ov-nav-pill px-3 py-1.5 rounded-md font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition">Activity</a>
+        <a href="#ov-sec-transitions" data-target="ov-sec-transitions" class="ov-nav-pill px-3 py-1.5 rounded-md font-semibold text-amber-400/80 hover:text-amber-300 hover:bg-amber-900/20 transition">Transition Book</a>
       </nav>
 
       <!-- ROW 1: KPI tiles -->
@@ -2882,6 +2883,18 @@
           </div>
         </div>
       </div>
+
+      <!-- ── SECTION: TRANSITION BOOK ── -->
+      <div id="ov-sec-transitions" class="scroll-mt-16"></div>
+      <div class="mt-10 mb-3 flex flex-wrap items-baseline gap-3 justify-between">
+        <div class="flex items-center gap-2">
+          <h2 class="text-lg font-bold text-white">Transition Book</h2>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/40 text-amber-300 border border-amber-700/40">INHERITED</span>
+        </div>
+        <span class="text-xs text-slate-500">Accounts transitioning to you · no historical commission · earn starts on first close</span>
+      </div>
+      <div id="ov-trans-kpis" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5"></div>
+      <div id="ov-trans-body" class="mb-5"></div>
 
     </div>
   </div><!-- /data-page="overview-dashboard" -->
@@ -24206,10 +24219,38 @@ function crvYoY(niceRows) {
 // Severity ranks: high(0) > med(1) > pos(2) > low(3).
 const CRV_SEV_RANK = { high: 0, med: 1, pos: 2, low: 3 };
 
-function crvBuildTalkingPoints({ scope, niceRows, stRows, upcoming, vendors, yoy }) {
+function crvBuildTalkingPoints({ scope, niceRows, stRows, upcoming, vendors, yoy, isTransition = false }) {
   const points = [];
   const today = _crvToday();
   const fmt$ = (n) => clientFmtMoney(n);
+
+  // ── Transition-specific rules (prepended; frame everything as forward-plan) ──
+  if (isTransition) {
+    // Rule T1: Earliest upcoming renewal = first commission-eligible deal.
+    const allRenewals = upcoming.filter(u => u.kind === 'Renewal').sort((a, b) => a.when - b.when);
+    if (allRenewals.length) {
+      const first = allRenewals[0];
+      const days  = _crvDaysBetween(first.when, today);
+      const sev   = days <= 90 ? 'high' : 'med';
+      points.push({
+        severity: sev,
+        title: `First earnable renewal — ${first.vendor || '(vendor TBD)'}`,
+        body: `${fmt$(first.amount)} due in ${days <= 0 ? 'now' : `${days} day${days === 1 ? '' : 's'}`} (${_crvFmtDate(first.when)}). This is your first commission-eligible deal on this account. Reach out ahead of the renewal to introduce yourself and understand their timeline.`,
+        evidence: first.desc ? first.desc.slice(0, 80) : '',
+        _amt: first.amount,
+      });
+    }
+    // Rule T2: New rep intro context — always shown for transition accounts.
+    const bookVal = stRows.reduce((s, r) => s + (Number(r.stSales) || Number(r.openSell) || 0), 0);
+    const vCount  = new Set(stRows.map(r => (r.vendor || '').trim()).filter(Boolean)).size;
+    points.push({
+      severity: 'low',
+      title: 'New rep introduction — establish your presence',
+      body: `You inherited this account. No commission on historical activity — your earning clock starts with the first new deal or renewal you close. Lead the intro call with an account review: confirm what they have, validate vendor relationships, and surface any gaps.${bookVal > 0 ? ` Use the ${fmt$(bookVal)} in booked history as conversation context.` : ''}`,
+      evidence: `${vCount} vendor${vCount === 1 ? '' : 's'} on file · TRANS account — no historical pay credit`,
+      _amt: 0,
+    });
+  }
 
   // Rule 1: Renewal due in <60d (HIGH if >$25k, MED otherwise). Group by chain
   // so multi-line renewals on one PO surface as a single point.
@@ -24346,7 +24387,12 @@ function renderClientReview() {
   const vendors  = clientAggVendors(stRows);
   const yoy      = crvYoY(niceRows);
   const yoyST    = crvYoY(stRows);
-  const tps      = crvBuildTalkingPoints({ scope: STATE._clientScope, niceRows, stRows, upcoming, vendors, yoy });
+  // A client is considered a transition account when ALL its ST rows carry
+  // the _isTransition flag (meaning it was imported as an inherited account
+  // rather than earned history). Mixed rows (some transition, some not) are
+  // not flagged — the account is already part of the active book.
+  const isTransitionAcct = stRows.length > 0 && stRows.every(r => r._isTransition);
+  const tps      = crvBuildTalkingPoints({ scope: STATE._clientScope, niceRows, stRows, upcoming, vendors, yoy, isTransition: isTransitionAcct });
 
   const total12mo = yoyST.recent;
   const upcomingRenewals = upcoming.filter(u => u.kind === 'Renewal');
@@ -24367,11 +24413,21 @@ function renderClientReview() {
   }
 
   body.innerHTML = `
+    ${isTransitionAcct ? `
+    <!-- Transition account banner -->
+    <div class="crv-section" style="border-left:3px solid #f59e0b;background:rgba(245,158,11,0.04);">
+      <div class="flex flex-wrap items-center gap-2 mb-1">
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/40 text-amber-300 border border-amber-700/40">INHERITED ACCOUNT</span>
+        <span class="text-amber-300 text-xs font-semibold">No commission on historical activity</span>
+      </div>
+      <p class="text-slate-400 text-xs">History below is account context — use it to build the relationship. Your commission clock starts with the first new deal or renewal you close on this account.</p>
+    </div>` : ''}
+
     <!-- Hero KPIs -->
     <div class="crv-section">
       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div class="crv-tile">
-          <p class="crv-tile-label">Total Spend last 12mo</p>
+          <p class="crv-tile-label">${isTransitionAcct ? 'Inherited Spend (ST)' : 'Total Spend last 12mo'}</p>
           <p class="crv-tile-value">${clientFmtMoney(total12mo)}</p>
           <p class="crv-tile-sub">${yoyST.prior > 0 ? `${yoyST.pct >= 0 ? '+' : ''}${(yoyST.pct * 100).toFixed(0)}% vs prior 12mo` : 'no prior-year baseline'}</p>
         </div>
@@ -24581,7 +24637,7 @@ function renderClientReview() {
 
     <!-- Talking points -->
     <div class="crv-section">
-      <div class="crv-section-title">Talking points</div>
+      <div class="crv-section-title">${isTransitionAcct ? 'Forward Plan · Talking Points' : 'Talking points'}</div>
       ${tps.length ? tps.map(p => `
         <div class="crv-tp-card ${p.severity}">
           <div class="crv-tp-title">
@@ -24591,7 +24647,7 @@ function renderClientReview() {
           <div class="crv-tp-body">${escHtml(p.body)}</div>
           ${p.evidence ? `<div class="crv-tp-evidence">${escHtml(p.evidence)}</div>` : ''}
         </div>
-      `).join('') : `<p class="text-slate-500 text-xs">No talking points triggered — relationship looks steady. Use Recent + Coming sections as the agenda.</p>`}
+      `).join('') : `<p class="text-slate-500 text-xs">${isTransitionAcct ? 'No forward actions triggered yet — review the Upcoming Renewals and Spend Trend sections to build your first outreach plan.' : 'No talking points triggered — relationship looks steady. Use Recent + Coming sections as the agenda.'}</p>`}
     </div>
   `;
 
@@ -25873,6 +25929,147 @@ function renderOverviewDashboard() {
   ovRenderQuotaTier();
   // ── ACTIVITY & VELOCITY (KPI strip + monthly volume + size distribution + customer pulse) ──
   ovRenderActivity();
+  // ── TRANSITION BOOK (inherited accounts: roster, urgency, first earnable renewals) ──
+  ovRenderTransitionBook();
+}
+
+// ─────────────────────────────────────────────────────────────
+// Transition Book — inherited accounts that are visibility-only
+// (no historical commission). Shows roster sorted by renewal
+// urgency so the rep knows where to focus first.
+// ─────────────────────────────────────────────────────────────
+
+function ovGoToClientReview(parent) {
+  STATE._view = 'client';
+  STATE._clientScope = { parent: parent, customer: null };
+  STATE._clientPickerSeen = true;
+  if (typeof clientStatePersist === 'function') clientStatePersist();
+  setActivePage('client-review');
+}
+
+function ovRenderTransitionBook() {
+  const kpisEl = document.getElementById('ov-trans-kpis');
+  const bodyEl = document.getElementById('ov-trans-body');
+  if (!kpisEl || !bodyEl) return;
+
+  const transRows = (STATE.stRaw || []).filter(r => r._isTransition);
+  const fmt$ = (n) => typeof clientFmtMoney === 'function' ? clientFmtMoney(n) : (n >= 1e6 ? `$${(n/1e6).toFixed(1)}M` : n >= 1000 ? `$${(n/1000).toFixed(0)}K` : `$${Math.round(n).toLocaleString()}`);
+
+  if (!transRows.length) {
+    kpisEl.innerHTML = '';
+    bodyEl.innerHTML = `<div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-6 text-center text-slate-500 text-sm">No transition accounts on file. When importing SalesTrak data, enable the Transitions toggle to mark inherited accounts — they appear here and in your renewal pipeline but are excluded from commission pay totals until you close new business.</div>`;
+    return;
+  }
+
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  // Group rows by top-level account identifier (custParent → customer fallback).
+  const byCustomer = new Map();
+  for (const r of transRows) {
+    const key = (r.custParent || r.customer || '').trim();
+    if (!key) continue;
+    if (!byCustomer.has(key)) byCustomer.set(key, { cust: key, rows: [], vendors: new Set() });
+    const c = byCustomer.get(key);
+    c.rows.push(r);
+    const v = (r.vendor || '').trim();
+    if (v) c.vendors.add(v);
+  }
+
+  // For each account: compute upcoming renewals (reuse crvUpcoming) + total booked value.
+  const accounts = [];
+  for (const c of byCustomer.values()) {
+    const upcoming = (typeof crvUpcoming === 'function') ? crvUpcoming(c.rows) : [];
+    const renewals = upcoming.filter(u => u.kind === 'Renewal').sort((a, b) => a.when - b.when);
+    const next90   = renewals.filter(u => _crvDaysBetween(u.when, today) >= 0 && _crvDaysBetween(u.when, today) <= 90);
+    const next180  = renewals.filter(u => _crvDaysBetween(u.when, today) >= 0 && _crvDaysBetween(u.when, today) <= 180);
+    const soonest  = renewals[0] || null;
+    const bookVal  = c.rows.reduce((s, r) => s + (Number(r.stSales) || Number(r.openSell) || 0), 0);
+    const ren90$   = next90.reduce((s, u) => s + u.amount, 0);
+    accounts.push({ ...c, upcoming, renewals, next90, next180, soonest, bookVal, ren90$ });
+  }
+
+  // Sort: accounts with imminent renewals first, then by booked value desc.
+  accounts.sort((a, b) => {
+    if (a.soonest && b.soonest) return a.soonest.when - b.soonest.when;
+    if (a.soonest) return -1;
+    if (b.soonest) return 1;
+    return b.bookVal - a.bookVal;
+  });
+
+  const totalAccounts = accounts.length;
+  const totalRen90$   = accounts.reduce((s, a) => s + a.ren90$, 0);
+  const totalBookVal  = accounts.reduce((s, a) => s + a.bookVal, 0);
+  const acctsWith90   = accounts.filter(a => a.next90.length > 0).length;
+
+  // ── KPI tiles ──
+  kpisEl.innerHTML = `
+    <div class="bg-gradient-to-br from-amber-900/40 to-orange-900/30 border border-amber-700/40 rounded-2xl p-5">
+      <p class="text-amber-400 text-xs font-semibold uppercase tracking-wider mb-1">Inherited Accounts</p>
+      <p class="text-3xl font-bold text-white">${totalAccounts}</p>
+      <p class="text-[11px] mt-1 text-slate-400">accounts transitioning to you</p>
+    </div>
+    <div class="bg-gradient-to-br from-emerald-900/40 to-teal-900/30 border border-emerald-700/40 rounded-2xl p-5">
+      <p class="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1">Renewals · Next 90d</p>
+      <p class="text-3xl font-bold text-white">${fmt$(totalRen90$)}</p>
+      <p class="text-[11px] mt-1 text-slate-400">${acctsWith90} account${acctsWith90 === 1 ? '' : 's'} · first earnable commission opportunities</p>
+    </div>
+    <div class="bg-gradient-to-br from-indigo-900/40 to-violet-900/30 border border-indigo-700/40 rounded-2xl p-5">
+      <p class="text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">Total Booked Value</p>
+      <p class="text-3xl font-bold text-white">${fmt$(totalBookVal)}</p>
+      <p class="text-[11px] mt-1 text-slate-400">ST-booked revenue across inherited book</p>
+    </div>
+  `;
+
+  // ── Account roster table ──
+  const tbodyRows = accounts.map(a => {
+    const vendorStr = [...a.vendors].slice(0, 3).join(', ') || '—';
+    const renewalStr = a.soonest
+      ? `${_crvFmtDate(a.soonest.when)}<span class="text-slate-500"> · ${fmt$(a.soonest.amount || 0)}</span>`
+      : '<span class="text-slate-600">—</span>';
+    const urgencyBadge = a.next90.length
+      ? `<span class="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-900/50 text-amber-300 border border-amber-700/40">${a.next90.length} DUE &lt;90d</span>`
+      : '';
+    return `
+      <tr class="cursor-pointer hover:bg-indigo-900/10 transition"
+          onclick="ovGoToClientReview(${JSON.stringify(a.cust)})"
+          title="Open ${escAttr(a.cust)} in Client Review">
+        <td class="font-semibold">${escHtml(a.cust)}${urgencyBadge}</td>
+        <td class="text-right">${fmt$(a.bookVal)}</td>
+        <td>${renewalStr}</td>
+        <td class="text-slate-400 text-[11px] max-w-[200px] truncate" title="${escAttr(vendorStr)}">${escHtml(vendorStr)}</td>
+        <td class="text-right text-slate-500">${a.renewals.length}</td>
+      </tr>`;
+  }).join('');
+
+  // Priority actions header (urgent = any account with <90d renewal)
+  const urgentAccts = accounts.filter(a => a.next90.length > 0);
+  const priorityNote = urgentAccts.length
+    ? `<span class="text-amber-400">${urgentAccts.length} account${urgentAccts.length === 1 ? '' : 's'} with renewals due in &lt;90 days — contact first</span>`
+    : `<span class="text-slate-500">No renewals due in &lt;90 days · use 180d horizon to plan intros</span>`;
+
+  bodyEl.innerHTML = `
+    <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+        <h3 class="text-base font-semibold text-white">Inherited Account Roster</h3>
+        <span class="text-xs">${priorityNote}</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="sg-table w-full text-xs">
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th class="text-right">Booked Value</th>
+              <th>Next Renewal</th>
+              <th>Key Vendors</th>
+              <th class="text-right">Total Renewals</th>
+            </tr>
+          </thead>
+          <tbody>${tbodyRows}</tbody>
+        </table>
+      </div>
+      <p class="text-[10px] text-slate-600 mt-3">Click any row to open full Client Review · Booked Value = Σ ST sales on transition rows</p>
+    </div>
+  `;
 }
 
 // ─────────────────────────────────────────────────────────────
