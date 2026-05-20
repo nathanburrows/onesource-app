@@ -1887,7 +1887,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 18 · 11:16 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 08:47 AM ET</span>
     </div>
   </div>
 </div>
@@ -2039,7 +2039,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 18 · 11:16 PM ET</p>
+          <p class="upload-brand-ver-ts">May 20 · 08:47 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2284,7 +2284,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 18 · 11:16 PM ET</div>
+        <div class="ds-brand-ver-ts">May 20 · 08:47 AM ET</div>
       </div>
     </div>
   </div>
@@ -2478,7 +2478,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 18 · 11:16 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 08:47 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -4297,8 +4297,18 @@
         <div id="cloud-inactive-status" style="display:none;margin-top:12px;font-size:12px;"></div>
       </div>
 
-      <div id="cloud-sync-no-app-notice" style="display:none;font-size:13px;color:#94a3b8;padding:8px 0;">
-        Cloud sync is only available in the desktop app.
+      <div id="cloud-sync-web-mode" style="display:none;">
+        <div style="font-size:13px;color:#cbd5e1;margin-bottom:12px;">
+          Your desktop app auto-exports an encrypted snapshot to OneDrive after every sync. Load it below to access your full dataset in the browser.
+        </div>
+        <button id="cloud-sync-web-load-btn" style="width:100%;padding:11px 14px;border-radius:6px;font-size:13px;font-weight:600;background:#0d9488;color:#ccfbf1;border:1px solid #14b8a6;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Load snapshot.osc from OneDrive</span>
+        </button>
+        <div style="margin-top:9px;font-size:11.5px;color:#475569;">
+          Files → OneDrive → OneSourceCMD → <strong style="color:#94a3b8;">snapshot.osc</strong>
+        </div>
+        <div id="cloud-sync-web-loaded" style="display:none;margin-top:10px;padding:8px 12px;background:#0f172a;border:1px solid #1e293b;border-radius:8px;font-size:12px;color:#6ee7b7;"></div>
       </div>
     </section>
 
@@ -5414,6 +5424,18 @@ async function loadSnapshot(file) {
 
     const age = snap.exportedAt ? new Date(snap.exportedAt).toLocaleString() : 'unknown';
     try { toast('success', 'Snapshot loaded', `Exported ${age} · ${STATE.niceRaw.length.toLocaleString()} NICE · ${STATE.stRaw.length.toLocaleString()} ST rows`); } catch (_) {}
+    // Update Cloud Sync badge in Settings if visible
+    try {
+      const badge = document.getElementById('cloud-sync-status');
+      if (badge && badge.textContent === 'web mode') {
+        badge.textContent = 'loaded'; badge.style.color = '#6ee7b7';
+      }
+      const loaded = document.getElementById('cloud-sync-web-loaded');
+      if (loaded) {
+        loaded.style.display = 'block';
+        loaded.textContent = `Loaded · exported ${age} · ${STATE.niceRaw.length.toLocaleString()} NICE · ${STATE.stRaw.length.toLocaleString()} ST rows`;
+      }
+    } catch (_) {}
   } catch (e) {
     try { toast('error', 'Snapshot load failed', e.message === 'The operation failed for an operation-specific reason' ? 'Wrong PIN or corrupted file' : e.message); } catch (_) {}
     console.error('[snapshot] load failed:', e);
@@ -38852,11 +38874,18 @@ Use the response format from SYSTEM_PROMPT.`;
 (function setupCloudSyncPanel() {
   const sec = document.getElementById('cloud-sync-section');
   if (!sec) return;
-  const noApp = document.getElementById('cloud-sync-no-app-notice');
   if (!window.electronAPI || !window.electronAPI.cloud) {
-    if (noApp) noApp.style.display = 'block';
+    const webEl = document.getElementById('cloud-sync-web-mode');
+    const statusEl = document.getElementById('cloud-sync-status');
+    if (webEl) webEl.style.display = 'block';
+    if (statusEl) { statusEl.textContent = 'web mode'; statusEl.style.color = '#94a3b8'; }
+    const loadBtn = document.getElementById('cloud-sync-web-load-btn');
+    if (loadBtn) loadBtn.addEventListener('click', () => {
+      if (typeof pickFiles === 'function') pickFiles('.osc', files => { if (files && files[0]) loadSnapshot(files[0]); });
+    });
     return;
   }
+  const noApp = document.getElementById('cloud-sync-web-mode');
   const $ = (id) => document.getElementById(id);
   const statusEl = $('cloud-sync-status');
   const noodEl   = $('cloud-sync-noonedrive');
