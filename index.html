@@ -1906,7 +1906,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 09:00 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 09:10 AM ET</span>
     </div>
   </div>
 </div>
@@ -2058,7 +2058,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 20 · 09:00 AM ET</p>
+          <p class="upload-brand-ver-ts">May 20 · 09:10 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2303,7 +2303,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 20 · 09:00 AM ET</div>
+        <div class="ds-brand-ver-ts">May 20 · 09:10 AM ET</div>
       </div>
     </div>
   </div>
@@ -2393,6 +2393,10 @@
     <button class="ds-nav-item" data-page-target="client-overview" onclick="setActivePage('client-overview')">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       <span>Overview</span>
+    </button>
+    <button class="ds-nav-item" data-page-target="rep-account" onclick="setActivePage('rep-account')">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 8h2"/><path d="M7 12h5"/><path d="M15 8l2 2-2 2"/></svg>
+      <span>Acct Dashboard</span>
     </button>
     <button class="ds-nav-item" data-page-target="client-order-search" onclick="setActivePage('client-order-search')">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>
@@ -2497,7 +2501,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 09:00 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 09:10 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -4939,6 +4943,28 @@
       </div>
     </div>
   </div><!-- /data-page="client-overview" -->
+
+  <!-- ── PAGE: REP ACCOUNT DASHBOARD (internal: full margin/GP/cost data, account-scoped) ── -->
+  <div data-page="rep-account" class="dash-page">
+    <div class="px-1">
+      <div id="ra-scope-banner" class="mb-4"></div>
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-2xl font-bold text-white">Account Dashboard</h2>
+          <p class="text-xs text-slate-500 mt-0.5" id="ra-subtitle">—</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] text-slate-500 uppercase tracking-wider font-semibold">Client FY Starts</span>
+            <select id="ra-fy-month" onchange="setClientFyStartMonth(this.value)"
+              class="bg-slate-900/60 border border-slate-700/60 rounded-md px-2 py-1 text-xs text-slate-200 font-semibold focus:outline-none focus:border-purple-500/60"></select>
+          </div>
+          <div id="ra-tw-pills"></div>
+        </div>
+      </div>
+      <div id="ra-body"></div>
+    </div>
+  </div><!-- /data-page="rep-account" -->
 
   <!-- ── PAGE: CLIENT REVIEW (executive narrative — print-ready) ── -->
   <div data-page="client-review" class="dash-page">
@@ -16820,6 +16846,7 @@ function setActivePage(name) {
   }
   if (name === 'client-review') renderClientReview();
   if (name === 'client-overview') renderClientOverview();
+  if (name === 'rep-account') renderRepAccount();
   if (name === 'client-order-search') renderClientOrderSearch();
   if (name === 'client-services') renderClientServices();
   if (name === 'client-renewals') renderClientRenewals();
@@ -17192,6 +17219,44 @@ function getClientStRows(parent, customer = null) {
 // Back-compat alias — most early client renderers will use NICE for spend history.
 function getClientRows(parent, customer = null) { return getClientNiceRows(parent, customer); }
 
+// ── Rep-internal account rows ──────────────────────────────────────────────
+// Same parent/customer scope as getClientStRows / getClientNiceRows but the
+// margin/GP/cost fields are NOT stripped — this is for the internal Rep
+// Account Dashboard where full financial detail is required.
+// Rebill rows are excluded (same as getClientStRows) since they are billing
+// artifacts and distort trend data.
+
+function getRepStRows(parent, customer = null, applyTimeWindow = true) {
+  if (!parent) return [];
+  detectRebillCol();
+  const out = [];
+  for (const r of STATE.stRaw) {
+    if (isRebillRow(r)) continue;
+    const cust = (r.customer || '').trim();
+    if (!cust) continue;
+    const rowParent = (r.custParent || '').trim() || cust;
+    if (rowParent !== parent) continue;
+    if (customer && cust !== customer) continue;
+    if (applyTimeWindow && !clientRowInTimeWindow(r)) continue;
+    out.push(r);
+  }
+  return out;
+}
+
+function getRepNiceRows(parent, customer = null) {
+  if (!parent) return [];
+  const out = [];
+  for (const r of STATE.niceRaw) {
+    const cust = (r.customer || '').trim();
+    if (!cust) continue;
+    const rowParent = (r.custParent || '').trim() || cust;
+    if (rowParent !== parent) continue;
+    if (customer && cust !== customer) continue;
+    out.push(r);
+  }
+  return out;
+}
+
 // Diagnostic — log what the scrub did. Called once after each data load
 // so we can verify rebill detection in the console.
 function logClientScrubDiagnostic() {
@@ -17317,6 +17382,7 @@ function pickClient(parent, customer) {
   // Re-render whatever client page we're currently on.
   if (STATE.activePage === 'client-review') renderClientReview();
   if (STATE.activePage === 'client-overview') renderClientOverview();
+  if (STATE.activePage === 'rep-account') renderRepAccount();
   if (STATE.activePage === 'client-order-search') renderClientOrderSearch();
   if (STATE.activePage === 'client-services') renderClientServices();
   if (STATE.activePage === 'client-renewals') renderClientRenewals();
@@ -17796,6 +17862,11 @@ function clientAggMonthlyByVendor(rows, topN = 8) {
 const CLIENT_CHARTS = {};
 function clientDestroyChart(key) {
   if (CLIENT_CHARTS[key]) { try { CLIENT_CHARTS[key].destroy(); } catch(_) {} delete CLIENT_CHARTS[key]; }
+}
+
+const RA_CHARTS = {};
+function raDestroyChart(key) {
+  if (RA_CHARTS[key]) { try { RA_CHARTS[key].destroy(); } catch(_) {} delete RA_CHARTS[key]; }
 }
 
 // Format YM label as "Mon YY".
@@ -19549,6 +19620,408 @@ function renderClientOverview() {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// REP ACCOUNT DASHBOARD
+// Internal rep-facing single-account dashboard. Full margin/GP/cost data —
+// NOT for sharing with customers. Uses getRepStRows / getRepNiceRows which
+// return raw rows without CLIENT_STRIP_KEYS scrubbing.
+//
+// Sections:
+//   1. Hero KPIs   — Revenue, Booked GP, Paid GP, GM%, Open Profit, Renewals ≤90d
+//   2. Monthly Combo — 24-month spine, Revenue bars + GP lines + GM% right axis
+//   3. Top Vendors by GP — table with revenue / GP$ / GM% / lines
+//   4. YoY Comparison  — current L12M vs prior L12M (NICE paid data)
+//   5. Renewal Pipeline — next 180 days, sorted by urgency
+// ─────────────────────────────────────────────────────────────────────────────
+
+function renderRepAccount() {
+  renderClientScopeBanner('ra-scope-banner');
+  renderClientTimeWindowPills('ra-tw-pills');
+
+  // Populate the FY-start picker (mirrors renderClientOverview logic).
+  const raFySel = document.getElementById('ra-fy-month');
+  if (raFySel) {
+    const cur       = getClientFyStartMonth();
+    const isDefault = !(STATE._clientScope && STATE._clientFyByParent && STATE._clientFyByParent[STATE._clientScope.parent]);
+    raFySel.innerHTML = MONTH_NAMES.map((nm, i) => {
+      const m = i + 1;
+      const tag = (m === 4 && isDefault) ? ' (ePlus default)' : '';
+      return `<option value="${m}" ${cur === m ? 'selected' : ''}>${nm}${tag}</option>`;
+    }).join('');
+    raFySel.disabled = !STATE._clientScope;
+  }
+
+  const sub  = document.getElementById('ra-subtitle');
+  const body = document.getElementById('ra-body');
+  if (!body) return;
+
+  // Tear down prior charts before re-render.
+  ['ra-monthly'].forEach(k => raDestroyChart(k));
+
+  if (!STATE._clientScope) {
+    if (sub) sub.textContent = '—';
+    body.innerHTML = `<div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-8 text-center text-slate-400 text-sm">Select a client to open the account dashboard.</div>`;
+    return;
+  }
+
+  const { parent, customer } = STATE._clientScope;
+  const scopeLabel = customer ? `${customer} (under ${parent})` : `${parent} — all accounts`;
+  const windowLabel = STATE._clientTimeWindow === 'fy' ? clientTimeWindowLabel() : STATE._clientTimeWindow === 'last12' ? 'Last 12 Months' : 'All Time';
+  if (sub) sub.textContent = `${scopeLabel} · internal rep view · ${windowLabel}`;
+
+  // ── Data retrieval ───────────────────────────────────────────────────────
+  // Time-windowed ST rows drive KPIs and the time-window-sensitive metrics.
+  // All-time ST rows drive vendor breakdown and the chart spine (so the 24-month
+  // chart doesn't suddenly go blank when the user changes the time window).
+  const stRows = getRepStRows(parent, customer, true);
+
+  const prevWindow = STATE._clientTimeWindow;
+  STATE._clientTimeWindow = 'all';
+  const stRowsAll = getRepStRows(parent, customer, false);
+  STATE._clientTimeWindow = prevWindow;
+
+  // NICE rows are always all-time — the time-window applies to ST bookings only.
+  // We L12M-filter them manually for the KPI tiles.
+  const niceRows = getRepNiceRows(parent, customer);
+
+  const isTransitionAcct = stRows.length > 0 && stRows.every(r => r._isTransition);
+
+  // ── KPI calculations ─────────────────────────────────────────────────────
+  const today  = new Date(); today.setHours(0, 0, 0, 0);
+  const l12mCut = new Date(today); l12mCut.setFullYear(l12mCut.getFullYear() - 1);
+
+  // NICE rows filtered to last 12 months for "paid" metrics.
+  const niceL12m = niceRows.filter(r => {
+    const d = _crvParseRowDate(r, ['invoiceDate']);
+    return d && d >= l12mCut && d <= today;
+  });
+
+  // Revenue and Booked GP from time-windowed ST rows.
+  let rev = 0, bookedGp = 0;
+  for (const r of stRows) {
+    rev      += Number(r.stSales) || 0;
+    const { billedGp } = ovStRowMargins(r);
+    bookedGp += billedGp;
+  }
+
+  const paidGp  = niceL12m.reduce((s, r) => s + (Number(r.niceMargin) || 0), 0);
+  const paidRev = niceL12m.reduce((s, r) => s + (Number(r.niceSales)  || 0), 0);
+  const gm      = rev > 0 ? (bookedGp / rev) * 100 : 0;
+
+  // Open pipeline — unbilled/open sell and open profit on windowed ST rows.
+  const openSell   = stRows.reduce((s, r) => s + (Number(r.openSell)   || 0), 0);
+  const openProfit = stRows.reduce((s, r) => s + (Number(r.openProfit) || 0), 0);
+
+  // Renewals — always run against all-time rows so the time-window pill does
+  // not hide upcoming renewals that fall outside the selected window.
+  const upcoming = typeof crvUpcoming === 'function' ? crvUpcoming(stRowsAll) : [];
+  const ren90  = upcoming.filter(u => u.kind === 'Renewal' && _crvDaysBetween(u.when, today) >= 0 && _crvDaysBetween(u.when, today) <= 90);
+  const ren180 = upcoming.filter(u => u.kind === 'Renewal' && _crvDaysBetween(u.when, today) >= 0 && _crvDaysBetween(u.when, today) <= 180).sort((a, b) => a.when - b.when);
+  const ren90$ = ren90.reduce((s, u) => s + u.amount, 0);
+
+  const fmt$   = clientFmtMoney;
+  const fmtPct = p => (isNaN(p) ? '—' : p.toFixed(1) + '%');
+
+  // ── Top vendors by Booked GP (all-time ST rows) ──────────────────────────
+  const vendorMap = {};
+  for (const r of stRowsAll) {
+    const v = (r.vendor || '').trim();
+    if (!v || clientIsEPlusVendor(v)) continue;
+    if (!vendorMap[v]) vendorMap[v] = { vendor: v, rev: 0, gp: 0, lines: 0 };
+    const { billedGp: vGp } = ovStRowMargins(r);
+    vendorMap[v].rev   += Number(r.stSales) || 0;
+    vendorMap[v].gp    += vGp;
+    vendorMap[v].lines += 1;
+  }
+  const topVendors = Object.values(vendorMap)
+    .sort((a, b) => b.gp - a.gp)
+    .slice(0, 10);
+
+  // ── YoY — NICE L12M vs prior L12M ───────────────────────────────────────
+  const prior12mCut = new Date(l12mCut); prior12mCut.setFullYear(prior12mCut.getFullYear() - 1);
+  const nicePrior   = niceRows.filter(r => {
+    const d = _crvParseRowDate(r, ['invoiceDate']);
+    return d && d >= prior12mCut && d < l12mCut;
+  });
+  const priorRev = nicePrior.reduce((s, r) => s + (Number(r.niceSales)  || 0), 0);
+  const priorGp  = nicePrior.reduce((s, r) => s + (Number(r.niceMargin) || 0), 0);
+  const priorGm  = priorRev > 0 ? (priorGp / priorRev) * 100 : 0;
+  const curGm    = paidRev  > 0 ? (paidGp  / paidRev)  * 100 : 0;
+
+  const yoyPctFn = (c, p) => p > 0 ? ((c - p) / p * 100) : null;
+
+  const yoyRows = [
+    { label: 'Revenue',  cur: paidRev, prev: priorRev, fmt: fmt$ },
+    { label: 'Paid GP',  cur: paidGp,  prev: priorGp,  fmt: fmt$ },
+    { label: 'GM%',      cur: curGm,   prev: priorGm,  fmt: fmtPct },
+  ];
+
+  // ── Monthly chart data (24-month spine: 12 back + 12 forward) ────────────
+  const [todayYY, todayMM] = [today.getFullYear(), today.getMonth() + 1];
+  const spine = [];
+  for (let i = -11; i <= 12; i++) {
+    const d = new Date(todayYY, todayMM - 1 + i, 1);
+    spine.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+
+  const stByYM   = {};
+  const niceByYM = {};
+
+  for (const r of stRowsAll) {
+    const ym = commRowYM(r, 'invoiceDate') || commRowYM(r, 'estInvoiceDate') || commRowYM(r, 'custOrderDate');
+    if (!ym) continue;
+    if (!stByYM[ym]) stByYM[ym] = { rev: 0, gp: 0 };
+    const { billedGp: sGp } = ovStRowMargins(r);
+    stByYM[ym].rev += Number(r.stSales) || 0;
+    stByYM[ym].gp  += sGp;
+  }
+
+  for (const r of niceRows) {
+    const ym = commRowYM(r, 'invoiceDate');
+    if (!ym) continue;
+    if (!niceByYM[ym]) niceByYM[ym] = { gp: 0 };
+    niceByYM[ym].gp += Number(r.niceMargin) || 0;
+  }
+
+  // ── Render HTML ──────────────────────────────────────────────────────────
+  body.innerHTML = `
+    ${isTransitionAcct ? `
+    <div style="border-left:3px solid #f59e0b;background:rgba(245,158,11,0.04);border-radius:12px;padding:12px 16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/40 text-amber-300 border border-amber-700/40">INHERITED ACCOUNT</span>
+        <span class="text-amber-300 text-xs font-semibold">No historical commission — earn starts with first close</span>
+      </div>
+      <p class="text-slate-400 text-xs">History shown for account intelligence only.</p>
+    </div>` : ''}
+
+    <!-- ── Hero KPI tiles ── -->
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3 mb-5">
+      <div class="bg-gradient-to-br from-indigo-900/40 to-violet-900/30 border border-indigo-700/40 rounded-2xl p-4">
+        <p class="text-indigo-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Revenue</p>
+        <p class="text-2xl font-bold text-white">${fmt$(rev)}</p>
+        <p class="text-[10px] mt-1 text-slate-500">ST booked · ${windowLabel.toLowerCase()}</p>
+      </div>
+      <div class="bg-gradient-to-br from-emerald-900/40 to-teal-900/30 border border-emerald-700/40 rounded-2xl p-4">
+        <p class="text-emerald-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Booked GP</p>
+        <p class="text-2xl font-bold text-white">${fmt$(bookedGp)}</p>
+        <p class="text-[10px] mt-1 text-slate-500">ST projected margin</p>
+      </div>
+      <div class="bg-gradient-to-br from-teal-900/40 to-cyan-900/30 border border-teal-700/40 rounded-2xl p-4">
+        <p class="text-teal-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Paid GP</p>
+        <p class="text-2xl font-bold text-white">${fmt$(paidGp)}</p>
+        <p class="text-[10px] mt-1 text-slate-500">NICE invoiced · L12M</p>
+      </div>
+      <div class="bg-gradient-to-br from-amber-900/40 to-orange-900/30 border border-amber-700/40 rounded-2xl p-4">
+        <p class="text-amber-400 text-[10px] font-semibold uppercase tracking-wider mb-1">GM%</p>
+        <p class="text-2xl font-bold text-white">${fmtPct(gm)}</p>
+        <p class="text-[10px] mt-1 text-slate-500">Booked GP ÷ Revenue</p>
+      </div>
+      <div class="bg-gradient-to-br from-violet-900/40 to-purple-900/30 border border-violet-700/40 rounded-2xl p-4">
+        <p class="text-violet-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Open Profit</p>
+        <p class="text-2xl font-bold text-white">${fmt$(openProfit)}</p>
+        <p class="text-[10px] mt-1 text-slate-500">${fmt$(openSell)} open sell</p>
+      </div>
+      <div class="bg-gradient-to-br from-sky-900/40 to-cyan-900/30 border border-sky-700/40 rounded-2xl p-4">
+        <p class="text-sky-400 text-[10px] font-semibold uppercase tracking-wider mb-1">Renewals ≤90d</p>
+        <p class="text-2xl font-bold text-white">${fmt$(ren90$)}</p>
+        <p class="text-[10px] mt-1 text-slate-500">${ren90.length} renewal${ren90.length === 1 ? '' : 's'} due</p>
+      </div>
+    </div>
+
+    <!-- ── Monthly Combo chart ── -->
+    <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 mb-5">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+        <h3 class="text-base font-semibold text-white">Monthly Trend · 24 months</h3>
+        <span class="text-[10px] text-slate-500">Revenue bars · Booked GP (emerald) · Paid GP (purple dashed) · GM% right axis</span>
+      </div>
+      <div style="height:280px;position:relative;"><canvas id="ra-monthly-canvas"></canvas></div>
+    </div>
+
+    <!-- ── Top Vendors + YoY ── -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+
+      <!-- Top Vendors by GP -->
+      <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
+        <div class="flex items-baseline justify-between mb-3">
+          <h3 class="text-base font-semibold text-white">Top Vendors by Booked GP</h3>
+          <span class="text-[10px] text-slate-500">all-time ST · sorted by GP</span>
+        </div>
+        ${topVendors.length ? `
+        <div class="overflow-x-auto">
+          <table class="sg-table w-full text-xs">
+            <thead>
+              <tr>
+                <th class="text-right">#</th>
+                <th>Vendor</th>
+                <th class="text-right">Revenue</th>
+                <th class="text-right">Booked GP</th>
+                <th class="text-right">GM%</th>
+                <th class="text-right">Lines</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${topVendors.map((v, i) => {
+                const gmv = v.rev > 0 ? (v.gp / v.rev) * 100 : 0;
+                const gmColor = gmv >= 15 ? 'text-emerald-400' : gmv >= 10 ? 'text-amber-400' : gmv > 0 ? 'text-slate-400' : 'text-rose-400';
+                return `<tr>
+                  <td class="text-right text-slate-600">${i + 1}</td>
+                  <td class="font-semibold">${escHtml(v.vendor)}</td>
+                  <td class="text-right">${fmt$(v.rev)}</td>
+                  <td class="text-right text-emerald-400">${fmt$(v.gp)}</td>
+                  <td class="text-right ${gmColor}">${v.rev > 0 ? fmtPct(gmv) : '—'}</td>
+                  <td class="text-right text-slate-500">${v.lines}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>` : '<p class="text-slate-500 text-xs">No vendor data on file for this account.</p>'}
+      </div>
+
+      <!-- YoY Comparison -->
+      <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
+        <div class="flex items-baseline justify-between mb-3">
+          <h3 class="text-base font-semibold text-white">YoY Comparison · Paid (NICE)</h3>
+          <span class="text-[10px] text-slate-500">L12M vs prior L12M · invoiced</span>
+        </div>
+        <div class="space-y-4 mt-2">
+          ${yoyRows.map(row => {
+            const pct   = yoyPctFn(row.cur, row.prev);
+            const delta = row.cur - row.prev;
+            const color = pct == null ? 'text-slate-500' : pct >= 0 ? 'text-emerald-400' : 'text-rose-400';
+            const sign  = delta >= 0 ? '+' : '';
+            const pctStr = pct != null ? `${sign}${pct.toFixed(1)}%` : '—';
+            return `
+              <div class="flex items-center justify-between gap-3 py-2 border-b border-slate-700/40 last:border-0">
+                <span class="text-xs text-slate-400 w-16 shrink-0">${row.label}</span>
+                <span class="text-sm font-bold text-white">${row.fmt(row.cur)}</span>
+                <span class="text-xs text-slate-500 shrink-0">${row.fmt(row.prev)} prior</span>
+                <span class="text-xs font-semibold ${color} w-14 text-right shrink-0">${pctStr}</span>
+              </div>`;
+          }).join('')}
+        </div>
+        <p class="text-[10px] text-slate-600 mt-4">NICE paid data · commission source of truth</p>
+      </div>
+    </div>
+
+    <!-- ── Renewal Pipeline ── -->
+    <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
+        <h3 class="text-base font-semibold text-white">Renewal Pipeline · next 180 days</h3>
+        <span class="text-[10px] text-slate-500">${ren180.length} renewal${ren180.length === 1 ? '' : 's'} · sorted by urgency</span>
+      </div>
+      ${ren180.length ? `
+      <div class="overflow-x-auto">
+        <table class="sg-table w-full text-xs">
+          <thead>
+            <tr>
+              <th>Renewal Date</th>
+              <th class="text-right">Days</th>
+              <th>Vendor</th>
+              <th>Description</th>
+              <th>PO #</th>
+              <th class="text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ren180.map(u => {
+              const days = _crvDaysBetween(u.when, today);
+              const urgCls = days <= 30 ? 'text-rose-400' : days <= 60 ? 'text-amber-400' : 'text-slate-300';
+              return `<tr>
+                <td class="${urgCls} font-semibold whitespace-nowrap">${_crvFmtDate(u.when)}</td>
+                <td class="${urgCls} text-right">${days}d</td>
+                <td>${escHtml(u.vendor) || '—'}</td>
+                <td class="text-slate-400 max-w-[220px] truncate" title="${escAttr(u.desc || '')}">${escHtml(u.desc) || '—'}</td>
+                <td class="text-slate-500">${escHtml(u.poNumber) || '—'}</td>
+                <td class="text-right font-semibold">${fmt$(u.amount)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>` : '<p class="text-slate-500 text-xs">No renewals due in the next 180 days.</p>'}
+    </div>
+  `;
+
+  // ── Monthly Combo chart ──────────────────────────────────────────────────
+  const canvas = document.getElementById('ra-monthly-canvas');
+  if (canvas) {
+    const labels     = spine.map(ym => commFmtYM(ym));
+    const stRevData  = spine.map(ym => (stByYM[ym]   || {}).rev || 0);
+    const stGpData   = spine.map(ym => (stByYM[ym]   || {}).gp  || 0);
+    const niceGpData = spine.map(ym => (niceByYM[ym] || {}).gp  || 0);
+    const gmPctData  = spine.map(ym => {
+      const r = (stByYM[ym] || {}).rev || 0;
+      const g = (stByYM[ym] || {}).gp  || 0;
+      return r > 0 ? (g / r) * 100 : 0;
+    });
+
+    RA_CHARTS['ra-monthly'] = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            type: 'bar', label: 'Revenue (ST)',
+            data: stRevData,
+            backgroundColor: 'rgba(99,102,241,0.50)',
+            borderColor: 'rgba(99,102,241,0.85)',
+            borderWidth: 1, borderRadius: 2, yAxisID: 'y',
+          },
+          {
+            type: 'line', label: 'Booked GP (ST)',
+            data: stGpData,
+            borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,0.08)',
+            borderWidth: 2, tension: 0.25, pointRadius: 2, yAxisID: 'y',
+          },
+          {
+            type: 'line', label: 'Paid GP (NICE)',
+            data: niceGpData,
+            borderColor: '#a78bfa', borderDash: [4, 3],
+            borderWidth: 1.5, pointRadius: 1, tension: 0.25, yAxisID: 'y',
+          },
+          {
+            type: 'line', label: 'GM%',
+            data: gmPctData,
+            borderColor: '#fbbf24', borderDash: [2, 3],
+            borderWidth: 1, pointRadius: 0, tension: 0.25, yAxisID: 'y2',
+          },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            labels: { color: '#94a3b8', font: { size: 10 }, usePointStyle: true, boxWidth: 8 },
+          },
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.dataset.label === 'GM%'
+                ? `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`
+                : `${ctx.dataset.label}: ${fmt$(ctx.parsed.y)}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            ticks: { color: '#64748b', maxRotation: 0, autoSkip: true, font: { size: 9 } },
+            grid: { display: false },
+          },
+          y: {
+            position: 'left',
+            ticks: { color: '#94a3b8', font: { size: 10 }, callback: v => fmt$(v) },
+            grid: { color: 'rgba(148,163,184,0.06)' },
+          },
+          y2: {
+            position: 'right',
+            ticks: { color: '#fbbf24', font: { size: 10 }, callback: v => v.toFixed(1) + '%' },
+            grid: { display: false },
+          },
+        },
+      },
+    });
+  }
+}
+
 // Back-compat: the old confirmClientToRepSwitch() is no longer called from
 // setActivePage but other code paths might still call it. Now uses the modal.
 function confirmClientToRepSwitch() {
@@ -19629,6 +20102,7 @@ function setClientFyStartMonth(monthNum) {
   clientStatePersist();
   if (STATE.activePage === 'client-review') renderClientReview();
   if (STATE.activePage === 'client-overview') renderClientOverview();
+  if (STATE.activePage === 'rep-account') renderRepAccount();
   if (STATE.activePage === 'client-order-search') renderClientOrderSearch();
   if (STATE.activePage === 'client-services') renderClientServices();
   if (STATE.activePage === 'client-renewals') renderClientRenewals();
@@ -19736,6 +20210,7 @@ function setClientTimeWindow(w) {
   clientStatePersist();
   if (STATE.activePage === 'client-review') renderClientReview();
   if (STATE.activePage === 'client-overview') renderClientOverview();
+  if (STATE.activePage === 'rep-account') renderRepAccount();
   if (STATE.activePage === 'client-order-search') renderClientOrderSearch();
   if (STATE.activePage === 'client-services') renderClientServices();
   if (STATE.activePage === 'client-renewals') renderClientRenewals();
