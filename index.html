@@ -1906,7 +1906,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 10:30 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 11:03 AM ET</span>
     </div>
   </div>
 </div>
@@ -2058,7 +2058,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 20 · 10:30 AM ET</p>
+          <p class="upload-brand-ver-ts">May 20 · 11:03 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2303,7 +2303,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 20 · 10:30 AM ET</div>
+        <div class="ds-brand-ver-ts">May 20 · 11:03 AM ET</div>
       </div>
     </div>
   </div>
@@ -2501,7 +2501,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 10:30 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 11:03 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -24828,10 +24828,15 @@ function crvUpcoming(stRows) {
     ? STATE.quotesByOrderNo : null;
   const out = [];
   for (const r of stRows) {
-    // Skip rows that have already invoiced in the past — they belong in Recent.
-    const inv = _crvParseRowDate(r, ['invoiceDate']);
-    if (inv && inv <= today) continue;
+    // Parse renewal date first — rows with a future _renewalDate must NOT be
+    // skipped by the invoiceDate check below. Renewal dates live on past-invoiced
+    // orders; invoiceDate is the original sale date, not the upcoming event.
     const renewal = _crvParseRowDate(r, ['_renewalDate']);
+    // Skip rows already invoiced in the past — UNLESS they carry a future
+    // renewal date (in which case the upcoming event is the renewal, not a
+    // re-invoice of the original order).
+    const inv = _crvParseRowDate(r, ['invoiceDate']);
+    if (inv && inv <= today && (!renewal || renewal <= today)) continue;
     const est     = _crvParseRowDate(r, ['estInvoiceDate']);
     let when = null, kind = '';
     if (renewal && renewal >= today && renewal <= horizon) { when = renewal; kind = 'Renewal'; }
