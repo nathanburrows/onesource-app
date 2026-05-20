@@ -1906,7 +1906,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 11:09 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 11:17 AM ET</span>
     </div>
   </div>
 </div>
@@ -2058,7 +2058,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 20 · 11:09 AM ET</p>
+          <p class="upload-brand-ver-ts">May 20 · 11:17 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2303,7 +2303,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 20 · 11:09 AM ET</div>
+        <div class="ds-brand-ver-ts">May 20 · 11:17 AM ET</div>
       </div>
     </div>
   </div>
@@ -2501,7 +2501,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 11:09 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 11:17 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -17550,7 +17550,7 @@ function clientAggRenewalEvents(parent, customer) {
       chainBills.set(chainKey, {
         vendor: v, customer: cust, poNumber: r.poNumber || '',
         engineDateMs: null,
-        warrEndMsList: [], invMsList: [], confidence: rt, totalRev: 0, billCount: 0,
+        warrEndMsList: [], invMsList: [], estInvMsList: [], confidence: rt, totalRev: 0, billCount: 0,
       });
     }
     const c = chainBills.get(chainKey);
@@ -17573,6 +17573,13 @@ function clientAggRenewalEvents(parent, customer) {
       const ims = inv.getTime();
       if (!isNaN(ims)) c.invMsList.push(ims);
     }
+    // estInvoiceDate — used as direct forward anchor for 'billing'-type rows
+    // (open-sell orders with no warranty cycle or invoiceDate yet).
+    const ei = _rnDateFromCell(r.estInvoiceDate);
+    if (ei) {
+      const eims = ei.getTime();
+      if (!isNaN(eims)) c.estInvMsList.push(eims);
+    }
   }
   const chainRenewalYM = new Map(); // chainKey → ym (so we can drop matching bill rows)
   for (const [chainKey, c] of chainBills.entries()) {
@@ -17582,6 +17589,12 @@ function clientAggRenewalEvents(parent, customer) {
       renewalMs = c.engineDateMs;
     } else if (c.warrEndMsList.length) {
       renewalMs = Math.max(...c.warrEndMsList);
+    } else if (c.estInvMsList.length) {
+      // 'billing'-type rows: use the latest estInvoiceDate directly as the
+      // renewal anchor. These are open-sell orders that carry an explicit
+      // expected-billing date but no warranty cycle yet.
+      renewalMs = Math.max(...c.estInvMsList);
+      c.confidence = 'estimated';
     } else if (c.invMsList.length) {
       // Fallback: last invoice date + 12 months. Stamp as 'derived' so the
       // marker renders with an "EST" badge.
