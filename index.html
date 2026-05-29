@@ -1906,7 +1906,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 20 · 11:17 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">May 29 · 10:42 AM ET</span>
     </div>
   </div>
 </div>
@@ -2058,7 +2058,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 20 · 11:17 AM ET</p>
+          <p class="upload-brand-ver-ts">May 29 · 10:42 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2303,7 +2303,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 20 · 11:17 AM ET</div>
+        <div class="ds-brand-ver-ts">May 29 · 10:42 AM ET</div>
       </div>
     </div>
   </div>
@@ -2501,7 +2501,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 20 · 11:17 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">May 29 · 10:42 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -3647,6 +3647,13 @@
                 class="ds-qtab px-3 py-1.5 rounded-md text-xs font-semibold bg-slate-800/40 text-slate-400 border border-slate-700/60 hover:bg-slate-700/60">
           Un-Quoted ST/NICE
         </button>
+        <button id="qtab-all"
+                role="tab"
+                aria-selected="false"
+                onclick="selectQuoteTab('all')"
+                class="ds-qtab px-3 py-1.5 rounded-md text-xs font-semibold bg-slate-800/40 text-slate-400 border border-slate-700/60 hover:bg-slate-700/60">
+          All Quotes
+        </button>
       </div>
       <div id="quotes-empty-state" style="display:none" class="text-center p-8 text-slate-400">
         <div class="text-sm mb-3">No quotes yet — install the OSIT-Sync bookmarklet and run it from a SalesTrakWeb tab.</div>
@@ -3657,6 +3664,7 @@
       </div>
       <div id="qtab-body-pipeline"></div>
       <div id="qtab-body-orphans" style="display:none"></div>
+      <div id="qtab-body-all" style="display:none"></div>
     </div>
   </div><!-- /data-page="quotes" -->
 
@@ -14085,31 +14093,30 @@ function updateQuotesNavVisibility() {
 // it. Phase 15 / Plan 04 retired the Renewals tab — rn-table is the canonical
 // Renewals surface. Stale 'renewals' values from localStorage coerce to 'pipeline'.
 function selectQuoteTab(tab) {
-  const t = (tab === 'orphans') ? 'orphans' : 'pipeline';
+  const t = (tab === 'orphans') ? 'orphans' : (tab === 'all') ? 'all' : 'pipeline';
   const pipeBody    = document.getElementById('qtab-body-pipeline');
   const orphansBody = document.getElementById('qtab-body-orphans');
+  const allBody     = document.getElementById('qtab-body-all');
   const pipeBtn     = document.getElementById('qtab-pipeline');
   const orphansBtn  = document.getElementById('qtab-orphans');
+  const allBtn      = document.getElementById('qtab-all');
   if (pipeBody)    pipeBody.style.display    = (t === 'pipeline') ? '' : 'none';
   if (orphansBody) orphansBody.style.display = (t === 'orphans')  ? '' : 'none';
+  if (allBody)     allBody.style.display     = (t === 'all')      ? '' : 'none';
   // Active styling — mirror the chip pattern from data-source cards.
   const ACTIVE   = 'bg-slate-700/70 text-white border-slate-600';
   const INACTIVE = 'bg-slate-800/40 text-slate-400 border-slate-700/60';
-  if (pipeBtn) {
-    pipeBtn.setAttribute('aria-selected', t === 'pipeline' ? 'true' : 'false');
-    pipeBtn.className = pipeBtn.className
-      .replace(ACTIVE, '').replace(INACTIVE, '').trim()
-      + ' ' + (t === 'pipeline' ? ACTIVE : INACTIVE);
-  }
-  if (orphansBtn) {
-    orphansBtn.setAttribute('aria-selected', t === 'orphans' ? 'true' : 'false');
-    orphansBtn.className = orphansBtn.className
-      .replace(ACTIVE, '').replace(INACTIVE, '').trim()
-      + ' ' + (t === 'orphans' ? ACTIVE : INACTIVE);
-  }
+  [[pipeBtn, 'pipeline'], [orphansBtn, 'orphans'], [allBtn, 'all']].forEach(([btn, key]) => {
+    if (!btn) return;
+    btn.setAttribute('aria-selected', t === key ? 'true' : 'false');
+    btn.className = btn.className.replace(ACTIVE, '').replace(INACTIVE, '').trim()
+      + ' ' + (t === key ? ACTIVE : INACTIVE);
+  });
   try { localStorage.setItem('quotes.activeTab', t); } catch (_) {}
   if (t === 'pipeline') {
     try { renderQuotesPipeline(); } catch (_) {}
+  } else if (t === 'all') {
+    try { renderAllQuotes(); } catch (_) {}
   } else {
     try { if (typeof renderOrphanFinder === 'function') renderOrphanFinder(orphansBody); } catch (_) {}
   }
@@ -14971,6 +14978,80 @@ function renderQuotesPipeline() {
     // below the master table (which can be 80+ rows tall).
     setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
   }
+}
+
+// ───────────────────────────────────────────────────────────────────────
+// All Quotes flat list — sorted newest-modified first, largest-total second.
+// Shows every row in STATE.quotesRows regardless of status.
+// ───────────────────────────────────────────────────────────────────────
+function renderAllQuotes() {
+  const host = document.getElementById('qtab-body-all');
+  if (!host) return;
+
+  const rows = Array.isArray(STATE.quotesRows) ? STATE.quotesRows : [];
+  if (!rows.length) {
+    host.innerHTML = '<div style="text-align:center;padding:32px;color:#94a3b8;font-size:13px;">No quotes loaded yet.</div>';
+    return;
+  }
+
+  // Pre-sort: modified desc, then totalSale desc as stable tiebreaker.
+  // dtSortRows uses a stable sort, so rows with identical modified dates
+  // will preserve this relative order even after the user re-sorts by modified.
+  const sorted = rows.slice().sort((a, b) => {
+    const mA = String(a.modified || ''), mB = String(b.modified || '');
+    if (mB !== mA) return mB < mA ? -1 : 1;
+    return (Number(b.totalSale) || 0) - (Number(a.totalSale) || 0);
+  });
+
+  // Variant of drill cols: customer canonical visible by default.
+  const cols = _qpDrillCols().map(c => {
+    if (c.key === 'custCanonical') return Object.assign({}, c, { defaultHidden: false });
+    return c;
+  });
+
+  host.innerHTML = `
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:#e2e8f0;">All Quotes</div>
+        <div style="font-size:11.5px;color:#94a3b8;margin-top:2px;">${sorted.length.toLocaleString()} quote${sorted.length === 1 ? '' : 's'} · newest modified first</div>
+      </div>
+    </div>
+    <div id="qall-master-host" style="background:#0b1220;border:1px solid #1e293b;border-radius:10px;padding:10px;">
+      <div id="ds-modal-controls" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;"></div>
+      <div id="ds-modal-body"></div>
+    </div>
+  `;
+
+  const masterHost = host.querySelector('#qall-master-host');
+  masterHost.querySelector('#ds-modal-controls').innerHTML = dsControlsHtml({ placeholder: 'Filter quotes…' });
+  const allTable = dsRenderTable(masterHost, '#a5b4fc', cols, sorted, 'No quotes match.');
+
+  // Override default sort to newest-modified first.
+  allTable.state.sort = { col: 'modified', dir: 'desc' };
+  renderDataTable(document.getElementById(allTable.tableId), allTable.config, allTable.state);
+
+  masterHost.querySelector('#ds-modal-filter').addEventListener('input',
+    dsDebounce(e => allTable.setFilter(e.target.value), 200));
+  const wrap = masterHost.querySelector('.sg-table-wrap');
+  if (wrap) { wrap.style.maxHeight = 'none'; wrap.style.overflow = 'visible'; }
+  attachColPicker({
+    mountEl: masterHost.querySelector('#ds-modal-controls'),
+    tables:  [allTable],
+    cols,
+    storageKey: 'qall.hiddenCols',
+  });
+  masterHost.querySelector('#ds-modal-body').addEventListener('click', ev => {
+    const ffBtn = ev.target.closest && ev.target.closest('[data-action="ff-expand"]');
+    if (ffBtn) {
+      ev.preventDefault(); ev.stopPropagation();
+      fulfillmentPillExpand(ffBtn.getAttribute('data-quote-no'), ffBtn);
+      return;
+    }
+    const td = ev.target.closest('td[data-quote-no]');
+    if (!td) return;
+    const qno = td.getAttribute('data-quote-no');
+    if (qno) openQuoteDetailModal(qno);
+  });
 }
 
 // ───────────────────────────────────────────────────────────────────────
