@@ -1099,7 +1099,7 @@
      visible). Compact horizontal layout so it fits the 56px-tall bar. */
   #global-search-brand {
     display: flex; align-items: center; gap: 12px;
-    margin-left: auto; padding: 0 6px 0 18px;
+    margin-left: auto; padding: 0 0 0 18px;
     font-family: inherit; line-height: 1;
     -webkit-app-region: no-drag;
   }
@@ -1121,6 +1121,7 @@
   #proxy-sync-status {
     display: flex; align-items: center; gap: 6px;
     padding: 5px 11px 5px 9px; border-radius: 20px;
+    margin-left: 10px; margin-right: 6px;
     font-size: 11px; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap;
     user-select: none; -webkit-app-region: no-drag;
     transition: background 250ms, border-color 250ms, color 250ms;
@@ -1938,17 +1939,17 @@
   <input id="global-search-input" type="search"
          placeholder="Search customers, vendors, orders, invoices…  (⌘K)"
          autocomplete="off" spellcheck="false" />
-  <div id="proxy-sync-status" onclick="proxySyncStatusClick()" title="Proxy data sync status">
-    <span class="proxy-status-dot"></span>
-    <span id="proxy-sync-label">Checking…</span>
-  </div>
   <div id="global-search-brand">
     <div class="gs-brand-title">OneSourceCMD</div>
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">Jun 03 · 03:16 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">Jun 03 · 03:17 PM ET</span>
     </div>
+  </div>
+  <div id="proxy-sync-status" onclick="proxySyncStatusClick()" title="Proxy data sync status">
+    <span class="proxy-status-dot"></span>
+    <span id="proxy-sync-label">Checking…</span>
   </div>
 </div>
 <div id="global-search-results" role="listbox"></div>
@@ -2099,7 +2100,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">Jun 03 · 03:16 PM ET</p>
+          <p class="upload-brand-ver-ts">Jun 03 · 03:17 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2344,7 +2345,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">Jun 03 · 03:16 PM ET</div>
+        <div class="ds-brand-ver-ts">Jun 03 · 03:17 PM ET</div>
       </div>
     </div>
   </div>
@@ -2542,7 +2543,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">Jun 03 · 03:16 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">Jun 03 · 03:17 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
