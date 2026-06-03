@@ -1117,6 +1117,28 @@
   .gs-brand-ver-label { text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; color: #64748b; }
   .gs-brand-ver-num { color: #93c5fd; font-weight: 700; font-size: 15px; }
   .gs-brand-ver-ts { font-size: 9px; color: #94a3b8; margin-top: 3px; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+  /* Proxy freshness badge — shown when proxy CRM data is newer than what's loaded */
+  #proxy-stale-badge {
+    display: none; align-items: center; gap: 6px;
+    padding: 5px 10px 5px 8px; border-radius: 20px;
+    background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35);
+    cursor: pointer; user-select: none; -webkit-app-region: no-drag;
+    font-size: 11px; font-weight: 600; color: #fbbf24;
+    letter-spacing: 0.02em; white-space: nowrap;
+    transition: background 120ms, border-color 120ms;
+  }
+  #proxy-stale-badge:hover { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.6); }
+  #proxy-stale-badge.visible { display: flex; }
+  #proxy-stale-badge.loading { opacity: 0.6; pointer-events: none; }
+  .proxy-stale-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #f59e0b; flex-shrink: 0;
+    animation: proxy-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes proxy-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.75); }
+  }
   /* Hide the per-page header brand on dashboard pages — brand now lives in
      the global search bar instead. The page-header keeps its action buttons. */
   body.with-sidebar .page-brand { display: none; }
@@ -1901,12 +1923,16 @@
   <input id="global-search-input" type="search"
          placeholder="Search customers, vendors, orders, invoices…  (⌘K)"
          autocomplete="off" spellcheck="false" />
+  <button id="proxy-stale-badge" onclick="proxyStaleBadgeRefresh()" title="CRM data updated in proxy — click to reload">
+    <span class="proxy-stale-dot"></span>
+    <span id="proxy-stale-label">CRM updated · Reload</span>
+  </button>
   <div id="global-search-brand">
     <div class="gs-brand-title">OneSourceCMD</div>
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">May 29 · 10:42 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">Jun 03 · 03:03 PM ET</span>
     </div>
   </div>
 </div>
@@ -2058,7 +2084,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">May 29 · 10:42 AM ET</p>
+          <p class="upload-brand-ver-ts">Jun 03 · 03:03 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2303,7 +2329,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">May 29 · 10:42 AM ET</div>
+        <div class="ds-brand-ver-ts">Jun 03 · 03:03 PM ET</div>
       </div>
     </div>
   </div>
@@ -2501,7 +2527,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">May 29 · 10:42 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">Jun 03 · 03:03 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -7150,6 +7176,61 @@ async function hydrateCrmFromProxy({ silent = false } = {}) {
   }
   scheduleSnapshotExport();
   return { ok: true, count: rows.length, status: statusRes };
+}
+
+// ── Proxy freshness watcher ───────────────────────────────────────────────────
+// Polls /crm/status every 90 s. If the proxy's lastSyncedAt is newer than when
+// we last hydrated, surfaces a badge in the header so the user can pull fresh
+// data without a full page reload. Safe to call multiple times — idempotent.
+let _proxyWatcherTimer = null;
+function startProxyFreshnessWatcher() {
+  if (_proxyWatcherTimer) return;
+  const INTERVAL_MS = 90_000;
+  const badge  = document.getElementById('proxy-stale-badge');
+  const label  = document.getElementById('proxy-stale-label');
+  if (!badge) return;
+
+  async function poll() {
+    try {
+      const base = proxyBase();
+      const s = await fetch(base + '/crm/status', { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null);
+      if (!s || !s.lastSyncedAt || !STATE.crmHydratedAt) return;
+      const proxyMs  = new Date(s.lastSyncedAt).getTime();
+      const loadedMs = new Date(STATE.crmHydratedAt).getTime();
+      if (proxyMs > loadedMs + 1000) {
+        // Proxy has fresher data than what we last loaded
+        const ageMin = s.ageMinutes != null ? Math.round(s.ageMinutes) : null;
+        if (label) label.textContent = ageMin != null ? `CRM updated ${ageMin}m ago · Reload` : 'CRM updated · Reload';
+        badge.classList.add('visible');
+      } else {
+        badge.classList.remove('visible');
+      }
+    } catch (_) { /* proxy may be unreachable — badge stays hidden */ }
+  }
+
+  poll();
+  _proxyWatcherTimer = setInterval(poll, INTERVAL_MS);
+}
+
+async function proxyStaleBadgeRefresh() {
+  const badge = document.getElementById('proxy-stale-badge');
+  const label = document.getElementById('proxy-stale-label');
+  if (badge) { badge.classList.add('loading'); }
+  if (label) label.textContent = 'Reloading…';
+  try {
+    const r = await hydrateCrmFromProxy({ silent: false });
+    if (!r || !r.ok) throw new Error(r ? r.reason : 'unknown');
+    // Re-render whichever page is currently visible
+    try { if (typeof renderClientOverview === 'function' && STATE.activePage === 'client-overview') renderClientOverview(); } catch (_) {}
+    try { if (typeof renderCrmPage         === 'function' && STATE.activePage === 'crm-page')         renderCrmPage(); }         catch (_) {}
+    try { if (typeof renderClientServices  === 'function' && STATE.activePage === 'client-services')  renderClientServices(); }  catch (_) {}
+    try { if (typeof renderClientRenewals  === 'function' && STATE.activePage === 'client-renewals')  renderClientRenewals(); }  catch (_) {}
+    if (badge) badge.classList.remove('visible');
+  } catch (e) {
+    try { toast('error', 'CRM reload failed', String(e.message || e)); } catch (_) {}
+    if (label) label.textContent = 'CRM updated · Reload';
+  }
+  if (badge) badge.classList.remove('loading');
 }
 
 // Manual alias map: when normalizer + parent-fallback can't bridge a name
@@ -34067,6 +34148,7 @@ try { _ensureBootOverlay(); } catch (_) {}
   } catch (_) {}
 
   hideBootOverlay();
+  try { startProxyFreshnessWatcher(); } catch (_) {}
 
   if ((STATE.niceRaw.length || STATE.stRaw.length || STATE.avantRaw.length) && !STATE._stagedAtBoot) {
     const parts = [`${STATE.niceRaw.length.toLocaleString()} NICE`, `${STATE.stRaw.length.toLocaleString()} ST`];
