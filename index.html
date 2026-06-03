@@ -1117,8 +1117,9 @@
   .gs-brand-ver-label { text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; color: #64748b; }
   .gs-brand-ver-num { color: #93c5fd; font-weight: 700; font-size: 15px; }
   .gs-brand-ver-ts { font-size: 9px; color: #94a3b8; margin-top: 3px; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
-  /* Proxy freshness badge — shown when proxy CRM data is newer than what's loaded */
-  #proxy-stale-badge {
+  /* Proxy freshness badges — shown when proxy data is newer than what's loaded in memory */
+  #proxy-stale-badge,
+  #proxy-financial-stale-badge {
     display: none; align-items: center; gap: 6px;
     padding: 5px 10px 5px 8px; border-radius: 20px;
     background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35);
@@ -1127,9 +1128,12 @@
     letter-spacing: 0.02em; white-space: nowrap;
     transition: background 120ms, border-color 120ms;
   }
-  #proxy-stale-badge:hover { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.6); }
-  #proxy-stale-badge.visible { display: flex; }
-  #proxy-stale-badge.loading { opacity: 0.6; pointer-events: none; }
+  #proxy-stale-badge:hover,
+  #proxy-financial-stale-badge:hover { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.6); }
+  #proxy-stale-badge.visible,
+  #proxy-financial-stale-badge.visible { display: flex; }
+  #proxy-stale-badge.loading,
+  #proxy-financial-stale-badge.loading { opacity: 0.6; pointer-events: none; }
   .proxy-stale-dot {
     width: 6px; height: 6px; border-radius: 50%;
     background: #f59e0b; flex-shrink: 0;
@@ -1927,12 +1931,16 @@
     <span class="proxy-stale-dot"></span>
     <span id="proxy-stale-label">CRM updated · Reload</span>
   </button>
+  <button id="proxy-financial-stale-badge" onclick="proxyFinancialBadgeRefresh()" title="Commission data updated in proxy — click to reload dashboard">
+    <span class="proxy-stale-dot"></span>
+    <span id="proxy-financial-stale-label">Data updated · Reload</span>
+  </button>
   <div id="global-search-brand">
     <div class="gs-brand-title">OneSourceCMD</div>
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">Jun 03 · 03:03 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">Jun 03 · 03:06 PM ET</span>
     </div>
   </div>
 </div>
@@ -2084,7 +2092,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">Jun 03 · 03:03 PM ET</p>
+          <p class="upload-brand-ver-ts">Jun 03 · 03:06 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2329,7 +2337,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">Jun 03 · 03:03 PM ET</div>
+        <div class="ds-brand-ver-ts">Jun 03 · 03:06 PM ET</div>
       </div>
     </div>
   </div>
@@ -2527,7 +2535,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">Jun 03 · 03:03 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">Jun 03 · 03:06 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -7179,33 +7187,77 @@ async function hydrateCrmFromProxy({ silent = false } = {}) {
 }
 
 // ── Proxy freshness watcher ───────────────────────────────────────────────────
-// Polls /crm/status every 90 s. If the proxy's lastSyncedAt is newer than when
-// we last hydrated, surfaces a badge in the header so the user can pull fresh
-// data without a full page reload. Safe to call multiple times — idempotent.
+// Polls /crm/status + /nice/status + /st/status + /avant/status every 90 s.
+// Shows header badges when proxy data is newer than what's loaded in memory.
+// CRM badge: quick in-memory reload. Financial badge: full rehyd + rebuild().
+// Safe to call multiple times — idempotent.
 let _proxyWatcherTimer = null;
+
+// Returns the newest savedAt ISO string across a fiscalYears[] status response.
+function _maxSavedAt(statusPayload) {
+  if (!statusPayload || !Array.isArray(statusPayload.fiscalYears)) return null;
+  let best = null;
+  for (const fy of statusPayload.fiscalYears) {
+    if (!fy.savedAt) continue;
+    if (!best || fy.savedAt > best) best = fy.savedAt;
+  }
+  return best;
+}
+
 function startProxyFreshnessWatcher() {
   if (_proxyWatcherTimer) return;
   const INTERVAL_MS = 90_000;
-  const badge  = document.getElementById('proxy-stale-badge');
-  const label  = document.getElementById('proxy-stale-label');
-  if (!badge) return;
 
   async function poll() {
     try {
       const base = proxyBase();
-      const s = await fetch(base + '/crm/status', { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null);
-      if (!s || !s.lastSyncedAt || !STATE.crmHydratedAt) return;
-      const proxyMs  = new Date(s.lastSyncedAt).getTime();
-      const loadedMs = new Date(STATE.crmHydratedAt).getTime();
-      if (proxyMs > loadedMs + 1000) {
-        // Proxy has fresher data than what we last loaded
-        const ageMin = s.ageMinutes != null ? Math.round(s.ageMinutes) : null;
-        if (label) label.textContent = ageMin != null ? `CRM updated ${ageMin}m ago · Reload` : 'CRM updated · Reload';
-        badge.classList.add('visible');
-      } else {
-        badge.classList.remove('visible');
+      const [crmS, niceS, stS, avantS] = await Promise.all([
+        fetch(base + '/crm/status',   { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(base + '/nice/status',  { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(base + '/st/status',    { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch(base + '/avant/status', { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null).catch(() => null),
+      ]);
+
+      // ── CRM badge ──
+      const crmBadge = document.getElementById('proxy-stale-badge');
+      const crmLabel = document.getElementById('proxy-stale-label');
+      if (crmBadge) {
+        if (crmS && crmS.lastSyncedAt && STATE.crmHydratedAt) {
+          const stale = new Date(crmS.lastSyncedAt).getTime() > new Date(STATE.crmHydratedAt).getTime() + 1000;
+          if (stale) {
+            const ageMin = crmS.ageMinutes != null ? Math.round(crmS.ageMinutes) : null;
+            if (crmLabel) crmLabel.textContent = ageMin != null ? `CRM updated ${ageMin}m ago · Reload` : 'CRM updated · Reload';
+            crmBadge.classList.add('visible');
+          } else {
+            crmBadge.classList.remove('visible');
+          }
+        }
       }
-    } catch (_) { /* proxy may be unreachable — badge stays hidden */ }
+
+      // ── Financial badge (NICE / ST / Avant) ──
+      const finBadge = document.getElementById('proxy-financial-stale-badge');
+      const finLabel = document.getElementById('proxy-financial-stale-label');
+      if (finBadge) {
+        const staleSources = [];
+        const niceAt  = _maxSavedAt(niceS);
+        const stAt    = _maxSavedAt(stS);
+        const avantAt = _maxSavedAt(avantS);
+        const niceMeta  = STATE.niceProxyMeta;
+        const stMeta    = STATE.stProxyMeta;
+        const avantMeta = STATE.avantProxyMeta;
+
+        if (niceAt  && niceMeta?.syncedAt  && niceAt  > niceMeta.syncedAt)  staleSources.push('NICE');
+        if (stAt    && stMeta?.syncedAt    && stAt    > stMeta.syncedAt)    staleSources.push('ST');
+        if (avantAt && avantMeta?.syncedAt && avantAt > avantMeta.syncedAt) staleSources.push('Avant');
+
+        if (staleSources.length) {
+          if (finLabel) finLabel.textContent = staleSources.join(' + ') + ' updated · Reload';
+          finBadge.classList.add('visible');
+        } else {
+          finBadge.classList.remove('visible');
+        }
+      }
+    } catch (_) { /* proxy unreachable — badges stay hidden */ }
   }
 
   poll();
@@ -7215,12 +7267,11 @@ function startProxyFreshnessWatcher() {
 async function proxyStaleBadgeRefresh() {
   const badge = document.getElementById('proxy-stale-badge');
   const label = document.getElementById('proxy-stale-label');
-  if (badge) { badge.classList.add('loading'); }
+  if (badge) badge.classList.add('loading');
   if (label) label.textContent = 'Reloading…';
   try {
     const r = await hydrateCrmFromProxy({ silent: false });
     if (!r || !r.ok) throw new Error(r ? r.reason : 'unknown');
-    // Re-render whichever page is currently visible
     try { if (typeof renderClientOverview === 'function' && STATE.activePage === 'client-overview') renderClientOverview(); } catch (_) {}
     try { if (typeof renderCrmPage         === 'function' && STATE.activePage === 'crm-page')         renderCrmPage(); }         catch (_) {}
     try { if (typeof renderClientServices  === 'function' && STATE.activePage === 'client-services')  renderClientServices(); }  catch (_) {}
@@ -7229,6 +7280,29 @@ async function proxyStaleBadgeRefresh() {
   } catch (e) {
     try { toast('error', 'CRM reload failed', String(e.message || e)); } catch (_) {}
     if (label) label.textContent = 'CRM updated · Reload';
+  }
+  if (badge) badge.classList.remove('loading');
+}
+
+async function proxyFinancialBadgeRefresh() {
+  const badge = document.getElementById('proxy-financial-stale-badge');
+  const label = document.getElementById('proxy-financial-stale-label');
+  if (badge) badge.classList.add('loading');
+  if (label) label.textContent = 'Reloading…';
+  try {
+    // Re-hydrate all three financial sources in parallel (non-fatal per source)
+    await Promise.allSettled([
+      typeof hydrateNiceFromProxyV2 === 'function' ? hydrateNiceFromProxyV2({ silent: true }) : Promise.resolve(),
+      typeof hydrateStFromProxy     === 'function' ? hydrateStFromProxy({ silent: true })     : Promise.resolve(),
+      typeof hydrateAvantFromProxy  === 'function' ? hydrateAvantFromProxy({ silent: true })  : Promise.resolve(),
+    ]);
+    // Recompute all derived data and re-render current page
+    rebuild();
+    toast('info', 'Dashboard data reloaded', 'NICE · ST · Avant refreshed from proxy');
+    if (badge) badge.classList.remove('visible');
+  } catch (e) {
+    try { toast('error', 'Financial reload failed', String(e.message || e)); } catch (_) {}
+    if (label) label.textContent = 'Data updated · Reload';
   }
   if (badge) badge.classList.remove('loading');
 }
