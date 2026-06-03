@@ -1117,31 +1117,42 @@
   .gs-brand-ver-label { text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; color: #64748b; }
   .gs-brand-ver-num { color: #93c5fd; font-weight: 700; font-size: 15px; }
   .gs-brand-ver-ts { font-size: 9px; color: #94a3b8; margin-top: 3px; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
-  /* Proxy freshness badges — shown when proxy data is newer than what's loaded in memory */
-  #proxy-stale-badge,
-  #proxy-financial-stale-badge {
-    display: none; align-items: center; gap: 6px;
-    padding: 5px 10px 5px 8px; border-radius: 20px;
-    background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.35);
-    cursor: pointer; user-select: none; -webkit-app-region: no-drag;
-    font-size: 11px; font-weight: 600; color: #fbbf24;
-    letter-spacing: 0.02em; white-space: nowrap;
-    transition: background 120ms, border-color 120ms;
+  /* Proxy sync status chip — always visible in header, changes color by state */
+  #proxy-sync-status {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 11px 5px 9px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.02em; white-space: nowrap;
+    user-select: none; -webkit-app-region: no-drag;
+    transition: background 250ms, border-color 250ms, color 250ms;
+    /* default: checking state */
+    background: rgba(100,116,139,0.12); border: 1px solid rgba(100,116,139,0.25);
+    color: #64748b; cursor: default;
   }
-  #proxy-stale-badge:hover,
-  #proxy-financial-stale-badge:hover { background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.6); }
-  #proxy-stale-badge.visible,
-  #proxy-financial-stale-badge.visible { display: flex; }
-  #proxy-stale-badge.loading,
-  #proxy-financial-stale-badge.loading { opacity: 0.6; pointer-events: none; }
-  .proxy-stale-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: #f59e0b; flex-shrink: 0;
+  #proxy-sync-status.state-synced {
+    background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: #4ade80; cursor: default;
+  }
+  #proxy-sync-status.state-stale {
+    background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.4); color: #fbbf24; cursor: pointer;
+  }
+  #proxy-sync-status.state-stale:hover {
+    background: rgba(245,158,11,0.22); border-color: rgba(245,158,11,0.65);
+  }
+  #proxy-sync-status.state-loading {
+    background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.3); color: #a5b4fc; cursor: default; opacity: 0.8;
+  }
+  #proxy-sync-status.state-offline {
+    background: rgba(100,116,139,0.08); border-color: rgba(100,116,139,0.2); color: #475569; cursor: default;
+  }
+  .proxy-status-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    background: currentColor;
+  }
+  #proxy-sync-status.state-stale .proxy-status-dot {
     animation: proxy-pulse 1.8s ease-in-out infinite;
   }
   @keyframes proxy-pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.75); }
+    50% { opacity: 0.35; transform: scale(0.7); }
   }
   /* Hide the per-page header brand on dashboard pages — brand now lives in
      the global search bar instead. The page-header keeps its action buttons. */
@@ -1927,20 +1938,16 @@
   <input id="global-search-input" type="search"
          placeholder="Search customers, vendors, orders, invoices…  (⌘K)"
          autocomplete="off" spellcheck="false" />
-  <button id="proxy-stale-badge" onclick="proxyStaleBadgeRefresh()" title="CRM data updated in proxy — click to reload">
-    <span class="proxy-stale-dot"></span>
-    <span id="proxy-stale-label">CRM updated · Reload</span>
-  </button>
-  <button id="proxy-financial-stale-badge" onclick="proxyFinancialBadgeRefresh()" title="Commission data updated in proxy — click to reload dashboard">
-    <span class="proxy-stale-dot"></span>
-    <span id="proxy-financial-stale-label">Data updated · Reload</span>
-  </button>
+  <div id="proxy-sync-status" onclick="proxySyncStatusClick()" title="Proxy data sync status">
+    <span class="proxy-status-dot"></span>
+    <span id="proxy-sync-label">Checking…</span>
+  </div>
   <div id="global-search-brand">
     <div class="gs-brand-title">OneSourceCMD</div>
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">Jun 03 · 03:08 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">Jun 03 · 03:16 PM ET</span>
     </div>
   </div>
 </div>
@@ -2092,7 +2099,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">Jun 03 · 03:08 PM ET</p>
+          <p class="upload-brand-ver-ts">Jun 03 · 03:16 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2337,7 +2344,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">Jun 03 · 03:08 PM ET</div>
+        <div class="ds-brand-ver-ts">Jun 03 · 03:16 PM ET</div>
       </div>
     </div>
   </div>
@@ -2535,7 +2542,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">Jun 03 · 03:08 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">Jun 03 · 03:16 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -7186,14 +7193,19 @@ async function hydrateCrmFromProxy({ silent = false } = {}) {
   return { ok: true, count: rows.length, status: statusRes };
 }
 
-// ── Proxy freshness watcher ───────────────────────────────────────────────────
-// Polls /crm/status + /nice/status + /st/status + /avant/status every 90 s.
-// Shows header badges when proxy data is newer than what's loaded in memory.
-// CRM badge: quick in-memory reload. Financial badge: full rehyd + rebuild().
-// Safe to call multiple times — idempotent.
+// ── Proxy sync status chip ────────────────────────────────────────────────────
+// Always-visible pill in the header. States:
+//   checking → gray  "Checking…"
+//   synced   → green "Synced"
+//   stale    → amber "CRM updated · Reload"  (clickable)
+//   loading  → indigo "Reloading…"
+//   offline  → gray  "Proxy offline"
+//
+// Polls all four proxy status endpoints every 90 s. On stale, click triggers
+// the appropriate re-hydration without a full page reload.
 let _proxyWatcherTimer = null;
+let _proxyStaleSources = [];   // tracks which sources are stale for click handler
 
-// Returns the newest savedAt ISO string across a fiscalYears[] status response.
 function _maxSavedAt(statusPayload) {
   if (!statusPayload || !Array.isArray(statusPayload.fiscalYears)) return null;
   let best = null;
@@ -7204,113 +7216,109 @@ function _maxSavedAt(statusPayload) {
   return best;
 }
 
+function _setProxySyncState(state, label) {
+  const el = document.getElementById('proxy-sync-status');
+  const lb = document.getElementById('proxy-sync-label');
+  if (!el) return;
+  el.className = '';          // clear all state classes
+  el.classList.add('state-' + state);
+  if (lb) lb.textContent = label;
+  el.onclick = (state === 'stale') ? proxySyncStatusClick : null;
+  el.style.cursor = (state === 'stale') ? 'pointer' : 'default';
+  el.title = (state === 'stale') ? 'Proxy has newer data — click to reload' : 'Proxy sync status';
+}
+
 function startProxyFreshnessWatcher() {
   if (_proxyWatcherTimer) return;
   const INTERVAL_MS = 90_000;
-  // Baseline = when the watcher started (≈ app boot). Used as the comparison
-  // floor when a source's ProxyMeta.syncedAt is null (snapshot load, etc.).
-  // Any proxy data saved after this moment is considered stale for the user.
   const _watcherBaseline = new Date().toISOString();
+  _setProxySyncState('checking', 'Checking…');
 
   async function poll() {
+    let crmS, niceS, stS, avantS;
     try {
       const base = proxyBase();
-      const [crmS, niceS, stS, avantS] = await Promise.all([
+      [crmS, niceS, stS, avantS] = await Promise.all([
         fetch(base + '/crm/status',   { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null).catch(() => null),
         fetch(base + '/nice/status',  { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null).catch(() => null),
         fetch(base + '/st/status',    { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null).catch(() => null),
         fetch(base + '/avant/status', { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null).catch(() => null),
       ]);
+    } catch (_) {
+      _setProxySyncState('offline', 'Proxy offline');
+      return;
+    }
 
-      // ── CRM badge ──
-      const crmBadge = document.getElementById('proxy-stale-badge');
-      const crmLabel = document.getElementById('proxy-stale-label');
-      if (crmBadge && crmS && crmS.lastSyncedAt) {
-        // Fall back to watcher baseline when app loaded CRM before proxy was set
-        const loadedAt = STATE.crmHydratedAt || _watcherBaseline;
-        const stale = new Date(crmS.lastSyncedAt).getTime() > new Date(loadedAt).getTime() + 1000;
-        if (stale) {
-          const ageMin = crmS.ageMinutes != null ? Math.round(crmS.ageMinutes) : null;
-          if (crmLabel) crmLabel.textContent = ageMin != null ? `CRM updated ${ageMin}m ago · Reload` : 'CRM updated · Reload';
-          crmBadge.classList.add('visible');
-        } else {
-          crmBadge.classList.remove('visible');
-        }
+    if (!crmS && !niceS && !stS && !avantS) {
+      _setProxySyncState('offline', 'Proxy offline');
+      return;
+    }
+
+    const stale = [];
+
+    // CRM staleness
+    if (crmS && crmS.lastSyncedAt) {
+      const loadedAt = STATE.crmHydratedAt || _watcherBaseline;
+      if (new Date(crmS.lastSyncedAt).getTime() > new Date(loadedAt).getTime() + 1000) {
+        const ageMin = crmS.ageMinutes != null ? Math.round(crmS.ageMinutes) : null;
+        stale.push(ageMin != null ? `CRM (${ageMin}m ago)` : 'CRM');
       }
+    }
 
-      // ── Financial badge (NICE / ST / Avant) ──
-      const finBadge = document.getElementById('proxy-financial-stale-badge');
-      const finLabel = document.getElementById('proxy-financial-stale-label');
-      if (finBadge) {
-        const staleSources = [];
-        const niceAt  = _maxSavedAt(niceS);
-        const stAt    = _maxSavedAt(stS);
-        const avantAt = _maxSavedAt(avantS);
-        // Fall back to watcher baseline when ProxyMeta.syncedAt is null (snapshot
-        // load path, or hydrate that ran before the proxy had data).
-        const niceBase  = STATE.niceProxyMeta?.syncedAt  || _watcherBaseline;
-        const stBase    = STATE.stProxyMeta?.syncedAt    || _watcherBaseline;
-        const avantBase = STATE.avantProxyMeta?.syncedAt || _watcherBaseline;
+    // Financial staleness (NICE / ST / Avant)
+    const niceAt  = _maxSavedAt(niceS);
+    const stAt    = _maxSavedAt(stS);
+    const avantAt = _maxSavedAt(avantS);
+    const niceBase  = STATE.niceProxyMeta?.syncedAt  || _watcherBaseline;
+    const stBase    = STATE.stProxyMeta?.syncedAt    || _watcherBaseline;
+    const avantBase = STATE.avantProxyMeta?.syncedAt || _watcherBaseline;
+    if (niceAt  && niceAt  > niceBase)  stale.push('NICE');
+    if (stAt    && stAt    > stBase)    stale.push('ST');
+    if (avantAt && avantAt > avantBase) stale.push('Avant');
 
-        if (niceAt  && niceAt  > niceBase)  staleSources.push('NICE');
-        if (stAt    && stAt    > stBase)    staleSources.push('ST');
-        if (avantAt && avantAt > avantBase) staleSources.push('Avant');
+    _proxyStaleSources = stale;
 
-        if (staleSources.length) {
-          if (finLabel) finLabel.textContent = staleSources.join(' + ') + ' updated · Reload';
-          finBadge.classList.add('visible');
-        } else {
-          finBadge.classList.remove('visible');
-        }
-      }
-    } catch (_) { /* proxy unreachable — badges stay hidden */ }
+    if (stale.length) {
+      _setProxySyncState('stale', stale.join(' + ') + ' updated · Reload');
+    } else {
+      _setProxySyncState('synced', 'Synced');
+    }
   }
 
   poll();
   _proxyWatcherTimer = setInterval(poll, INTERVAL_MS);
 }
 
-async function proxyStaleBadgeRefresh() {
-  const badge = document.getElementById('proxy-stale-badge');
-  const label = document.getElementById('proxy-stale-label');
-  if (badge) badge.classList.add('loading');
-  if (label) label.textContent = 'Reloading…';
+async function proxySyncStatusClick() {
+  const hasCrm       = _proxyStaleSources.some(s => s.startsWith('CRM'));
+  const hasFinancial = _proxyStaleSources.some(s => s === 'NICE' || s === 'ST' || s === 'Avant');
+  _setProxySyncState('loading', 'Reloading…');
   try {
-    const r = await hydrateCrmFromProxy({ silent: false });
-    if (!r || !r.ok) throw new Error(r ? r.reason : 'unknown');
-    try { if (typeof renderClientOverview === 'function' && STATE.activePage === 'client-overview') renderClientOverview(); } catch (_) {}
-    try { if (typeof renderCrmPage         === 'function' && STATE.activePage === 'crm-page')         renderCrmPage(); }         catch (_) {}
-    try { if (typeof renderClientServices  === 'function' && STATE.activePage === 'client-services')  renderClientServices(); }  catch (_) {}
-    try { if (typeof renderClientRenewals  === 'function' && STATE.activePage === 'client-renewals')  renderClientRenewals(); }  catch (_) {}
-    if (badge) badge.classList.remove('visible');
+    if (hasCrm) {
+      const r = await hydrateCrmFromProxy({ silent: true });
+      if (r && r.ok) {
+        try { if (typeof renderClientOverview === 'function' && STATE.activePage === 'client-overview') renderClientOverview(); } catch (_) {}
+        try { if (typeof renderCrmPage         === 'function' && STATE.activePage === 'crm-page')         renderCrmPage(); }         catch (_) {}
+        try { if (typeof renderClientServices  === 'function' && STATE.activePage === 'client-services')  renderClientServices(); }  catch (_) {}
+        try { if (typeof renderClientRenewals  === 'function' && STATE.activePage === 'client-renewals')  renderClientRenewals(); }  catch (_) {}
+      }
+    }
+    if (hasFinancial) {
+      await Promise.allSettled([
+        typeof hydrateNiceFromProxyV2 === 'function' ? hydrateNiceFromProxyV2({ silent: true }) : Promise.resolve(),
+        typeof hydrateStFromProxy     === 'function' ? hydrateStFromProxy({ silent: true })     : Promise.resolve(),
+        typeof hydrateAvantFromProxy  === 'function' ? hydrateAvantFromProxy({ silent: true })  : Promise.resolve(),
+      ]);
+      rebuild();
+    }
+    const reloaded = _proxyStaleSources.join(' + ');
+    toast('info', 'Proxy data reloaded', reloaded + ' refreshed from proxy');
+    _proxyStaleSources = [];
+    _setProxySyncState('synced', 'Synced');
   } catch (e) {
-    try { toast('error', 'CRM reload failed', String(e.message || e)); } catch (_) {}
-    if (label) label.textContent = 'CRM updated · Reload';
+    try { toast('error', 'Reload failed', String(e.message || e)); } catch (_) {}
+    _setProxySyncState('stale', _proxyStaleSources.join(' + ') + ' updated · Reload');
   }
-  if (badge) badge.classList.remove('loading');
-}
-
-async function proxyFinancialBadgeRefresh() {
-  const badge = document.getElementById('proxy-financial-stale-badge');
-  const label = document.getElementById('proxy-financial-stale-label');
-  if (badge) badge.classList.add('loading');
-  if (label) label.textContent = 'Reloading…';
-  try {
-    // Re-hydrate all three financial sources in parallel (non-fatal per source)
-    await Promise.allSettled([
-      typeof hydrateNiceFromProxyV2 === 'function' ? hydrateNiceFromProxyV2({ silent: true }) : Promise.resolve(),
-      typeof hydrateStFromProxy     === 'function' ? hydrateStFromProxy({ silent: true })     : Promise.resolve(),
-      typeof hydrateAvantFromProxy  === 'function' ? hydrateAvantFromProxy({ silent: true })  : Promise.resolve(),
-    ]);
-    // Recompute all derived data and re-render current page
-    rebuild();
-    toast('info', 'Dashboard data reloaded', 'NICE · ST · Avant refreshed from proxy');
-    if (badge) badge.classList.remove('visible');
-  } catch (e) {
-    try { toast('error', 'Financial reload failed', String(e.message || e)); } catch (_) {}
-    if (label) label.textContent = 'Data updated · Reload';
-  }
-  if (badge) badge.classList.remove('loading');
 }
 
 // Manual alias map: when normalizer + parent-fallback can't bridge a name
