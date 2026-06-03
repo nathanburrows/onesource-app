@@ -1940,7 +1940,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">Jun 03 · 03:06 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">Jun 03 · 03:08 PM ET</span>
     </div>
   </div>
 </div>
@@ -2092,7 +2092,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">Jun 03 · 03:06 PM ET</p>
+          <p class="upload-brand-ver-ts">Jun 03 · 03:08 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2337,7 +2337,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">Jun 03 · 03:06 PM ET</div>
+        <div class="ds-brand-ver-ts">Jun 03 · 03:08 PM ET</div>
       </div>
     </div>
   </div>
@@ -2535,7 +2535,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">Jun 03 · 03:06 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">Jun 03 · 03:08 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -7207,6 +7207,10 @@ function _maxSavedAt(statusPayload) {
 function startProxyFreshnessWatcher() {
   if (_proxyWatcherTimer) return;
   const INTERVAL_MS = 90_000;
+  // Baseline = when the watcher started (≈ app boot). Used as the comparison
+  // floor when a source's ProxyMeta.syncedAt is null (snapshot load, etc.).
+  // Any proxy data saved after this moment is considered stale for the user.
+  const _watcherBaseline = new Date().toISOString();
 
   async function poll() {
     try {
@@ -7221,16 +7225,16 @@ function startProxyFreshnessWatcher() {
       // ── CRM badge ──
       const crmBadge = document.getElementById('proxy-stale-badge');
       const crmLabel = document.getElementById('proxy-stale-label');
-      if (crmBadge) {
-        if (crmS && crmS.lastSyncedAt && STATE.crmHydratedAt) {
-          const stale = new Date(crmS.lastSyncedAt).getTime() > new Date(STATE.crmHydratedAt).getTime() + 1000;
-          if (stale) {
-            const ageMin = crmS.ageMinutes != null ? Math.round(crmS.ageMinutes) : null;
-            if (crmLabel) crmLabel.textContent = ageMin != null ? `CRM updated ${ageMin}m ago · Reload` : 'CRM updated · Reload';
-            crmBadge.classList.add('visible');
-          } else {
-            crmBadge.classList.remove('visible');
-          }
+      if (crmBadge && crmS && crmS.lastSyncedAt) {
+        // Fall back to watcher baseline when app loaded CRM before proxy was set
+        const loadedAt = STATE.crmHydratedAt || _watcherBaseline;
+        const stale = new Date(crmS.lastSyncedAt).getTime() > new Date(loadedAt).getTime() + 1000;
+        if (stale) {
+          const ageMin = crmS.ageMinutes != null ? Math.round(crmS.ageMinutes) : null;
+          if (crmLabel) crmLabel.textContent = ageMin != null ? `CRM updated ${ageMin}m ago · Reload` : 'CRM updated · Reload';
+          crmBadge.classList.add('visible');
+        } else {
+          crmBadge.classList.remove('visible');
         }
       }
 
@@ -7242,13 +7246,15 @@ function startProxyFreshnessWatcher() {
         const niceAt  = _maxSavedAt(niceS);
         const stAt    = _maxSavedAt(stS);
         const avantAt = _maxSavedAt(avantS);
-        const niceMeta  = STATE.niceProxyMeta;
-        const stMeta    = STATE.stProxyMeta;
-        const avantMeta = STATE.avantProxyMeta;
+        // Fall back to watcher baseline when ProxyMeta.syncedAt is null (snapshot
+        // load path, or hydrate that ran before the proxy had data).
+        const niceBase  = STATE.niceProxyMeta?.syncedAt  || _watcherBaseline;
+        const stBase    = STATE.stProxyMeta?.syncedAt    || _watcherBaseline;
+        const avantBase = STATE.avantProxyMeta?.syncedAt || _watcherBaseline;
 
-        if (niceAt  && niceMeta?.syncedAt  && niceAt  > niceMeta.syncedAt)  staleSources.push('NICE');
-        if (stAt    && stMeta?.syncedAt    && stAt    > stMeta.syncedAt)    staleSources.push('ST');
-        if (avantAt && avantMeta?.syncedAt && avantAt > avantMeta.syncedAt) staleSources.push('Avant');
+        if (niceAt  && niceAt  > niceBase)  staleSources.push('NICE');
+        if (stAt    && stAt    > stBase)    staleSources.push('ST');
+        if (avantAt && avantAt > avantBase) staleSources.push('Avant');
 
         if (staleSources.length) {
           if (finLabel) finLabel.textContent = staleSources.join(' + ') + ' updated · Reload';
