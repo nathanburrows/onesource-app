@@ -1944,7 +1944,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">Jun 03 · 03:17 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">Jun 08 · 08:50 AM ET</span>
     </div>
   </div>
   <div id="proxy-sync-status" onclick="proxySyncStatusClick()" title="Proxy data sync status">
@@ -2100,7 +2100,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">Jun 03 · 03:17 PM ET</p>
+          <p class="upload-brand-ver-ts">Jun 08 · 08:50 AM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2345,7 +2345,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">Jun 03 · 03:17 PM ET</div>
+        <div class="ds-brand-ver-ts">Jun 08 · 08:50 AM ET</div>
       </div>
     </div>
   </div>
@@ -2543,7 +2543,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">Jun 03 · 03:17 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">Jun 08 · 08:50 AM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -10713,6 +10713,24 @@ function openCrmMatcher(defaultTab) {
   };
 }
 
+// Per-sheet header row detection. Some SalesTrak exports include 2–3 metadata
+// rows (Fiscal Calendar, Sales Rep name) above the real column headers, and
+// the same file may also contain a "clean" duplicate sheet with headers at
+// row 0. Scoring each candidate row against the field patterns lets us pick
+// the right row regardless of which format a given sheet uses, without
+// relying on the file-level headerRow that classifyFile computed from the
+// best-scoring sheet. Falls back to row 0 if nothing scores above 0.
+function detectSheetHeaderRow(aoa, patterns) {
+  let bestRow = 0, bestScore = 0;
+  for (let i = 0; i < Math.min(12, aoa.length); i++) {
+    const cells = (aoa[i] || []).map(v => String(v || '').trim()).filter(Boolean);
+    if (cells.length < 3) continue;
+    const score = Object.keys(resolveFieldMap(cells, patterns)).length;
+    if (score > bestScore) { bestScore = score; bestRow = i; }
+  }
+  return bestRow;
+}
+
 // ─────────────────────────────────────────────
 // Import — NICE (multi-file capable)
 //   list is [{file, headerRow}] from routeFiles. headerRow is dynamically
@@ -10747,23 +10765,32 @@ function importNiceProceed(list) {
         // Multi-tab support — same rationale as ST. Each non-empty sheet
         // gets its own mapping detection so a hypothetical NICE export
         // with Transactions + Margin Adjustments tabs both ingest cleanly.
+        // Deduplicate sheets whose names differ only by spacing (e.g.
+        // "Burrows-Ord" vs "Burrows- Ord") — SalesTrak exports sometimes
+        // include both a metadata-header variant and a clean variant of
+        // the same data; processing both would double-count every row.
         let fileSheetCount = 0, fileRowsAdded = 0;
+        const seenNormNames = new Set();
         for (const sheetName of (wb.SheetNames || [])) {
+          const normName = sheetName.replace(/\s+/g, '').toLowerCase();
+          if (seenNormNames.has(normName)) continue;
+          seenNormNames.add(normName);
           const ws = wb.Sheets[sheetName];
           if (!ws) continue;
           const aoa = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:true, blankrows:false });
           if (!aoa.length) continue;
-          const hdrCells = aoa[headerRow] || [];
+          const sheetHdrRow = detectSheetHeaderRow(aoa, NICE_FIELD_PATTERNS);
+          const hdrCells = aoa[sheetHdrRow] || [];
           const headers = hdrCells.map(h => String(h || '').trim());
           if (!headers.filter(Boolean).length) continue;
           // Resolve mapping per-sheet (classifyFile already did this for
           // sheet 0, but tabs may have different headers).
-          const fileMap = mapping || resolveFieldMap(headers, NICE_FIELD_PATTERNS);
+          const fileMap = resolveFieldMap(headers, NICE_FIELD_PATTERNS);
           // Manual AOA→object conversion. SheetJS's sheet_to_json with explicit
           // `header` array + `range` does NOT skip the header row (the header
           // row gets returned as the first data row with header-name = header-name
           // for every cell). Slicing the AOA ourselves is bulletproof.
-          const rows = aoa.slice(headerRow + 1).map(r => {
+          const rows = aoa.slice(sheetHdrRow + 1).map(r => {
             const obj = {};
             headers.forEach((h, i) => { if (h) obj[h] = (r[i] !== undefined ? r[i] : ''); });
             return obj;
@@ -10785,7 +10812,7 @@ function importNiceProceed(list) {
         if (fileSheetCount === 0) {
           errors.push(`${file.name}: no readable data found in any sheet`);
         } else if (fileRowsAdded === 0) {
-          errors.push(`${file.name}: no data rows below header row ${headerRow + 1} in any sheet`);
+          errors.push(`${file.name}: no data rows found in any sheet`);
         }
       } catch (err) {
         console.error(err);
@@ -11019,18 +11046,27 @@ function importSt(list) {
         // own entry in `parsed` and gets its own mapping detection in
         // handleParsedSt. Pre-multi-tab the code only read SheetNames[0]
         // and silently dropped the second tab.
+        // Deduplicate sheets whose names differ only by spacing (e.g.
+        // "Burrows-Ord" vs "Burrows- Ord") to avoid double-counting rows
+        // when a file contains both a metadata-header and a clean variant
+        // of the same sheet.
         const sheetNames = wb.SheetNames || [];
         const multiTab = sheetNames.length > 1;
+        const seenStNormNames = new Set();
         for (const sheetName of sheetNames) {
+          const normName = sheetName.replace(/\s+/g, '').toLowerCase();
+          if (seenStNormNames.has(normName)) continue;
+          seenStNormNames.add(normName);
           const ws = wb.Sheets[sheetName];
           if (!ws) continue;
           const aoa = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:true, blankrows:false });
           if (!aoa.length) continue;
-          const headers = (aoa[headerRow] || []).map(h => String(h || '').trim());
+          const sheetHdrRow = detectSheetHeaderRow(aoa, ST_FIELD_PATTERNS);
+          const headers = (aoa[sheetHdrRow] || []).map(h => String(h || '').trim());
           if (!headers.filter(Boolean).length) continue; // empty header row → skip tab
           // Manual AOA slice — same SheetJS quirk as importNice (range + explicit
           // header array doesn't actually skip the header row).
-          const rows = aoa.slice(headerRow + 1).map(r => {
+          const rows = aoa.slice(sheetHdrRow + 1).map(r => {
             const obj = {};
             headers.forEach((h, i) => { if (h) obj[h] = (r[i] !== undefined ? r[i] : ''); });
             return obj;
