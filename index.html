@@ -494,6 +494,28 @@
   .tag-tile-ghost-debook  { --tile-from:rgba(131,24,67,0.40);--tile-to:rgba(136,19,55,0.30);--tile-border:rgba(190,24,93,0.40); }
   .tag-tile-ghost-debook  .tile-label { color:#f472b6; }
 
+  /* FY coverage warning banner — recon-wide alert when one source covers a
+     fiscal year the other doesn't (the systemic cause of false ghosts). */
+  .recon-cov-banner {
+    display:flex; align-items:flex-start; gap:10px;
+    margin:0 0 12px; padding:11px 14px; border-radius:10px;
+    background:linear-gradient(135deg,rgba(180,83,9,0.18),rgba(146,64,14,0.12));
+    border:1px solid rgba(245,158,11,0.45);
+    color:#fde68a; font-size:12.5px; line-height:1.5;
+  }
+  .recon-cov-banner__icon { font-size:15px; line-height:1.3; flex:0 0 auto; color:#fbbf24; }
+  .recon-cov-banner__body { flex:1; min-width:0; }
+  .recon-cov-banner__body strong { color:#fcd34d; }
+  .recon-cov-banner__tag {
+    display:inline-block; padding:0 6px; border-radius:5px; font-weight:600;
+    background:rgba(34,211,238,0.16); color:#67e8f9; border:1px solid rgba(34,211,238,0.45);
+  }
+  .recon-cov-banner__active {
+    display:inline-block; margin-left:4px; padding:0 7px; border-radius:5px;
+    background:rgba(245,158,11,0.22); color:#fed7aa; border:1px solid rgba(245,158,11,0.5);
+    font-weight:600;
+  }
+
   /* Step 4 — parent / child grouping. Parent + children share a single solid
      indigo band so the whole group reads as one block. The next non-group row
      reverts to the table's default dark background, creating a clean gap. */
@@ -1944,7 +1966,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">Jun 08 · 08:50 AM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts">Jun 23 · 02:51 PM ET</span>
     </div>
   </div>
   <div id="proxy-sync-status" onclick="proxySyncStatusClick()" title="Proxy data sync status">
@@ -2100,7 +2122,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">Jun 08 · 08:50 AM ET</p>
+          <p class="upload-brand-ver-ts">Jun 23 · 02:51 PM ET</p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2345,7 +2367,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">Jun 08 · 08:50 AM ET</div>
+        <div class="ds-brand-ver-ts">Jun 23 · 02:51 PM ET</div>
       </div>
     </div>
   </div>
@@ -2543,7 +2565,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">Jun 08 · 08:50 AM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts">Jun 23 · 02:51 PM ET</div>
       </div>
     </div>
     <div class="header-actions">
@@ -3873,6 +3895,11 @@
     </span>
     <span class="viz-sel-hint">click another dot to switch · click selected dot to clear</span>
   </div>
+
+  <!-- FY COVERAGE WARNING — fires when NICE covers a fiscal year that ST does
+       not (or vice-versa). Every invoice in an ST-less FY would falsely ghost,
+       so warn recon-wide instead of letting the user chase individual rows. -->
+  <div id="recon-fy-coverage-banner" class="recon-cov-banner" style="display:none;"></div>
 
   <!-- TAG FILTER TILES (legacy 7-across row, hidden in Recon Visual mode) -->
   <div id="flag-tiles-wrap">
@@ -32467,6 +32494,84 @@ function computeGroupTag(rows) {
   return 'match';
 }
 
+// ─────────────────────────────────────────────
+// FY coverage diagnostics — systemic ghost detector
+// ─────────────────────────────────────────────
+// A group goes Ghost Pay when its NICE rows have no ST sibling in the group.
+// The most common *systemic* cause isn't a per-invoice data problem — it's a
+// whole fiscal year of SalesTrak that was never loaded (proxy cache scoped to
+// the wrong FY, or an ST file that predates the period NICE now covers). When
+// that happens EVERY invoice in that FY ghosts. reconFyCoverage() compares the
+// FY footprint of each source so we can warn once, recon-wide, instead of
+// letting the user chase individual phantom ghosts.
+function reconFyCoverage() {
+  const tally = rows => {
+    const m = new Map();
+    for (const r of (rows || [])) {
+      const fy = fyOf(ymOf(r.invoiceDate));
+      if (fy) m.set(fy, (m.get(fy) || 0) + 1);
+    }
+    return m;
+  };
+  const niceFYs = tally(STATE.niceRaw);
+  const stFYs   = tally(STATE.stRaw);
+  // niceOnlyFYs — paid commissions with no ST loaded → false Ghost Pay.
+  // stOnlyFYs   — booked sales with no NICE loaded → false Missing.
+  const niceOnlyFYs = [...niceFYs.keys()].filter(fy => !stFYs.has(fy)).sort((a,b)=>a-b);
+  const stOnlyFYs   = [...stFYs.keys()].filter(fy => !niceFYs.has(fy)).sort((a,b)=>a-b);
+  return { niceFYs, stFYs, niceOnlyFYs, stOnlyFYs };
+}
+
+// Render the recon-wide FY coverage banner. No-op unless BOTH sources have
+// data (an empty ST side is a "you haven't uploaded SalesTrak yet" state, not
+// a coverage gap) AND at least one FY is one-sided.
+function updateReconFyCoverageBanner() {
+  const el = document.getElementById('recon-fy-coverage-banner');
+  if (!el) return;
+  const hide = () => { el.style.display = 'none'; el.innerHTML = ''; };
+  if (STATE.view !== 'recon' && STATE.view !== 'reconviz') return hide();
+  const haveNice = (STATE.niceRaw || []).length > 0;
+  const haveSt   = (STATE.stRaw   || []).length > 0;
+  if (!haveNice || !haveSt) return hide();
+
+  const { niceOnlyFYs, stOnlyFYs } = reconFyCoverage();
+  if (!niceOnlyFYs.length && !stOnlyFYs.length) return hide();
+
+  const fyLabel  = fy => 'FY' + String(fy).slice(-2);
+  const activeFy = STATE.fy && STATE.fy.fy;
+  const join     = arr => arr.map(fyLabel).join(', ');
+  const plural   = arr => arr.length > 1;
+  const parts = [];
+
+  if (niceOnlyFYs.length) {
+    const list = join(niceOnlyFYs);
+    parts.push(
+      `<strong>SalesTrak data not loaded for ${list}.</strong> ` +
+      `NICE shows paid commissions in ${plural(niceOnlyFYs)?'these fiscal years':'this fiscal year'}, ` +
+      `but no SalesTrak rows are loaded to reconcile against — every invoice in ${plural(niceOnlyFYs)?'them':'it'} ` +
+      `falsely tags as <span class="recon-cov-banner__tag">Ghost Pay</span>. ` +
+      `Re-sync or upload the SalesTrak export covering ${list}.` +
+      (activeFy && niceOnlyFYs.includes(activeFy)
+        ? ` <span class="recon-cov-banner__active">You're viewing ${fyLabel(activeFy)} now.</span>` : '')
+    );
+  }
+  if (stOnlyFYs.length) {
+    const list = join(stOnlyFYs);
+    parts.push(
+      `<strong>NICE data not loaded for ${list}.</strong> ` +
+      `SalesTrak has booked sales in ${plural(stOnlyFYs)?'these fiscal years':'this fiscal year'} with no NICE side loaded — ` +
+      `those bookings tag as Missing until the matching NICE pay export is synced.` +
+      (activeFy && stOnlyFYs.includes(activeFy)
+        ? ` <span class="recon-cov-banner__active">You're viewing ${fyLabel(activeFy)} now.</span>` : '')
+    );
+  }
+
+  el.innerHTML =
+    `<div class="recon-cov-banner__icon">⚠</div>` +
+    `<div class="recon-cov-banner__body">${parts.join('<br><br>')}</div>`;
+  el.style.display = 'flex';
+}
+
 // Collect adjustment-class transTypes present in a group's NICE children.
 // Returns a list (in stable order) of any of: 'sales-adj', 'paycomm',
 // 'margin-adj'. Used to render small informational sub-pills next to the
@@ -33587,6 +33692,11 @@ function renderBody() {
   const niceCount = STATE.niceRaw.length;
   const stCount   = STATE.stRaw.length;
   // Flag-tile row visibility — only on Recon Visual.
+  // Systemic ghost guard — warn if a whole fiscal year is loaded on one side
+  // only (the root cause of false Ghost Pay / Missing tags). Runs for both the
+  // recon table and Recon Visual views.
+  try { updateReconFyCoverageBanner(); } catch (_) {}
+
   const flagTileRow = document.getElementById('flag-tiles');
   if (flagTileRow) flagTileRow.style.display = (STATE.view === 'reconviz') ? '' : 'none';
 
