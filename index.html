@@ -17864,13 +17864,14 @@ function clientAggRenewalEvents(parent, customer) {
       chainBills.set(chainKey, {
         vendor: v, customer: cust, poNumber: r.poNumber || '',
         engineDateMs: null,
-        warrEndMsList: [], invMsList: [], estInvMsList: [], confidence: rt, totalRev: 0, billCount: 0,
+        warrEndMsList: [], invMsList: [], estInvMsList: [], confidence: rt, totalRev: 0, billCount: 0, termYears: 0,
       });
     }
     const c = chainBills.get(chainKey);
     if (rt === 'renewal') c.confidence = 'renewal'; // upgrade if any row is hard-stamped
     c.totalRev += Number(r._annualizedRev || r.stSales) || 0;
     if (r.estInvoiceDate) c.billCount += 1; // for averaging only — not used for date math
+    if (!c.termYears && r._termYears) c.termYears = Number(r._termYears) || 0;
     // Engine-stamped renewal date (ISO yyyy-mm-dd). Every line in a chain
     // carries the same value; first non-empty wins.
     if (c.engineDateMs == null && r._renewalDate) {
@@ -17931,7 +17932,7 @@ function clientAggRenewalEvents(parent, customer) {
     (byVendor[c.vendor] = byVendor[c.vendor] || []).push({
       kind: 'renewal',
       ms: renewalMs, ymStr: ym, ...lbl,
-      netSell: c.totalRev / Math.max(1, c.billCount), // avg per-year if multi-bill
+      netSell: c.totalRev / Math.max(1, c.termYears || c.billCount), // divide by actual term years; fall back to bill-row count
       customer: c.customer,
       poNumber: c.poNumber,
       confidence: c.confidence,
