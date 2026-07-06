@@ -1966,7 +1966,7 @@
     <div class="gs-brand-divider"></div>
     <div class="gs-brand-ver">
       <div class="gs-brand-ver-row"><span class="gs-brand-ver-label">v</span><span class="gs-brand-ver-num">3.0</span></div>
-      <span class="gs-brand-ver-ts" id="ver-ts">Jun 23 · 02:51 PM ET</span>
+      <span class="gs-brand-ver-ts" id="ver-ts"></span>
     </div>
   </div>
   <div id="proxy-sync-status" onclick="proxySyncStatusClick()" title="Proxy data sync status">
@@ -2122,7 +2122,7 @@
         <div class="upload-brand-ver">
           <p class="upload-brand-ver-label">version</p>
           <p class="upload-brand-ver-num">3.0</p>
-          <p class="upload-brand-ver-ts">Jun 23 · 02:51 PM ET</p>
+          <p class="upload-brand-ver-ts"></p>
         </div>
       </div>
       <p class="upload-tagline">CRM and NICE sync via bookmarklets — drop SalesTrak files anywhere on this page.</p>
@@ -2367,7 +2367,7 @@
       <div class="ds-brand-ver">
         <div class="ds-brand-ver-label">version</div>
         <div class="ds-brand-ver-num">3.0</div>
-        <div class="ds-brand-ver-ts">Jun 23 · 02:51 PM ET</div>
+        <div class="ds-brand-ver-ts"></div>
       </div>
     </div>
   </div>
@@ -2565,7 +2565,7 @@
       <div class="page-brand-ver">
         <div class="page-brand-ver-label">version</div>
         <div class="page-brand-ver-num">3.0</div>
-        <div class="page-brand-ver-ts" id="ver-ts">Jun 23 · 02:51 PM ET</div>
+        <div class="page-brand-ver-ts" id="ver-ts"></div>
       </div>
     </div>
     <div class="header-actions">
@@ -42928,6 +42928,18 @@ Use the response format from SYSTEM_PROMPT.`;
     const src = _src; closePopup();
     window.dsTriggerRefreshExt?.(src);
   });
+})();
+</script>
+<script>
+(function () {
+  const d = new Date(document.lastModified);
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit', hour12: true,
+  }).formatToParts(d);
+  const get = t => (parts.find(p => p.type === t) || {}).value || '';
+  const ts = `${get('month')} ${get('day')} · ${get('hour')}:${get('minute')} ${get('dayPeriod')} ET`;
+  document.querySelectorAll('.gs-brand-ver-ts, .upload-brand-ver-ts, .ds-brand-ver-ts, .page-brand-ver-ts').forEach(el => el.textContent = ts);
 })();
 </script>
 </body>
