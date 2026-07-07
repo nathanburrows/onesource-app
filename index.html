@@ -2650,28 +2650,28 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         <div class="bg-gradient-to-br from-indigo-900/40 to-violet-900/30 border border-indigo-700/40 rounded-2xl p-5 relative">
           <span class="ov-kpi-badge" data-ov-badge>—</span>
-          <p class="text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">YTD Revenue</p>
+          <p class="text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">YTD Revenue <button class="calc-info-btn" data-calc-info="YTD Revenue&#10;Sum of ST Net Sell (stSales) for the selected period&#10;Source: SalesTrak booked sales&#10;Includes billed invoices + open bookings" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-ytd-rev">—</p>
           <p class="text-[11px] mt-1" id="ov-ytd-rev-yoy">—</p>
           <div class="mt-2" style="height:36px;"><canvas id="ov-spark-rev"></canvas></div>
         </div>
         <div class="bg-gradient-to-br from-emerald-900/40 to-teal-900/30 border border-emerald-700/40 rounded-2xl p-5 relative">
           <span class="ov-kpi-badge" data-ov-badge>—</span>
-          <p class="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1">YTD Credit GP</p>
+          <p class="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">YTD Credit GP <button class="calc-info-btn" data-calc-info="YTD Credit GP&#10;GP = ST Net Sell × margin % per line&#10;Billed leg: stSales × marginPct ÷ 100&#10;Open leg: openSell × marginPct ÷ 100&#10;NICE paid GP shown in subtitle" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-ytd-gp">—</p>
           <p class="text-[11px] mt-1" id="ov-ytd-gp-yoy">—</p>
           <div class="mt-2" style="height:36px;"><canvas id="ov-spark-gp"></canvas></div>
         </div>
         <div class="bg-gradient-to-br from-amber-900/40 to-orange-900/30 border border-amber-700/40 rounded-2xl p-5 relative">
           <span class="ov-kpi-badge" data-ov-badge>—</span>
-          <p class="text-amber-400 text-xs font-semibold uppercase tracking-wider mb-1">YTD Blended GM%</p>
+          <p class="text-amber-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">YTD Blended GM% <button class="calc-info-btn" data-calc-info="YTD Blended GM%&#10;GM% = YTD GP ÷ YTD Revenue × 100&#10;Accel bands: &lt;10% none · 10-15% +1% · 15-20% +2% · &gt;20% +3%" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-ytd-gm">—</p>
           <p class="text-[11px] mt-1" id="ov-ytd-gm-band">—</p>
           <p class="text-[10px] text-slate-500 mt-1" id="ov-ytd-gm-yoy">—</p>
         </div>
         <div class="bg-gradient-to-br from-sky-900/40 to-cyan-900/30 border border-sky-700/40 rounded-2xl p-5 relative">
           <span class="ov-kpi-badge" data-ov-badge>—</span>
-          <p class="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-1">Open Sell Margin</p>
+          <p class="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">Open Sell Margin <button class="calc-info-btn" data-calc-info="Open Sell Margin&#10;GP from open/unbilled orders&#10;openSell × marginPct ÷ 100 per line&#10;Share = open GP ÷ total booked GP" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-ytd-count">—</p>
           <p class="text-[11px] mt-1" id="ov-ytd-avg">—</p>
           <p class="text-[10px] text-slate-500 mt-1" id="ov-ytd-count-yoy">—</p>
@@ -2682,7 +2682,7 @@
       <!-- ROW 2: Monthly Revenue + Margin combo (24 months) — full width -->
       <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 mb-5">
         <div class="flex items-baseline justify-between mb-3">
-          <h3 class="text-base font-semibold text-white">Monthly Revenue + Margin · 24 months</h3>
+          <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Monthly Revenue + Margin · 24 months <button class="calc-info-btn" data-calc-info="Monthly Revenue + Margin · 24 months&#10;Revenue bars: ST Net Sell (stSales) per month&#10;Margin $ line: stSales × marginPct ÷ 100&#10;GM% dotted line: monthly GP ÷ monthly Rev × 100" onclick="showCalcInfo(this,event)">ℹ</button></h3>
           <span class="text-xs text-slate-500">Click any month to drill into rows · Bars = revenue · Line = margin · Dotted = GM%</span>
         </div>
         <div style="height:300px;"><canvas id="ov-monthly-combo"></canvas></div>
@@ -2727,14 +2727,14 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white">Cumulative GP · YoY</h3>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Cumulative GP · YoY <button class="calc-info-btn" data-calc-info="Cumulative GP · YoY&#10;Running total of GP from FY start (Apr) each year&#10;GP = ST Net Sell × marginPct ÷ 100 per line&#10;FY runs Apr → Mar" onclick="showCalcInfo(this,event)">ℹ</button></h3>
             <span class="text-xs text-slate-500">FY runs Apr → Mar</span>
           </div>
           <div style="height:280px;"><canvas id="ov-cum-yoy"></canvas></div>
         </div>
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white">Pace to Quota · Run Rate</h3>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Pace to Quota · Run Rate <button class="calc-info-btn" data-calc-info="Pace to Quota · Run Rate&#10;Booked GP to date vs. quota target&#10;Run rate: FYTD GP ÷ elapsed months × 12&#10;Projection: run rate × remaining FY months" onclick="showCalcInfo(this,event)">ℹ</button></h3>
             <span class="text-xs text-slate-500" id="ov-pace-projection">—</span>
           </div>
           <div style="height:280px;"><canvas id="ov-pace"></canvas></div>
@@ -2746,14 +2746,14 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white">Quarterly Performance · YoY</h3>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Quarterly Performance · YoY <button class="calc-info-btn" data-calc-info="Quarterly Performance · YoY&#10;Full bar = ST Net Sell (revenue) per quarter&#10;GP segment = stSales × marginPct ÷ 100&#10;Quarters: Q1=Apr-Jun, Q2=Jul-Sep, Q3=Oct-Dec, Q4=Jan-Mar" onclick="showCalcInfo(this,event)">ℹ</button></h3>
             <span class="text-xs text-slate-500">Rev (full bar) · GP segment at base</span>
           </div>
           <div style="height:340px;"><canvas id="ov-q-yoy"></canvas></div>
         </div>
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-center justify-between mb-3">
-            <h3 class="text-base font-semibold text-white">Top 10 Vendors · Mix</h3>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Top 10 Vendors · Mix <button class="calc-info-btn" data-calc-info="Top 10 Vendors · Mix&#10;Revenue slice: ST Net Sell (stSales) per vendor&#10;GP slice: stSales × marginPct ÷ 100 per vendor&#10;Share % = vendor total ÷ all-vendor total × 100" onclick="showCalcInfo(this,event)">ℹ</button></h3>
             <div id="ov-vd-donut-toggle" class="inline-flex bg-slate-900/60 border border-slate-700/60 rounded-lg p-0.5">
               <button type="button" data-metric="rev" class="px-2.5 py-1 text-xs font-semibold rounded-md transition bg-slate-700 text-white">Revenue</button>
               <button type="button" data-metric="gp" class="px-2.5 py-1 text-xs font-semibold rounded-md transition text-slate-400 hover:text-slate-200">GP</button>
@@ -2767,7 +2767,7 @@
       <div class="mb-5">
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white">Top 5 Vendors · Rev / GP by FY</h3>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Top 5 Vendors · Rev / GP by FY <button class="calc-info-btn" data-calc-info="Top 5 Vendors · Rev / GP by FY&#10;Revenue base: ST Net Sell (stSales) per FY&#10;Margin top: stSales × marginPct ÷ 100&#10;GM% label: GP ÷ Rev × 100&#10;Top 5 ranked by rolling 12-mo GP · ePlus excluded" onclick="showCalcInfo(this,event)">ℹ</button></h3>
             <span class="text-xs text-slate-500">Bars = Rev (solid base) + Margin$ (translucent top) stacked · GM% labeled above each bar · ePlus excluded · top 5 by rolling 12-mo GP</span>
           </div>
           <div style="height:340px;"><canvas id="ov-vd-yoy"></canvas></div>
@@ -2784,23 +2784,23 @@
       <!-- ROW MH-1: 4 KPI tiles (canonical gradient hero) -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         <div class="bg-gradient-to-br from-emerald-900/40 to-teal-900/30 border border-emerald-700/40 rounded-2xl p-5">
-          <p class="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1">YTD Blended GM%</p>
+          <p class="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">YTD Blended GM% <button class="calc-info-btn" data-calc-info="YTD Blended GM%&#10;GM% = YTD GP ÷ YTD Revenue × 100&#10;GP = stSales × marginPct ÷ 100 per line&#10;Accel bands: &lt;10% none · 10-15% +1% · 15-20% +2% · &gt;20% +3%" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-mh-gm">—</p>
           <p class="text-[11px] mt-1" id="ov-mh-gm-trend">—</p>
           <p class="text-[10px] text-slate-500 mt-1" id="ov-mh-gm-band">—</p>
         </div>
         <div class="bg-gradient-to-br from-indigo-900/40 to-violet-900/30 border border-indigo-700/40 rounded-2xl p-5">
-          <p class="text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">GP Above 10% Floor</p>
+          <p class="text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">GP Above 10% Floor <button class="calc-info-btn" data-calc-info="GP Above 10% Floor&#10;Sum of GP on lines where marginPct ≥ 10%&#10;GP = stSales × marginPct ÷ 100&#10;% shown = above-floor GP ÷ total GP × 100" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-mh-above-gp">—</p>
           <p class="text-[11px] mt-1" id="ov-mh-above-pct">—</p>
         </div>
         <div class="bg-gradient-to-br from-amber-900/40 to-orange-900/30 border border-amber-700/40 rounded-2xl p-5">
-          <p class="text-amber-400 text-xs font-semibold uppercase tracking-wider mb-1">Below-Floor Deal Lines</p>
+          <p class="text-amber-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">Below-Floor Deal Lines <button class="calc-info-btn" data-calc-info="Below-Floor Deal Lines&#10;Count of lines where 0% ≤ marginPct &lt; 10%&#10;10% is the minimum accel-qualifying margin&#10;Drag $ = sum of GP shortfall vs. 10% floor" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-mh-below-count">—</p>
           <p class="text-[11px] mt-1" id="ov-mh-below-detail">—</p>
         </div>
         <div class="bg-gradient-to-br from-sky-900/40 to-cyan-900/30 border border-sky-700/40 rounded-2xl p-5">
-          <p class="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-1">Negative-GP Lines</p>
+          <p class="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">Negative-GP Lines <button class="calc-info-btn" data-calc-info="Negative-GP Lines&#10;Count of lines where marginPct &lt; 0%&#10;These drag down blended GM% and tier eligibility&#10;Drag $ = sum of negative GP amounts" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-mh-neg-count">—</p>
           <p class="text-[11px] mt-1" id="ov-mh-neg-detail">—</p>
         </div>
@@ -2810,14 +2810,14 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white">Monthly Blended GM%</h3>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Monthly Blended GM% <button class="calc-info-btn" data-calc-info="Monthly Blended GM%&#10;GM% = monthly GP ÷ monthly Rev × 100&#10;GP = stSales × marginPct ÷ 100 per line&#10;Reference lines at 10%, 15%, 20% accel bands" onclick="showCalcInfo(this,event)">ℹ</button></h3>
             <span class="text-xs text-slate-500">24-mo · accel band reference lines</span>
           </div>
           <div style="height:300px;"><canvas id="ov-mh-trend"></canvas></div>
         </div>
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white">Current FY · GP by Margin Band</h3>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Current FY · GP by Margin Band <button class="calc-info-btn" data-calc-info="Current FY · GP by Margin Band&#10;GP bucketed into margin bands: &lt;0%, 0-10%, 10-15%, 15-20%, &gt;20%&#10;GP = stSales × marginPct ÷ 100 per line&#10;Shows where GP $ sits across the accel curve" onclick="showCalcInfo(this,event)">ℹ</button></h3>
             <span class="text-xs text-slate-500">Where the GP $ is sitting</span>
           </div>
           <div style="height:300px;"><canvas id="ov-mh-bands"></canvas></div>
@@ -2827,7 +2827,7 @@
       <!-- ROW MH-3: Below-floor / negative-GP table -->
       <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 mb-5">
         <div class="flex items-baseline justify-between mb-3">
-          <h3 class="text-base font-semibold text-white">Margin-Drag Lines (current FY)</h3>
+          <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Margin-Drag Lines (current FY) <button class="calc-info-btn" data-calc-info="Margin-Drag Lines&#10;Lines where marginPct &lt; 10% (below accel floor)&#10;Drag $ = (10% - marginPct) ÷ stSales &#10;Shows GP lost vs. hitting the 10% floor" onclick="showCalcInfo(this,event)">ℹ</button></h3>
           <span class="text-xs text-slate-500" id="ov-mh-table-summary">—</span>
         </div>
         <div class="flex items-center gap-4 mb-3 text-xs">
@@ -2862,7 +2862,7 @@
       <!-- ROW QT-1: 4 KPI tiles (canonical gradient hero) -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
         <div class="bg-gradient-to-br from-emerald-900/40 to-teal-900/30 border border-emerald-700/40 rounded-2xl p-5">
-          <p class="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1">GP to Quota</p>
+          <p class="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">GP to Quota <button class="calc-info-btn" data-calc-info="GP to Quota&#10;FYTD GP vs. annual quota target&#10;GP = stSales × marginPct ÷ 100 per line&#10;% shown = FYTD GP ÷ quota × 100" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-qt-gp">—</p>
           <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-2">
             <div id="ov-qt-gp-bar" class="h-full bg-emerald-400" style="width:0%"></div>
@@ -2870,17 +2870,17 @@
           <p class="text-[11px] mt-1 text-slate-400" id="ov-qt-gp-sub">—</p>
         </div>
         <div class="bg-gradient-to-br from-indigo-900/40 to-violet-900/30 border border-indigo-700/40 rounded-2xl p-5">
-          <p class="text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">Current Tier</p>
+          <p class="text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">Current Tier <button class="calc-info-btn" data-calc-info="Current Tier&#10;Tier determined by FYTD GP vs. tier thresholds&#10;T1=base · T2/T3/T4/T5 unlock higher accel %&#10;Tier resets each April (FY start)" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-qt-tier">—</p>
           <p class="text-[11px] mt-1 text-slate-400" id="ov-qt-tier-sub">—</p>
         </div>
         <div class="bg-gradient-to-br from-amber-900/40 to-orange-900/30 border border-amber-700/40 rounded-2xl p-5">
-          <p class="text-amber-400 text-xs font-semibold uppercase tracking-wider mb-1">Gap to Next Tier</p>
+          <p class="text-amber-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">Gap to Next Tier <button class="calc-info-btn" data-calc-info="Gap to Next Tier&#10;GP needed to reach the next tier threshold&#10;Gap = next tier floor - FYTD GP&#10;Includes projected open ST in subtotal" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-qt-gap">—</p>
           <p class="text-[11px] mt-1 text-slate-400" id="ov-qt-gap-sub">—</p>
         </div>
         <div class="bg-gradient-to-br from-sky-900/40 to-cyan-900/30 border border-sky-700/40 rounded-2xl p-5">
-          <p class="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-1">Q Accelerator</p>
+          <p class="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">Q Accelerator <button class="calc-info-btn" data-calc-info="Q Accelerator&#10;Bonus % earned on GP when QTD GM% exceeds band floors&#10;10-15%: +1% · 15-20%: +2% · &gt;20%: +3%&#10;QTD GM% = QTD GP ÷ QTD Rev × 100" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-qt-accel">—</p>
           <p class="text-[11px] mt-1 text-slate-400" id="ov-qt-accel-sub">—</p>
         </div>
@@ -2890,14 +2890,14 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white">Tier Ladder · FY GP</h3>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Tier Ladder · FY GP <button class="calc-info-btn" data-calc-info="Tier Ladder · FY GP&#10;Shows each tier threshold and how far you've progressed&#10;FYTD GP vs. T1→T5 thresholds&#10;GP = stSales × marginPct ÷ 100 · FY Apr-Mar" onclick="showCalcInfo(this,event)">ℹ</button></h3>
             <span class="text-xs text-slate-500" id="ov-qt-ladder-sub">T1 → T5</span>
           </div>
           <div id="ov-qt-ladder" class="space-y-3"></div>
         </div>
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white">Q Accelerator Band · QTD GM%</h3>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Q Accelerator Band · QTD GM% <button class="calc-info-btn" data-calc-info="Q Accelerator Band · QTD GM%&#10;QTD GM% = QTD GP ÷ QTD Rev × 100&#10;Accel bands: 10-15% → +1% · 15-20% → +2% · &gt;20% → +3%&#10;Quarter resets each quarter (Q1=Apr, Q2=Jul, Q3=Oct, Q4=Jan)" onclick="showCalcInfo(this,event)">ℹ</button></h3>
             <span class="text-xs text-slate-500" id="ov-qt-accel-q-sub">Current quarter</span>
           </div>
           <div id="ov-qt-accel-gauge" class="space-y-3"></div>
@@ -2907,7 +2907,7 @@
       <!-- ROW QT-3: Forecast — what's left to hit each tier this FY -->
       <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 mb-5">
         <div class="flex items-baseline justify-between mb-3">
-          <h3 class="text-base font-semibold text-white">Tier Forecast · Remaining FY</h3>
+          <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Tier Forecast · Remaining FY <button class="calc-info-btn" data-calc-info="Tier Forecast · Remaining FY&#10;What each tier still needs to unlock&#10;FYTD GP + open ST projected GP vs. each tier floor&#10;Gap = tier floor - (booked GP + open GP)" onclick="showCalcInfo(this,event)">ℹ</button></h3>
           <span class="text-xs text-slate-500">Booked GP + open ST · what each tier still needs</span>
         </div>
         <div class="overflow-x-auto">
@@ -2927,12 +2927,12 @@
       <!-- ROW AV-1: 3 KPI tiles (canonical gradient hero) -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
         <div class="bg-gradient-to-br from-sky-900/40 to-cyan-900/30 border border-sky-700/40 rounded-2xl p-5">
-          <p class="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-1">Deal Lines · FYTD</p>
+          <p class="text-sky-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">Deal Lines · FYTD <button class="calc-info-btn" data-calc-info="Deal Lines · FYTD&#10;Count of individual ST booked line items&#10;Each PO can have multiple lines (one per product)&#10;Source: SalesTrak billed + open bookings" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-av-lines">—</p>
           <p class="text-[11px] mt-1 text-slate-400" id="ov-av-lines-sub">—</p>
         </div>
         <div class="bg-gradient-to-br from-emerald-900/40 to-teal-900/30 border border-emerald-700/40 rounded-2xl p-5">
-          <p class="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1">Avg Deal Size · 90d</p>
+          <p class="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">Avg Deal Size · 90d <button class="calc-info-btn" data-calc-info="Avg Deal Size · 90d&#10;Average ST Net Sell per PO in the last 90 days&#10;Avg = total stSales ÷ distinct PO count&#10;Excludes lines without a PO number" onclick="showCalcInfo(this,event)">ℹ</button></p>
           <p class="text-3xl font-bold text-white" id="ov-av-avg">—</p>
           <p class="text-[11px] mt-1 text-slate-400" id="ov-av-avg-sub">—</p>
         </div>
@@ -2940,7 +2940,7 @@
              class="bg-gradient-to-br from-indigo-900/40 to-violet-900/30 border border-indigo-700/40 rounded-2xl p-5 cursor-pointer transition hover:border-indigo-400/70 hover:from-indigo-900/60 hover:to-violet-900/50"
              title="Click to see the new customers">
           <div class="flex items-center justify-between mb-1">
-            <p class="text-indigo-400 text-xs font-semibold uppercase tracking-wider">New Customers · FYTD</p>
+            <p class="text-indigo-400 text-xs font-semibold uppercase tracking-wider" style="display:flex;align-items:center;gap:5px;">New Customers · FYTD <button class="calc-info-btn" data-calc-info="New Customers · FYTD&#10;Customers with first-ever ST activity this FY&#10;First activity = earliest invoice/booking date on record&#10;Click tile to see the full list" onclick="showCalcInfo(this,event)">ℹ</button></p>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-400 opacity-70"><path d="M9 18l6-6-6-6"/></svg>
           </div>
           <p class="text-3xl font-bold text-white" id="ov-av-newcust">—</p>
@@ -2952,14 +2952,14 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white">Monthly Deal Volume</h3>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Monthly Deal Volume <button class="calc-info-btn" data-calc-info="Monthly Deal Volume&#10;Count of distinct POs booked per month&#10;Current FY = emerald bars · prior FY = slate bars&#10;Source: SalesTrak billed + open" onclick="showCalcInfo(this,event)">ℹ</button></h3>
             <span class="text-xs text-slate-500">Last 24 months · current FY emerald, prior FY slate</span>
           </div>
           <div style="height:300px;"><canvas id="ov-av-volume"></canvas></div>
         </div>
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white">Deal Size Distribution</h3>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Deal Size Distribution <button class="calc-info-btn" data-calc-info="Deal Size Distribution&#10;GP per PO grouped into $ bands (FYTD)&#10;GP = stSales × marginPct ÷ 100 per line, summed per PO&#10;Bands: &lt;$1k · $1-5k · $5-25k · $25-100k · &gt;$100k" onclick="showCalcInfo(this,event)">ℹ</button></h3>
             <span class="text-xs text-slate-500">FYTD · GP per order grouped by $ band</span>
           </div>
           <div style="height:300px;"><canvas id="ov-av-dist"></canvas></div>
@@ -2969,7 +2969,7 @@
       <!-- ROW AV-3: Hot/Cold customers table -->
       <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 mb-5">
         <div class="flex items-baseline justify-between mb-3">
-          <h3 class="text-base font-semibold text-white">Customer Pulse · Recent Activity</h3>
+          <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Customer Pulse · Recent Activity <button class="calc-info-btn" data-calc-info="Customer Pulse · Recent Activity&#10;All customers with ST activity in the last 12 months&#10;Rev = ST Net Sell · GP = stSales × marginPct ÷ 100&#10;Sorted by most recent deal date" onclick="showCalcInfo(this,event)">ℹ</button></h3>
           <span class="text-xs text-slate-500">Last 12 months · sorted by latest deal</span>
         </div>
         <div class="overflow-x-auto">
