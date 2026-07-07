@@ -668,6 +668,33 @@
   }
   #oo-tip.oo-tip-show { opacity:1; }
 
+  /* ── Calculation info popout (click-triggered) ── */
+  #calc-info-pop {
+    position:fixed; z-index:9800; display:none;
+    background:#1e293b; border:1px solid #334155; border-radius:10px;
+    padding:12px 15px; min-width:200px; max-width:270px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.55);
+    font-size:12px; color:#cbd5e1; line-height:1.65;
+    white-space:pre-wrap; word-break:break-word;
+  }
+  #calc-info-pop.open { display:block; }
+  #calc-info-pop-title {
+    font-size:11px; font-weight:700; color:#94a3b8;
+    text-transform:uppercase; letter-spacing:0.07em;
+    margin-bottom:7px; padding-bottom:6px;
+    border-bottom:1px solid #334155;
+  }
+  #calc-info-pop-body { color:#e2e8f0; font-size:12px; line-height:1.7; }
+  .calc-info-btn {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:15px; height:15px; border-radius:50%;
+    background:rgba(148,163,184,0.10); border:1px solid rgba(148,163,184,0.22);
+    color:#64748b; font-size:9.5px; cursor:pointer; line-height:1;
+    font-style:normal; padding:0; vertical-align:middle;
+    transition:background 0.1s, color 0.1s; flex-shrink:0;
+  }
+  .calc-info-btn:hover { background:rgba(148,163,184,0.22); color:#e2e8f0; }
+
   /* Header filter / sort popover (Excel-style) */
   .filter-popover {
     position:fixed; z-index:9500; display:none;
@@ -17935,6 +17962,7 @@ function clientAggRenewalEvents(parent, customer) {
       kind: 'renewal',
       ms: renewalMs, ymStr: ym, ...lbl,
       netSell: (c.contractRev || c.stSalesTotal) / Math.max(1, c.termYears || 1),
+      contractRev: c.contractRev, stSalesTotal: c.stSalesTotal, termYears: c.termYears,
       customer: c.customer,
       poNumber: c.poNumber,
       confidence: c.confidence,
@@ -18366,7 +18394,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
     const totalLbl = fyTotal > 0 ? clientFmtMoney(fyTotal) : '';
     return `<div style="position:absolute;left:${left.toFixed(2)}%;transform:translateX(-50%);text-align:center;line-height:1.15;">
       <div style="display:inline-block;font-size:15px;color:#f1f5f9;font-weight:800;letter-spacing:0.10em;padding:2px 10px;border-radius:6px;background:rgba(99,102,241,0.18);border:1px solid rgba(99,102,241,0.35);">${f.fyKey}</div>
-      ${totalLbl ? `<div style="font-size:12px;color:#34d399;font-weight:800;font-variant-numeric:tabular-nums;margin-top:3px;text-shadow:0 0 6px rgba(52,211,153,0.25);">${totalLbl}</div>` : ''}
+      ${totalLbl ? `<div style="font-size:12px;color:#34d399;font-weight:800;font-variant-numeric:tabular-nums;margin-top:3px;text-shadow:0 0 6px rgba(52,211,153,0.25);display:flex;align-items:center;justify-content:center;gap:4px;">${totalLbl}<button class="calc-info-btn" data-calc-info="${escAttr('FY Renewal Total\nSum of annual renewal costs for all events in ' + f.fyKey + '\nEach renewal = ST Net Sell ÷ term years\n' + f.fyKey + ' total: ' + totalLbl)}" onclick="showCalcInfo(this,event)">ℹ</button></div>` : ''}
     </div>`;
   }).join('');
 
@@ -18390,7 +18418,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
     else if (qTotal > 0)                 tierStyle = 'color:#6ee7b7;text-shadow:0 0 6px rgba(110,231,183,0.35);';
     return `<div style="position:absolute;left:${left.toFixed(2)}%;transform:translateX(-50%);text-align:center;line-height:1.2;">
       <div style="font-size:11.5px;color:#cbd5e1;font-weight:700;letter-spacing:0.04em;">Q${b.q}</div>
-      ${totalLbl ? `<div style="font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:1px;${tierStyle}">${totalLbl}</div>` : ''}
+      ${totalLbl ? `<div style="font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:1px;${tierStyle}display:flex;align-items:center;justify-content:center;gap:3px;">${totalLbl}<button class="calc-info-btn" data-calc-info="${escAttr('Q' + b.q + ' Renewal Total\nSum of annual renewal costs for all events in Q' + b.q + '\nEach renewal = ST Net Sell ÷ term years\nQ' + b.q + ' total: ' + totalLbl)}" onclick="showCalcInfo(this,event)">ℹ</button></div>` : ''}
     </div>`;
   }).join('');
 
@@ -18451,6 +18479,22 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
       const moneyLbl = ev.netSell > 0
         ? `<span style="font-size:10px;color:${c};font-weight:800;font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 0 4px rgba(15,23,42,0.9);">${clientFmtMoney(ev.netSell)}</span>`
         : '';
+      const _confLabel = ev.confidence === 'renewal' ? 'Confirmed (warranty cycle)'
+                       : ev.confidence === 'estimated' ? 'Estimated (billing dates)'
+                       : ev.confidence === 'derived'   ? 'Derived (last invoice + 12mo)'
+                       : 'Unknown';
+      const _total = ev.contractRev || ev.stSalesTotal || 0;
+      const _term  = ev.termYears || 1;
+      const _renewalInfo = ev.kind === 'renewal' && ev.netSell > 0
+        ? `Annual Renewal Cost\nST Net Sell: ${clientFmtMoney(_total)}\nTerm: ${_term}yr\n${clientFmtMoney(_total)} ÷ ${_term} = ${clientFmtMoney(ev.netSell)}/yr\nConfidence: ${_confLabel}`
+        : ev.kind === 'purchase' && ev.netSell > 0
+        ? `Initial Purchase\nST Net Sell: ${clientFmtMoney(ev.netSell)}\nSource: earliest invoice date on record`
+        : ev.kind === 'annualBill' && ev.netSell > 0
+        ? `Annual Bill\nSum of ST Net Sell: ${clientFmtMoney(ev.netSell)}\nBilling period: ${ev.dateStr}`
+        : '';
+      const infoBtn = _renewalInfo
+        ? `<button class="calc-info-btn" data-calc-info="${escAttr(_renewalInfo)}" onclick="showCalcInfo(this,event)" title="How calculated">ℹ</button>`
+        : '';
       const ck = encodeURIComponent(ev.chainKey || '');
       const ym = encodeURIComponent(ev.ymStr || '');
       const ep = encodeURIComponent(parent || '');
@@ -18477,7 +18521,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
           : '';
         return `
           <div ${evtAttr} ${onClick} ${hoverFx} title="${tip}" class="crt-marker" style="${baseStyle}z-index:3;">
-            ${moneyLbl}
+            ${moneyLbl}${infoBtn}
             <span class="crt-marker-shape" style="display:block;width:16px;height:16px;${fillStyle}border:1.5px solid rgba(15,23,42,0.95);transform:rotate(45deg);box-shadow:0 0 0 1px ${c};"></span>
             <span style="font-size:9px;color:${c};font-weight:800;text-transform:uppercase;letter-spacing:0.04em;line-height:1.15;text-align:center;">
               Renewal<br>${ev.monthDay}<br>${ev.fullYear}
@@ -18493,7 +18537,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
                     ' · click for line detail';
         return `
           <div ${evtAttr} ${onClick} ${hoverFx} title="${tip}" class="crt-marker" style="${baseStyle}z-index:2;">
-            ${moneyLbl}
+            ${moneyLbl}${infoBtn}
             <span class="crt-marker-shape" style="display:block;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:12px solid ${c};filter:drop-shadow(0 0 1px rgba(15,23,42,0.95));"></span>
             <span style="font-size:8.5px;color:${c};opacity:0.9;font-weight:700;line-height:1.15;text-align:center;white-space:nowrap;text-transform:uppercase;letter-spacing:0.03em;">
               Start<br>${ev.monthDay} ${ev.fullYear}
@@ -18508,7 +18552,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
                   ' · click for line detail';
       return `
         <div ${evtAttr} ${onClick} ${hoverFx} title="${tip}" class="crt-marker" style="${baseStyle}z-index:2;">
-          ${moneyLbl}
+          ${moneyLbl}${infoBtn}
           <span class="crt-marker-shape" style="display:block;width:11px;height:11px;border-radius:50%;background:${c};opacity:0.85;border:1.5px solid rgba(15,23,42,0.95);"></span>
           <span style="font-size:8.5px;color:${c};opacity:0.9;font-weight:600;line-height:1.15;text-align:center;white-space:nowrap;">
             ${ev.monthDay} ${ev.fullYear}
@@ -19462,12 +19506,12 @@ function renderClientOverview() {
     <!-- KPI strip -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
       <div class="bg-gradient-to-br from-emerald-900/40 to-teal-900/30 border border-emerald-700/40 rounded-2xl p-5">
-        <p class="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1">Total Net Sell</p>
+        <p class="text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">Total Net Sell <button class="calc-info-btn" data-calc-info="${escAttr('Total Net Sell\nSum of ST Net Sell (stSales)\nWindow: ' + clientTimeWindowLabel() + '\nRebills excluded\nTotal: ' + clientFmtMoney(totalSpend))}" onclick="showCalcInfo(this,event)">ℹ</button></p>
         <p class="text-3xl font-bold text-white">${clientFmtMoney(totalSpend)}</p>
         <p class="text-[11px] mt-1 text-slate-400">${clientTimeWindowLabel()}</p>
       </div>
       <div class="bg-gradient-to-br from-indigo-900/40 to-violet-900/30 border border-indigo-700/40 rounded-2xl p-5">
-        <p class="text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">Top Vendor</p>
+        <p class="text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1" style="display:flex;align-items:center;gap:5px;">Top Vendor <button class="calc-info-btn" data-calc-info="${escAttr('Top Vendor\nSum of ST Net Sell per vendor (all-time)\nePlus-family vendors excluded\n' + (topVendor ? topVendor.vendor + ': ' + clientFmtMoney(topVendor.netSell) + '\nShare: ' + ((topVendor.netSell/(totalSpendAll||1))*100).toFixed(1) + '% of ' + clientFmtMoney(totalSpendAll) + ' all-time total' : ''))}" onclick="showCalcInfo(this,event)">ℹ</button></p>
         <p class="text-2xl font-bold text-white truncate" title="${topVendor ? escAttr(topVendor.vendor) : ''}">${topVendor ? escHtml(topVendor.vendor) : '—'}</p>
         <p class="text-[11px] mt-1 text-slate-400">${topVendor ? clientFmtMoney(topVendor.netSell) + ' · ' + ((topVendor.netSell / (totalSpendAll || 1)) * 100).toFixed(0) + '% all-time' : ''}</p>
       </div>
@@ -19489,7 +19533,7 @@ function renderClientOverview() {
     <!-- Monthly spend trend -->
     <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 mb-5">
       <div class="flex items-baseline justify-between mb-3">
-        <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Monthly Spend</h3>
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider" style="display:flex;align-items:center;gap:6px;">Monthly Spend <button class="calc-info-btn" data-calc-info="Monthly Spend&#10;Sum of ST Net Sell (stSales) per vendor per calendar month&#10;Rebills excluded" onclick="showCalcInfo(this,event)">ℹ</button></h3>
         <p class="text-[11px] text-slate-500">${monthly.length} month${monthly.length === 1 ? '' : 's'} of activity</p>
       </div>
       ${monthly.length
@@ -19501,7 +19545,7 @@ function renderClientOverview() {
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
       <div class="lg:col-span-2 bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
         <div class="flex items-baseline justify-between mb-3">
-          <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Top Vendors</h3>
+          <h3 class="text-sm font-semibold text-white uppercase tracking-wider" style="display:flex;align-items:center;gap:6px;">Top Vendors <button class="calc-info-btn" data-calc-info="Top Vendors&#10;Sum of ST Net Sell (stSales) per vendor (all-time)&#10;ePlus-family vendors excluded&#10;Share = vendor total ÷ all-time total" onclick="showCalcInfo(this,event)">ℹ</button></h3>
           <p class="text-[11px] text-slate-500">${vendorCount} total · all-time</p>
         </div>
         ${vendors.length ? `
@@ -19535,7 +19579,7 @@ function renderClientOverview() {
       <!-- Top Projects (right column) -->
       <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
         <div class="flex items-baseline justify-between mb-3">
-          <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Top Projects</h3>
+          <h3 class="text-sm font-semibold text-white uppercase tracking-wider" style="display:flex;align-items:center;gap:6px;">Top Projects <button class="calc-info-btn" data-calc-info="Top Projects&#10;Sum of ST Net Sell (stSales) per project number (all-time)&#10;Rows without a project number are excluded" onclick="showCalcInfo(this,event)">ℹ</button></h3>
           <p class="text-[11px] text-slate-500">all-time · top 15</p>
         </div>
         <div id="client-projects-host" style="height:520px;position:relative;"><canvas id="client-projects-chart"></canvas></div>
@@ -19545,7 +19589,7 @@ function renderClientOverview() {
     <!-- Vendor monthly trend (multi-line, full width) -->
     <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 mb-5">
       <div class="flex items-baseline justify-between mb-3">
-        <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Vendor Trend Over Time</h3>
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider" style="display:flex;align-items:center;gap:6px;">Vendor Trend Over Time <button class="calc-info-btn" data-calc-info="Vendor Trend Over Time&#10;Sum of ST Net Sell (stSales) per vendor per calendar month (all-time)&#10;Top 6 vendors shown individually, remainder grouped as Other" onclick="showCalcInfo(this,event)">ℹ</button></h3>
         <p class="text-[11px] text-slate-500">all-time · top 6 vendors · one line each</p>
       </div>
       <div style="height:340px;position:relative;"><canvas id="client-vendor-trend"></canvas></div>
@@ -19554,7 +19598,7 @@ function renderClientOverview() {
     <!-- Vendor revenue by FY (full width) -->
     <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5 mb-5">
       <div class="flex items-baseline justify-between mb-3">
-        <h3 class="text-sm font-semibold text-white uppercase tracking-wider">Vendor Revenue by Fiscal Year</h3>
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider" style="display:flex;align-items:center;gap:6px;">Vendor Revenue by Fiscal Year <button class="calc-info-btn" data-calc-info="Vendor Revenue by Fiscal Year&#10;Sum of ST Net Sell (stSales) per vendor per fiscal year (all-time)&#10;Top 12 vendors shown&#10;FY bucketed by invoice date or order date" onclick="showCalcInfo(this,event)">ℹ</button></h3>
         <p class="text-[11px] text-slate-500">all-time · top 12 vendors</p>
       </div>
       <div id="client-yoy-host" style="height:320px;position:relative;"><canvas id="client-yoy-chart"></canvas></div>
@@ -42822,7 +42866,36 @@ Use the response format from SYSTEM_PROMPT.`;
 })();
 </script>
 <div id="oo-tip"></div>
+<div id="calc-info-pop"><div id="calc-info-pop-title"></div><div id="calc-info-pop-body"></div></div>
 <script>
+(function() {
+  // ── Calc-info click popout ──────────────────────────────────────────
+  const pop      = document.getElementById('calc-info-pop');
+  const popTitle = document.getElementById('calc-info-pop-title');
+  const popBody  = document.getElementById('calc-info-pop-body');
+  window.showCalcInfo = function(btn, evt) {
+    if (evt) { evt.stopPropagation(); evt.preventDefault(); }
+    const raw = btn.getAttribute('data-calc-info') || '';
+    const nl = raw.indexOf('\n');
+    popTitle.textContent = nl >= 0 ? raw.slice(0, nl) : raw;
+    popBody.textContent  = nl >= 0 ? raw.slice(nl + 1) : '';
+    pop.classList.add('open');
+    const r = btn.getBoundingClientRect(), pad = 8;
+    pop.style.left = '0'; pop.style.top = '0';
+    const pw = pop.offsetWidth, ph = pop.offsetHeight;
+    let left = r.left, top = r.bottom + 6;
+    if (top + ph > window.innerHeight - pad) top = r.top - ph - 6;
+    if (left + pw > window.innerWidth  - pad) left = window.innerWidth - pw - pad;
+    pop.style.left = Math.max(pad, left) + 'px';
+    pop.style.top  = Math.max(pad, top)  + 'px';
+  };
+  window.hideCalcInfo = function() { pop.classList.remove('open'); };
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#calc-info-pop') && !e.target.closest('.calc-info-btn')) hideCalcInfo();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') hideCalcInfo(); });
+})();
+
 (function() {
   const tip = document.getElementById('oo-tip');
   if (!tip) return;
