@@ -13066,11 +13066,11 @@ function enrichStWithRenewals() {
   }
   // Classify each group + stamp every line.
   for (const g of groups.values()) {
-    // For Type 1, look at every cycle that has BOTH warrantyStart and warrantyEnd.
-    // The PO's renewal date = MAX cycle.warrantyEnd among those (still furthest out).
-    // Mixed-Term fires when multiple cycles disagree by > 30 days.
+    // For Type 1, warrantyEnd alone is sufficient — warrantyStart is used only to
+    // compute termYears and is optional. Requiring both caused exports that only
+    // include Warranty End Date (no Start) to fall through to the estimated path.
     const validCycles = [...g.cycles.values()]
-      .filter(c => c.warrantyStart && c.warrantyEnd);
+      .filter(c => c.warrantyEnd);
     let renewalDate = null, termEnd = null, termStart = null;
     let renewalType = null, confidence = null, isMixedTerm = false, termYears = 0;
     if (validCycles.length > 0) {
@@ -13082,7 +13082,9 @@ function enrichStWithRenewals() {
       termEnd     = anchor.warrantyEnd;
       renewalType = 'renewal';
       confidence  = 'hard';
-      termYears   = (anchor.warrantyEnd - anchor.warrantyStart) / 86400000 / 365.25;
+      termYears   = anchor.warrantyStart
+        ? (anchor.warrantyEnd - anchor.warrantyStart) / 86400000 / 365.25
+        : 1;
       if (validCycles.length > 1) {
         const ends = validCycles.map(c => c.warrantyEnd.getTime()).sort((a,b) => a - b);
         const spreadDays = (ends[ends.length-1] - ends[0]) / 86400000;
