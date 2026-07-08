@@ -27007,8 +27007,10 @@ function renderOverviewDashboard() {
             if (!drawnTop[topKey] && combined2[ds._fy] && combined2[ds._fy][qi]) {
               drawnTop[topKey] = true;
               const tot = combined2[ds._fy][qi];
-              const hasForecast = chart.data.datasets.some(d =>
+              // Only show "w/ est" when this specific quarter actually has est data.
+              const estForThisQ = chart.data.datasets.some(d =>
                 d._fy === ds._fy && d._isForecast && !chart.getDatasetMeta(chart.data.datasets.indexOf(d)).hidden
+                && d._rev && (d._rev[qi] || 0) > 0
               );
               if (tot.rev > 0) {
                 const gm = (tot.gp / tot.rev * 100).toFixed(0);
@@ -27016,24 +27018,25 @@ function renderOverviewDashboard() {
                 ctx.fillStyle = ds.borderColor || '#cbd5e1';
                 ctx.textBaseline = 'bottom';
                 const topPx = topY[ds._fy] && topY[ds._fy][qi] !== undefined ? topY[ds._fy][qi] : bar.y;
-                ctx.fillText(hasForecast ? `${gm}% (w/ est)` : `${gm}%`, bar.x, topPx - 3);
+                ctx.fillText(estForThisQ ? `${gm}% (w/ est)` : `${gm}%`, bar.x, topPx - 3);
               }
             }
           } else if (!ds._isForecast) {
             // Rev $ label below the billed base (only for non-forecast Rev-gap slice).
             if (revVal > 0) {
-              // Show combined rev if forecast is on, else just billed.
               const topKey = `rev-${ds._fy}-${qi}`;
               if (!drawnTop[topKey]) {
                 drawnTop[topKey] = true;
-                const hasForecast = chart.data.datasets.some(d =>
+                // Only show combined rev when this specific quarter has est data.
+                const estForThisQ = chart.data.datasets.some(d =>
                   d._fy === ds._fy && d._isForecast && !chart.getDatasetMeta(chart.data.datasets.indexOf(d)).hidden
+                  && d._rev && (d._rev[qi] || 0) > 0
                 );
                 const tot = (combined2[ds._fy] && combined2[ds._fy][qi]) || { rev: revVal };
                 ctx.font = '700 11px ui-sans-serif, system-ui';
                 ctx.fillStyle = '#ffffff';
                 ctx.textBaseline = 'top';
-                ctx.fillText(ovFmtAbbrev(hasForecast ? tot.rev : revVal), bar.x, bar.base + 4);
+                ctx.fillText(ovFmtAbbrev(estForThisQ ? tot.rev : revVal), bar.x, bar.base + 4);
               }
             }
           }
@@ -27106,9 +27109,12 @@ function renderOverviewDashboard() {
         tooltip: {
           backgroundColor:'#1e293b', borderColor:'#475569', borderWidth:1, padding:8,
           titleColor:'#e2e8f0', bodyColor:'#cbd5e1',
-          filter: (ctx) => ctx.dataset._isGp,
+          mode: 'nearest', axis: 'xy', intersect: true,
+          // Only trigger on the billed GP slice — we read all data from _vendor/_fy there.
+          filter: (ctx) => ctx.dataset._isGp && !ctx.dataset._isForecast,
           callbacks: {
             title: (items) => {
+              if (!items.length) return '';
               const ctx0 = items[0];
               return `${ctx0.chart.data.labels[ctx0.dataIndex]} — ${ctx0.dataset._fy}`;
             },
@@ -27116,29 +27122,30 @@ function renderOverviewDashboard() {
               const chart = ctx.chart;
               const ds    = ctx.dataset;
               const qi    = ctx.dataIndex;
-              // Sum billed + any visible est for this FY+quarter.
-              let totRev = 0, totGp = 0;
+              // Sum billed GP values.
+              const billedRev = ds._rev ? ds._rev[qi] : 0;
+              const billedGp  = ds._gp  ? ds._gp[qi]  : 0;
+              // Check if this quarter has visible est data.
+              let estRev = 0, estGp = 0;
               chart.data.datasets.forEach((d, di) => {
-                if (d._fy !== ds._fy || !d._isGp) return;
+                if (d._fy !== ds._fy || !d._isForecast || !d._isGp) return;
                 if (chart.getDatasetMeta(di).hidden) return;
-                totRev += (d._rev ? d._rev[qi] : 0);
-                totGp  += (d._gp  ? d._gp[qi]  : 0);
+                estRev += (d._rev ? d._rev[qi] : 0);
+                estGp  += (d._gp  ? d._gp[qi]  : 0);
               });
-              const hasForecast = chart.data.datasets.some(d =>
-                d._fy === ds._fy && d._isForecast && !chart.getDatasetMeta(chart.data.datasets.indexOf(d)).hidden
-              );
+              const hasEst = estRev > 0 || estGp > 0;
+              const totRev = billedRev + estRev;
+              const totGp  = billedGp  + estGp;
               const gm = totRev ? (totGp / totRev * 100).toFixed(1) + '%' : '—';
-              const suffix = ds._isForecast ? ' (est)' : '';
-              const sliceGp  = ds._gp  ? ds._gp[qi]  : 0;
-              const sliceRev = ds._rev ? ds._rev[qi]  : 0;
-              const lines = [];
-              if (hasForecast) {
-                lines.push(`Combined: Rev ${commFmtD(totRev)} · GP ${commFmtD(totGp)} · GM ${gm}`);
-                lines.push(`  ${ds._isForecast ? 'Est' : 'Billed'}: Rev ${commFmtD(sliceRev)} · GP ${commFmtD(sliceGp)}`);
-              } else {
-                lines.push(`Rev ${commFmtD(totRev)} · GP ${commFmtD(totGp)} · GM ${gm}`);
+              if (hasEst) {
+                const billedGm = billedRev ? (billedGp / billedRev * 100).toFixed(1) + '%' : '—';
+                return [
+                  `Combined: Rev ${commFmtD(totRev)} · GP ${commFmtD(totGp)} · GM ${gm}`,
+                  `  Billed: Rev ${commFmtD(billedRev)} · GP ${commFmtD(billedGp)} · GM ${billedGm}`,
+                  `  Est:    Rev ${commFmtD(estRev)} · GP ${commFmtD(estGp)}`,
+                ];
               }
-              return lines;
+              return `Rev ${commFmtD(billedRev)} · GP ${commFmtD(billedGp)} · GM ${gm}`;
             },
           },
         },
