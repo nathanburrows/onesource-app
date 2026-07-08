@@ -27719,12 +27719,17 @@ function ovRenderVendorYoY(d) {
         },
         tooltip: {
           backgroundColor:'#1e293b', borderColor:'#475569', borderWidth:1, padding:10,
-          // One tooltip per (vendor, FY) — show all 3 numbers regardless of which
-          // segment was hovered.
-          filter: (ctx) => ctx.dataset._segment === 'revBase',
+          mode: 'nearest', axis: 'xy', intersect: true,
+          filter: (ctx) => ctx.dataset._segment === 'revBase' || ctx.dataset._segment === 'gp',
           callbacks: {
-            title: (items) => items.length ? `${items[0].dataset.label} · ${items[0].label}` : '',
+            title: (items) => {
+              if (!items.length) return '';
+              const ds = items[0].dataset;
+              const vendorName = (ds._vendor && ds._vendor.key) || ds.label;
+              return `${vendorName} · ${items[0].label}`;
+            },
             label: (ctx) => {
+              if (ctx.dataset._segment !== 'revBase') return null;
               const v = ctx.dataset._vendor; const fy = ctx.label;
               const cell = (v && v.byFy && v.byFy[fy]) ? v.byFy[fy] : { rev:0, gp:0 };
               const gm = cell.rev > 0 ? (cell.gp / cell.rev * 100) : 0;
