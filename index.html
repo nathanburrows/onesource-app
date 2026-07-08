@@ -13055,14 +13055,33 @@ function enrichStWithRenewals() {
     // envelope. Rebills carry billing-period warranty windows (e.g. Y2 of a
     // 3-yr commit) that would pull the chain's renewal date earlier than the
     // contract's true expiration. v21 does this same exclusion.
-    if (isRebill) continue;
-    const ws = _rnDateFromCell(r.warrantyStart);
-    const we = _rnDateFromCell(r.warrantyEnd);
-    // MIN start, MAX end WITHIN this product cycle only.
-    if (ws && (!c.warrantyStart || ws < c.warrantyStart)) c.warrantyStart = ws;
-    if (we && (!c.warrantyEnd   || we > c.warrantyEnd))   c.warrantyEnd   = we;
-    // Open-sell lines under the same cycle still extend that cycle's envelope.
-    if (openSell > 0 && we && (!c.warrantyEnd || we > c.warrantyEnd)) c.warrantyEnd = we;
+    if (!isRebill) {
+      const ws = _rnDateFromCell(r.warrantyStart);
+      const we = _rnDateFromCell(r.warrantyEnd);
+      // MIN start, MAX end WITHIN this product cycle only.
+      if (ws && (!c.warrantyStart || ws < c.warrantyStart)) c.warrantyStart = ws;
+      if (we && (!c.warrantyEnd   || we > c.warrantyEnd))   c.warrantyEnd   = we;
+      // Open-sell lines under the same cycle still extend that cycle's envelope.
+      if (openSell > 0 && we && (!c.warrantyEnd || we > c.warrantyEnd)) c.warrantyEnd = we;
+    } else {
+      // Rebill fallback: if the master order is absent from the dataset (all
+      // lines in this chain are rebills), use MAX(warrantyEnd) from rebill lines
+      // so the chain still gets a hard renewal date. Store separately so the
+      // master pass can override if a master line appears later.
+      const we = _rnDateFromCell(r.warrantyEnd);
+      if (we) { c._rebillMaxWarrEnd = c._rebillMaxWarrEnd && c._rebillMaxWarrEnd > we ? c._rebillMaxWarrEnd : we; }
+      const ws = _rnDateFromCell(r.warrantyStart);
+      if (ws) { c._rebillMinWarrStart = c._rebillMinWarrStart && c._rebillMinWarrStart < ws ? c._rebillMinWarrStart : ws; }
+    }
+  }
+  // Apply rebill-only fallback: cycles where no master line set warrantyEnd.
+  for (const g of groups.values()) {
+    for (const c of g.cycles.values()) {
+      if (!c.warrantyEnd && c._rebillMaxWarrEnd) {
+        c.warrantyEnd   = c._rebillMaxWarrEnd;
+        c.warrantyStart = c.warrantyStart || c._rebillMinWarrStart || null;
+      }
+    }
   }
   // Classify each group + stamp every line.
   for (const g of groups.values()) {
