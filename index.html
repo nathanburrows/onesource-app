@@ -13004,7 +13004,11 @@ function enrichStWithRenewals() {
     const po = (r.poNumber || '').toString().trim();
     if (!customer || !po) continue;
     const inferred = poToOrigOrd.get(`${customer}|${po}`);
-    if (inferred) {
+    // Never stamp a line as a rebill of itself — if this row IS the master order,
+    // its orderNumber matches the inferred originalOrderNo and stamping would
+    // cause _rnIsRebill to return true for the master, skipping its warrantyEnd.
+    const ord = (r.orderNumber || '').toString().trim();
+    if (inferred && inferred !== ord) {
       r.originalOrderNo = inferred;       // populate so chain-key + isRebill catch it
       r._inferredOrigOrd = true;          // audit trail — distinguishes from source-populated
     }
