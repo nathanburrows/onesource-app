@@ -11426,10 +11426,12 @@ function _rnChainKey(r) {
   const vendor = _rnVendorCanon(r);
   const orig = (r.originalOrderNo || '').toString().trim();
   if (orig) return `${customer}|${orig}|${vendor}`;
-  const ord = (r.orderNumber || '').toString().trim();
-  if (ord) return `${customer}|${ord}|${vendor}`;
+  // Customer PO# before ePlus order# — multiple split SOs (invoiced + open-sell)
+  // under the same customer PO are the same deal and must share one chain.
   const po = (r.poNumber || '').toString().trim();
   if (po) return `${customer}|${po}|${vendor}`;
+  const ord = (r.orderNumber || '').toString().trim();
+  if (ord) return `${customer}|${ord}|${vendor}`;
   return null;
 }
 
