@@ -25951,7 +25951,8 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
     ${totalCost > 0 ? pRow('Total Cost', fmtD(totalCost)) : ''}
     ${blendedMargin !== null ? pRow('Blended Margin', blendedMargin.toFixed(1) + '%') : ''}
   </div>
-  <table style="width:100%;border-collapse:collapse;">
+  <div style="overflow-x:auto;">
+  <table style="width:100%;min-width:700px;border-collapse:collapse;">
     <thead><tr style="background:#1e1b4b;border-bottom:1px solid #3730a3;">
       <th style="${TH}">Vendor</th>
       <th style="${TH}">Description</th>
@@ -25961,10 +25962,11 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
     </tr></thead>
     <tbody>${prevRows}</tbody>
     <tfoot><tr style="background:#0f172a;border-top:1px solid #2d3f55;">
-      <td colspan="7" style="padding:6px 9px;font-size:10px;color:#64748b;font-weight:700;text-align:right;">Total Ext Sell</td>
-      <td style="padding:6px 9px;font-size:12px;color:#34d399;font-weight:700;text-align:right;">${fmtD(totalSell)}</td>
+      <td colspan="7" style="padding:6px 9px;font-size:10px;color:#64748b;font-weight:700;text-align:right;white-space:nowrap;">Total Ext Sell</td>
+      <td style="padding:6px 9px;font-size:12px;color:#34d399;font-weight:700;text-align:right;white-space:nowrap;">${fmtD(totalSell)}</td>
     </tr></tfoot>
   </table>
+  </div>
 </div>`;
 
   // ── Clipboard HTML (light/email-safe, inline styles only) ─────────────
@@ -26021,20 +26023,22 @@ function _buildEmailOrderBlock(groupKey, parent, children) {
     ${totalCost > 0 ? eRow('Total Cost', fmtD(totalCost)) : ''}
     ${blendedMargin !== null ? eRow('Blended Margin %', blendedMargin.toFixed(1) + '%') : ''}
   </table>
-  <table style="width:100%;border-collapse:collapse;">
+  <div style="overflow-x:auto;">
+  <table style="min-width:640px;border-collapse:collapse;">
     <thead><tr>
-      <th style="${ETH}">Vendor</th>
+      <th nowrap style="${ETH}">Vendor</th>
       <th style="${ETH}">Description</th>
-      <th style="${ETHR}">Qty</th><th style="${ETHR}">Cost</th>
-      <th style="${ETHR}">Ext Cost</th><th style="${ETHR}">Markup%</th>
-      <th style="${ETHR}">Sell</th><th style="${ETHR}">Ext Sell</th>
+      <th nowrap style="${ETHR}">Qty</th><th nowrap style="${ETHR}">Cost</th>
+      <th nowrap style="${ETHR}">Ext Cost</th><th nowrap style="${ETHR}">Markup%</th>
+      <th nowrap style="${ETHR}">Sell</th><th nowrap style="${ETHR}">Ext Sell</th>
     </tr></thead>
     <tbody>${clipRows}</tbody>
     <tfoot><tr style="background:#f8fafc;border-top:2px solid #e2e8f0;">
-      <td colspan="7" style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;color:#64748b;">Total Ext Sell</td>
-      <td nowrap style="padding:7px 10px;text-align:right;font-size:13px;font-weight:700;color:#059669;">${fmtD(totalSell)}</td>
+      <td colspan="7" nowrap style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;color:#64748b;white-space:nowrap;">Total Ext Sell</td>
+      <td nowrap style="padding:7px 10px;text-align:right;font-size:13px;font-weight:700;color:#059669;white-space:nowrap;">${fmtD(totalSell)}</td>
     </tr></tfoot>
   </table>
+  </div>
 </div>`;
 
   // ── Plain text (mailto: fallback) ─────────────────────────────────────
