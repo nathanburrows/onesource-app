@@ -26940,28 +26940,61 @@ function renderOverviewDashboard() {
       });
     }
   });
-  // Inline plugin: black "GP $X" label inside GP slice; "Rev $X · GM%" above stack.
+  // Inline plugin: GP $ inside each GP slice; combined Rev + GM% above the full stack.
+  // When forecast segments are visible the labels reflect the combined (billed + est) totals.
   const qBarLabelPlugin = {
     id: 'qBarLabel',
     afterDatasetsDraw(chart) {
       const { ctx } = chart;
       ctx.save();
       ctx.textAlign = 'center';
+
+      // Build combined totals per (fyKey, qIdx) across all visible datasets.
+      // topY[fy][qi] = the minimum y (highest pixel) seen for that stack.
+      const combined = {}; // { fy: { qi: { rev, gp } } }
+      const topY     = {}; // { fy: { qi: minY } }
       chart.data.datasets.forEach((ds, dsIdx) => {
+        if (!ds._fy) return;
         const meta = chart.getDatasetMeta(dsIdx);
         if (meta.hidden) return;
-        meta.data.forEach((bar, i) => {
-          const gpVal  = ds._gp ? ds._gp[i] : 0;
-          const revVal = ds._rev ? ds._rev[i] : 0;
+        if (!combined[ds._fy]) combined[ds._fy] = {};
+        if (!topY[ds._fy])     topY[ds._fy]     = {};
+        meta.data.forEach((bar, qi) => {
+          if (!combined[ds._fy][qi]) combined[ds._fy][qi] = { rev: 0, gp: 0 };
+          combined[ds._fy][qi].rev += (ds._rev ? ds._rev[qi] : 0);
+          combined[ds._fy][qi].gp  += (ds._gp  ? ds._gp[qi]  : 0);
+          if (topY[ds._fy][qi] === undefined || bar.y < topY[ds._fy][qi]) {
+            topY[ds._fy][qi] = bar.y;
+          }
+        });
+      });
+      // De-dup: rev/gp from paired billed+est datasets both store the full
+      // per-slice total, so combined.rev will be double-counted (Rev-gap slice
+      // + GP slice both carry _rev). Fix: only count _rev/_gp from _isGp datasets.
+      // Reset and redo using only GP datasets (they carry both _rev and _gp).
+      const combined2 = {};
+      chart.data.datasets.forEach((ds, dsIdx) => {
+        if (!ds._fy || !ds._isGp) return;
+        const meta = chart.getDatasetMeta(dsIdx);
+        if (meta.hidden) return;
+        if (!combined2[ds._fy]) combined2[ds._fy] = {};
+        meta.data.forEach((bar, qi) => {
+          if (!combined2[ds._fy][qi]) combined2[ds._fy][qi] = { rev: 0, gp: 0 };
+          combined2[ds._fy][qi].rev += (ds._rev ? ds._rev[qi] : 0);
+          combined2[ds._fy][qi].gp  += (ds._gp  ? ds._gp[qi]  : 0);
+        });
+      });
+
+      // Draw GP $ label inside each GP slice, and combined GM%+Rev above stack top.
+      const drawnTop = {}; // prevent double-drawing the above-stack label
+      chart.data.datasets.forEach((ds, dsIdx) => {
+        const meta = chart.getDatasetMeta(dsIdx);
+        if (meta.hidden || !ds._fy) return;
+        meta.data.forEach((bar, qi) => {
+          const gpVal  = ds._gp  ? ds._gp[qi]  : 0;
+          const revVal = ds._rev ? ds._rev[qi]  : 0;
           if (ds._isGp) {
-            // GP top (translucent): GM% above stack + GP $ inside slice
-            if (revVal > 0) {
-              const gm = (gpVal / revVal * 100).toFixed(0);
-              ctx.font = '700 10px ui-sans-serif, system-ui';
-              ctx.fillStyle = ds.borderColor || '#cbd5e1';
-              ctx.textBaseline = 'bottom';
-              ctx.fillText(ds._isForecast ? `${gm}% est` : `${gm}%`, bar.x, bar.y - 3);
-            }
+            // GP $ inside the slice
             const sliceH = Math.abs(bar.base - bar.y);
             if (gpVal && sliceH >= 14) {
               ctx.font = '700 10px ui-sans-serif, system-ui';
@@ -26969,13 +27002,39 @@ function renderOverviewDashboard() {
               ctx.textBaseline = 'middle';
               ctx.fillText(ovFmtAbbrev(gpVal), bar.x, (bar.base + bar.y) / 2);
             }
-          } else {
-            // Rev−GP base (solid): Rev $ stacked UNDER the bar in white
+            // Combined GM% above the full stack — draw once per (fy, qi).
+            const topKey = `${ds._fy}-${qi}`;
+            if (!drawnTop[topKey] && combined2[ds._fy] && combined2[ds._fy][qi]) {
+              drawnTop[topKey] = true;
+              const tot = combined2[ds._fy][qi];
+              const hasForecast = chart.data.datasets.some(d =>
+                d._fy === ds._fy && d._isForecast && !chart.getDatasetMeta(chart.data.datasets.indexOf(d)).hidden
+              );
+              if (tot.rev > 0) {
+                const gm = (tot.gp / tot.rev * 100).toFixed(0);
+                ctx.font = '700 10px ui-sans-serif, system-ui';
+                ctx.fillStyle = ds.borderColor || '#cbd5e1';
+                ctx.textBaseline = 'bottom';
+                const topPx = topY[ds._fy] && topY[ds._fy][qi] !== undefined ? topY[ds._fy][qi] : bar.y;
+                ctx.fillText(hasForecast ? `${gm}% (w/ est)` : `${gm}%`, bar.x, topPx - 3);
+              }
+            }
+          } else if (!ds._isForecast) {
+            // Rev $ label below the billed base (only for non-forecast Rev-gap slice).
             if (revVal > 0) {
-              ctx.font = '700 11px ui-sans-serif, system-ui';
-              ctx.fillStyle = '#ffffff';
-              ctx.textBaseline = 'top';
-              ctx.fillText(ovFmtAbbrev(revVal), bar.x, bar.base + 4);
+              // Show combined rev if forecast is on, else just billed.
+              const topKey = `rev-${ds._fy}-${qi}`;
+              if (!drawnTop[topKey]) {
+                drawnTop[topKey] = true;
+                const hasForecast = chart.data.datasets.some(d =>
+                  d._fy === ds._fy && d._isForecast && !chart.getDatasetMeta(chart.data.datasets.indexOf(d)).hidden
+                );
+                const tot = (combined2[ds._fy] && combined2[ds._fy][qi]) || { rev: revVal };
+                ctx.font = '700 11px ui-sans-serif, system-ui';
+                ctx.fillStyle = '#ffffff';
+                ctx.textBaseline = 'top';
+                ctx.fillText(ovFmtAbbrev(hasForecast ? tot.rev : revVal), bar.x, bar.base + 4);
+              }
             }
           }
         });
@@ -27049,14 +27108,37 @@ function renderOverviewDashboard() {
           titleColor:'#e2e8f0', bodyColor:'#cbd5e1',
           filter: (ctx) => ctx.dataset._isGp,
           callbacks: {
+            title: (items) => {
+              const ctx0 = items[0];
+              return `${ctx0.chart.data.labels[ctx0.dataIndex]} — ${ctx0.dataset._fy}`;
+            },
             label: (ctx) => {
-              const ds = ctx.dataset;
-              const i = ctx.dataIndex;
-              const gp  = ds._gp ? ds._gp[i] : 0;
-              const rev = ds._rev ? ds._rev[i] : 0;
-              const gm  = rev ? (gp / rev * 100).toFixed(1) + '%' : '—';
-              const kind = ds._isForecast ? 'Est' : ds._fy;
-              return `${kind}: Rev ${commFmtD(rev)} · GP ${commFmtD(gp)} · GM ${gm}`;
+              const chart = ctx.chart;
+              const ds    = ctx.dataset;
+              const qi    = ctx.dataIndex;
+              // Sum billed + any visible est for this FY+quarter.
+              let totRev = 0, totGp = 0;
+              chart.data.datasets.forEach((d, di) => {
+                if (d._fy !== ds._fy || !d._isGp) return;
+                if (chart.getDatasetMeta(di).hidden) return;
+                totRev += (d._rev ? d._rev[qi] : 0);
+                totGp  += (d._gp  ? d._gp[qi]  : 0);
+              });
+              const hasForecast = chart.data.datasets.some(d =>
+                d._fy === ds._fy && d._isForecast && !chart.getDatasetMeta(chart.data.datasets.indexOf(d)).hidden
+              );
+              const gm = totRev ? (totGp / totRev * 100).toFixed(1) + '%' : '—';
+              const suffix = ds._isForecast ? ' (est)' : '';
+              const sliceGp  = ds._gp  ? ds._gp[qi]  : 0;
+              const sliceRev = ds._rev ? ds._rev[qi]  : 0;
+              const lines = [];
+              if (hasForecast) {
+                lines.push(`Combined: Rev ${commFmtD(totRev)} · GP ${commFmtD(totGp)} · GM ${gm}`);
+                lines.push(`  ${ds._isForecast ? 'Est' : 'Billed'}: Rev ${commFmtD(sliceRev)} · GP ${commFmtD(sliceGp)}`);
+              } else {
+                lines.push(`Rev ${commFmtD(totRev)} · GP ${commFmtD(totGp)} · GM ${gm}`);
+              }
+              return lines;
             },
           },
         },
