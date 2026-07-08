@@ -2746,8 +2746,11 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
         <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
           <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Quarterly Performance · YoY <button class="calc-info-btn" data-calc-info="Quarterly Performance · YoY&#10;Full bar = ST Net Sell (revenue) per quarter&#10;GP segment = stSales × marginPct ÷ 100&#10;Quarters: Q1=Apr-Jun, Q2=Jul-Sep, Q3=Oct-Dec, Q4=Jan-Mar" onclick="showCalcInfo(this,event)">ℹ</button></h3>
-            <span class="text-xs text-slate-500">Rev (full bar) · GP segment at base</span>
+            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">Quarterly Performance · YoY <button class="calc-info-btn" data-calc-info="Quarterly Performance · YoY&#10;Full bar = ST Net Sell (revenue) per quarter&#10;GP segment = stSales × marginPct ÷ 100&#10;Quarters: Q1=Apr-Jun, Q2=Jul-Sep, Q3=Oct-Dec, Q4=Jan-Mar&#10;Forecast toggle: adds est invoice sell + est margin for current quarter" onclick="showCalcInfo(this,event)">ℹ</button></h3>
+            <div class="flex items-center gap-3">
+              <button id="ov-q-forecast-toggle" onclick="ovToggleQForecast()" class="px-2.5 py-1 rounded-lg text-xs font-semibold border transition bg-slate-900/60 text-slate-400 border-slate-700/60 hover:text-slate-200" title="Show estimated invoice dates as forecast segments on current quarter">Forecast off</button>
+              <span class="text-xs text-slate-500">Rev (full bar) · GP segment at base</span>
+            </div>
           </div>
           <div style="height:340px;"><canvas id="ov-q-yoy"></canvas></div>
         </div>
@@ -2771,21 +2774,6 @@
             <span class="text-xs text-slate-500">Bars = Rev (solid base) + Margin$ (translucent top) stacked · GM% labeled above each bar · ePlus excluded · top 5 by rolling 12-mo GP</span>
           </div>
           <div style="height:340px;"><canvas id="ov-vd-yoy"></canvas></div>
-        </div>
-      </div>
-
-      <!-- ROW 6: Current-Quarter Forecast — Billed vs. Est Invoice Date -->
-      <div class="mb-5">
-        <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-5">
-          <div class="flex items-baseline justify-between mb-3">
-            <h3 class="text-base font-semibold text-white" style="display:flex;align-items:center;gap:5px;">
-              Current Quarter · Billed vs. Forecast
-              <span id="ov-q-forecast-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-900/40 text-amber-300 border border-amber-700/40 ml-1">—</span>
-              <button class="calc-info-btn" data-calc-info="Current Quarter · Billed vs. Forecast&#10;Actuals: rows bucketed by invoiceDate&#10;Forecast: rows bucketed by estInvoiceDate or custOrderDate&#10;Rev = ST Net Sell + Open Sell · GP = sales × marginPct ÷ 100&#10;Only current quarter shown · prior FYs for context" onclick="showCalcInfo(this,event)">ℹ</button>
-            </h3>
-            <span class="text-xs text-slate-500">Actuals (solid) · Forecast from est invoice dates (striped) · current quarter only</span>
-          </div>
-          <div style="height:300px;"><canvas id="ov-q-forecast"></canvas></div>
         </div>
       </div>
 
@@ -26896,18 +26884,29 @@ function renderOverviewDashboard() {
   });
 
   // ── QUARTERLY YoY: grouped FY bars Q1..Q4 — stacked GP (base) + Rev−GP (top) ──
+  // Forecast datasets (est invoice dates) are added hidden; toggled via ovToggleQForecast().
   ovDestroy('q-yoy');
   const qLabels = ['Q1','Q2','Q3','Q4'];
   const qDatasets = [];
+  const _curFQ    = commFYQuarter(todayYM);
+  const _curQIdx  = { Q1:0, Q2:1, Q3:2, Q4:3 }[_curFQ.q] ?? 0; // 0..3 index into qLabels
+  const _curFyKey = _curFQ.fyKey;
   compareFys.filter(k => byFY[k]).forEach((fyKey, idx) => {
     const list = byFY[fyKey];
     const qGp  = [0,0,0,0];
     const qRev = [0,0,0,0];
+    // Forecast (est) totals — only meaningful for current quarter of current FY.
+    const qEstRev = [0,0,0,0];
+    const qEstGp  = [0,0,0,0];
     list.forEach(m => {
       const qIdx = Math.floor(m.offset / 3);
       if (qIdx >= 0 && qIdx <= 3) {
         qGp[qIdx]  += m.gp;
         qRev[qIdx] += m.rev;
+        if (fyKey === _curFyKey && qIdx === _curQIdx) {
+          qEstRev[qIdx] += m.revEst || 0;
+          qEstGp[qIdx]  += m.gpEst  || 0;
+        }
       }
     });
     const qGap = qRev.map((r, i) => Math.max(0, r - qGp[i]));
@@ -26916,14 +26915,30 @@ function renderOverviewDashboard() {
     qDatasets.push({
       label: `${fyKey} Rev`, data: qGap,
       backgroundColor: color + 'ee', borderColor: color, borderWidth: 1,
-      stack: fyKey, _isGp: false, _fy: fyKey, _rev: qRev, _gp: qGp,
+      stack: fyKey, _isGp: false, _fy: fyKey, _rev: qRev, _gp: qGp, _isForecast: false,
     });
     // GP top (translucent) — margin caps the stack
     qDatasets.push({
       label: `${fyKey} GP`, data: qGp,
       backgroundColor: color + '33', borderColor: color + '66', borderWidth: 1,
-      stack: fyKey, _isGp: true,  _fy: fyKey, _rev: qRev, _gp: qGp,
+      stack: fyKey, _isGp: true,  _fy: fyKey, _rev: qRev, _gp: qGp, _isForecast: false,
     });
+    // Forecast segments — only for current FY, hidden until toggle is on.
+    if (fyKey === _curFyKey) {
+      const qEstGap = qEstRev.map((r, i) => Math.max(0, r - qEstGp[i]));
+      qDatasets.push({
+        label: `${fyKey} Est Sell`, data: qEstGap,
+        backgroundColor: color + '44', borderColor: color + 'bb', borderWidth: 1.5,
+        stack: fyKey, _isGp: false, _fy: fyKey, _rev: qEstRev, _gp: qEstGp, _isForecast: true,
+        hidden: true,
+      });
+      qDatasets.push({
+        label: `${fyKey} Est Margin`, data: qEstGp,
+        backgroundColor: color + '18', borderColor: color + '55', borderWidth: 1.5,
+        stack: fyKey, _isGp: true, _fy: fyKey, _rev: qEstRev, _gp: qEstGp, _isForecast: true,
+        hidden: true,
+      });
+    }
   });
   // Inline plugin: black "GP $X" label inside GP slice; "Rev $X · GM%" above stack.
   const qBarLabelPlugin = {
@@ -26945,7 +26960,7 @@ function renderOverviewDashboard() {
               ctx.font = '700 10px ui-sans-serif, system-ui';
               ctx.fillStyle = ds.borderColor || '#cbd5e1';
               ctx.textBaseline = 'bottom';
-              ctx.fillText(`${gm}%`, bar.x, bar.y - 3);
+              ctx.fillText(ds._isForecast ? `${gm}% est` : `${gm}%`, bar.x, bar.y - 3);
             }
             const sliceH = Math.abs(bar.base - bar.y);
             if (gpVal && sliceH >= 14) {
@@ -26986,24 +27001,26 @@ function renderOverviewDashboard() {
               chart.data.datasets.forEach((ds, i) => {
                 if (ds._isGp) return; // anchor on Rev base, then add paired GP
                 const meta = chart.getDatasetMeta(i);
+                const label = ds._isForecast ? `${ds._fy} Est Sell` : `${ds._fy} Rev`;
                 items.push({
-                  text: `${ds._fy} Rev`,
+                  text: label,
                   fillStyle: ds.backgroundColor,
                   strokeStyle: ds.borderColor || ds.backgroundColor,
-                  lineWidth: 1,
-                  fontColor: '#ffffff',
+                  lineWidth: ds._isForecast ? 1.5 : 1,
+                  fontColor: ds._isForecast ? '#94a3b8' : '#ffffff',
                   hidden: meta.hidden,
                   datasetIndex: i,
                 });
-                const gpDi = chart.data.datasets.findIndex(d => d._isGp && d._fy === ds._fy);
+                const gpDi = chart.data.datasets.findIndex(d => d._isGp && d._fy === ds._fy && d._isForecast === ds._isForecast);
                 if (gpDi >= 0) {
                   const gpDs = chart.data.datasets[gpDi];
+                  const gpLabel = ds._isForecast ? `${ds._fy} Est Margin` : `${ds._fy} Margin$`;
                   items.push({
-                    text: `${ds._fy} Margin$`,
+                    text: gpLabel,
                     fillStyle: gpDs.backgroundColor,
                     strokeStyle: gpDs.borderColor || gpDs.backgroundColor,
-                    lineWidth: 1,
-                    fontColor: '#ffffff',
+                    lineWidth: ds._isForecast ? 1.5 : 1,
+                    fontColor: ds._isForecast ? '#94a3b8' : '#ffffff',
                     hidden: chart.getDatasetMeta(gpDi).hidden,
                     datasetIndex: gpDi,
                   });
@@ -27038,7 +27055,8 @@ function renderOverviewDashboard() {
               const gp  = ds._gp ? ds._gp[i] : 0;
               const rev = ds._rev ? ds._rev[i] : 0;
               const gm  = rev ? (gp / rev * 100).toFixed(1) + '%' : '—';
-              return `${ds._fy}: Rev ${commFmtD(rev)} · GP ${commFmtD(gp)} · GM ${gm}`;
+              const kind = ds._isForecast ? 'Est' : ds._fy;
+              return `${kind}: Rev ${commFmtD(rev)} · GP ${commFmtD(gp)} · GM ${gm}`;
             },
           },
         },
@@ -27047,187 +27065,28 @@ function renderOverviewDashboard() {
     plugins: [qBarLabelPlugin],
   });
 
-  // ── CURRENT QUARTER FORECAST: Billed vs. Est Invoice Date ──
-  ovDestroy('q-forecast');
-  (function() {
-    // Identify the current quarter (Q1-Q4 in ePlus FY, Apr start).
-    const curFQ    = commFYQuarter(todayYM);          // { q:'Q1', fyKey:'FY27', ... }
-    const curQ     = curFQ.q;                          // 'Q1'..'Q4'
-    const curFyKey = curFQ.fyKey;
-
-    // Update the badge label.
-    const badge = document.getElementById('ov-q-forecast-badge');
-    if (badge) badge.textContent = `${curFyKey} ${curQ}`;
-
-    // For each of the 3 comparison FYs, sum billed/est totals for the matching quarter slot.
-    // Quarter offset ranges: Q1=offset 0-2, Q2=3-5, Q3=6-8, Q4=9-11.
-    const qOffsetRange = { Q1:[0,2], Q2:[3,5], Q3:[6,8], Q4:[9,11] };
-    const [qLo, qHi] = qOffsetRange[curQ] || [0,2];
-
-    // Labels = Month names for the 3 months in this quarter.
-    const qMonthOffsets = [qLo, qLo+1, qLo+2];
-    const monthLabels   = qMonthOffsets.map(o => OV_MONTH_LABELS[o]);
-
-    const fcDatasets = [];
-    compareFys.filter(k => byFY[k]).forEach((fyKey, idx) => {
-      const list = byFY[fyKey];
-      // Per month within the quarter slot.
-      const billedRev = [0,0,0], billedGp = [0,0,0];
-      const estRev    = [0,0,0], estGp    = [0,0,0];
-      list.forEach(m => {
-        if (m.offset < qLo || m.offset > qHi) return;
-        const slot = m.offset - qLo; // 0,1,2
-        billedRev[slot] += m.revBilled || 0;
-        billedGp[slot]  += m.gpBilled  || 0;
-        estRev[slot]    += m.revEst    || 0;
-        estGp[slot]     += m.gpEst     || 0;
-      });
-
-      const color = OV_FY_PALETTE[idx % OV_FY_PALETTE.length];
-      const isCurrent = fyKey === curFyKey;
-
-      // Billed actuals — solid bars (only show if has data or is current FY).
-      const bGap = billedRev.map((r, i) => Math.max(0, r - billedGp[i]));
-      fcDatasets.push({
-        label: `${fyKey} Billed Rev`, data: bGap,
-        backgroundColor: color + 'ee', borderColor: color, borderWidth: 1,
-        stack: fyKey + '-billed', _isGp: false, _fy: fyKey, _kind: 'billed',
-        _rev: billedRev, _gp: billedGp,
-        order: isCurrent ? 0 : 1,
-      });
-      fcDatasets.push({
-        label: `${fyKey} Billed GP`, data: billedGp,
-        backgroundColor: color + '33', borderColor: color + '66', borderWidth: 1,
-        stack: fyKey + '-billed', _isGp: true,  _fy: fyKey, _kind: 'billed',
-        _rev: billedRev, _gp: billedGp,
-        order: isCurrent ? 0 : 1,
-      });
-
-      // Forecast (est dates) — only show for current FY.
-      if (isCurrent) {
-        const eGap = estRev.map((r, i) => Math.max(0, r - estGp[i]));
-        fcDatasets.push({
-          label: `${fyKey} Forecast Rev`, data: eGap,
-          backgroundColor: color + '55', borderColor: color + 'aa', borderWidth: 1.5,
-          borderDash: [4, 3],
-          stack: fyKey + '-est', _isGp: false, _fy: fyKey, _kind: 'est',
-          _rev: estRev, _gp: estGp,
-          order: 0,
-        });
-        fcDatasets.push({
-          label: `${fyKey} Forecast GP`, data: estGp,
-          backgroundColor: color + '22', borderColor: color + '55', borderWidth: 1.5,
-          borderDash: [4, 3],
-          stack: fyKey + '-est', _isGp: true,  _fy: fyKey, _kind: 'est',
-          _rev: estRev, _gp: estGp,
-          order: 0,
-        });
-      }
+  // Toggle function: show/hide the forecast datasets on the q-yoy chart.
+  window.ovToggleQForecast = function() {
+    const chart = OV_CHARTS['q-yoy'];
+    if (!chart) return;
+    const btn = document.getElementById('ov-q-forecast-toggle');
+    const anyForecastVisible = chart.data.datasets.some(ds => ds._isForecast && !chart.getDatasetMeta(chart.data.datasets.indexOf(ds)).hidden);
+    const turningOn = !anyForecastVisible;
+    chart.data.datasets.forEach((ds, i) => {
+      if (!ds._isForecast) return;
+      chart.getDatasetMeta(i).hidden = !turningOn;
     });
-
-    // Label plugin (same pattern as qBarLabelPlugin).
-    const fcLabelPlugin = {
-      id: 'fcBarLabel',
-      afterDatasetsDraw(chart) {
-        const { ctx } = chart;
-        ctx.save();
-        ctx.textAlign = 'center';
-        chart.data.datasets.forEach((ds, dsIdx) => {
-          const meta = chart.getDatasetMeta(dsIdx);
-          if (meta.hidden) return;
-          meta.data.forEach((bar, i) => {
-            const gpVal  = ds._gp  ? ds._gp[i]  : 0;
-            const revVal = ds._rev ? ds._rev[i]  : 0;
-            const isForecast = ds._kind === 'est';
-            if (ds._isGp) {
-              if (revVal > 0) {
-                const gm = (gpVal / revVal * 100).toFixed(0);
-                ctx.font = '700 10px ui-sans-serif, system-ui';
-                ctx.fillStyle = isForecast ? (ds.borderColor || '#94a3b8') : (ds.borderColor || '#cbd5e1');
-                ctx.textBaseline = 'bottom';
-                ctx.fillText(`${gm}%${isForecast ? ' est' : ''}`, bar.x, bar.y - 3);
-              }
-              const sliceH = Math.abs(bar.base - bar.y);
-              if (gpVal && sliceH >= 14) {
-                ctx.font = '700 10px ui-sans-serif, system-ui';
-                ctx.fillStyle = '#e2e8f0';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(ovFmtAbbrev(gpVal), bar.x, (bar.base + bar.y) / 2);
-              }
-            } else {
-              if (revVal > 0) {
-                ctx.font = '700 11px ui-sans-serif, system-ui';
-                ctx.fillStyle = isForecast ? '#94a3b8' : '#ffffff';
-                ctx.textBaseline = 'top';
-                ctx.fillText(ovFmtAbbrev(revVal), bar.x, bar.base + 4);
-              }
-            }
-          });
-        });
-        ctx.restore();
-      },
-    };
-
-    OV_CHARTS['q-forecast'] = new Chart(document.getElementById('ov-q-forecast'), {
-      type: 'bar',
-      data: { labels: monthLabels, datasets: fcDatasets },
-      options: ovBaseOpts({
-        layout: { padding: { top: 22, bottom: 22 } },
-        scales: {
-          y: { stacked: true, ticks:{ color:'#64748b', callback:ovFmtAbbrev }, grid:{ color:'rgba(71,85,105,0.2)' } },
-          x: { stacked: true, ticks:{ color:'#94a3b8', padding:22 }, grid:{ display:false } },
-        },
-        plugins: {
-          legend: {
-            labels: {
-              color: '#ffffff', boxWidth:12, padding:12, font:{ size:11 },
-              generateLabels: (chart) => {
-                const seen = new Set();
-                const items = [];
-                chart.data.datasets.forEach((ds, i) => {
-                  if (ds._isGp) return;
-                  const key = `${ds._fy}-${ds._kind}`;
-                  if (seen.has(key)) return;
-                  seen.add(key);
-                  const meta = chart.getDatasetMeta(i);
-                  const label = ds._kind === 'est'
-                    ? `${ds._fy} Forecast`
-                    : `${ds._fy} Billed`;
-                  items.push({
-                    text: label,
-                    fillStyle: ds.backgroundColor,
-                    strokeStyle: ds.borderColor || ds.backgroundColor,
-                    lineWidth: 1,
-                    fontColor: '#ffffff',
-                    hidden: meta.hidden,
-                    datasetIndex: i,
-                  });
-                });
-                return items;
-              },
-            },
-          },
-          tooltip: {
-            backgroundColor:'#1e293b', borderColor:'#475569', borderWidth:1, padding:8,
-            titleColor:'#e2e8f0', bodyColor:'#cbd5e1',
-            filter: (ctx) => ctx.dataset._isGp,
-            callbacks: {
-              label: (ctx) => {
-                const ds = ctx.dataset;
-                const i = ctx.dataIndex;
-                const gp  = ds._gp ? ds._gp[i] : 0;
-                const rev = ds._rev ? ds._rev[i] : 0;
-                const gm  = rev ? (gp / rev * 100).toFixed(1) + '%' : '—';
-                const kind = ds._kind === 'est' ? 'Forecast' : 'Billed';
-                return `${ds._fy} ${kind}: Rev ${commFmtD(rev)} · GP ${commFmtD(gp)} · GM ${gm}`;
-              },
-            },
-          },
-        },
-      }),
-      plugins: [fcLabelPlugin],
-    });
-  })();
+    chart.update();
+    if (btn) {
+      btn.textContent = turningOn ? 'Forecast on' : 'Forecast off';
+      btn.classList.toggle('bg-amber-900/40', turningOn);
+      btn.classList.toggle('text-amber-300',  turningOn);
+      btn.classList.toggle('border-amber-700/40', turningOn);
+      btn.classList.toggle('bg-slate-900/60', !turningOn);
+      btn.classList.toggle('text-slate-400',  !turningOn);
+      btn.classList.toggle('border-slate-700/60', !turningOn);
+    }
+  };
 
   // ── VENDOR MIX (donut + YoY stacked bars w/ Pareto) ──
   ovRenderVendorMix();
