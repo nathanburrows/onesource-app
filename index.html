@@ -17894,7 +17894,7 @@ function clientAggRenewalEvents(parent, customer) {
       chainBills.set(chainKey, {
         vendor: v, customer: cust, poNumber: r.poNumber || '',
         engineDateMs: null,
-        warrEndMsList: [], invMsList: [], estInvMsList: [], confidence: rt, contractRev: 0, stSalesTotal: 0, billCount: 0, termYears: 0,
+        warrEndMsList: [], invMsList: [], estInvMsList: [], confidence: rt, contractRev: 0, stSalesTotal: 0, openSellTotal: 0, billCount: 0, termYears: 0,
       });
     }
     const c = chainBills.get(chainKey);
@@ -17902,6 +17902,7 @@ function clientAggRenewalEvents(parent, customer) {
     // _annualizedRev is the PO-group total stamped on every line — take it once, not summed.
     if (!c.contractRev && r._annualizedRev) c.contractRev = Number(r._annualizedRev) || 0;
     c.stSalesTotal += Number(r.stSales) || 0; // fallback when _annualizedRev absent
+    c.openSellTotal += Number(r.openSell) || 0; // open-sell-only orders (no billed stSales yet)
     if (r.estInvoiceDate) c.billCount += 1;
     if (!c.termYears && r._termYears) c.termYears = Number(r._termYears) || 0;
     // Engine-stamped renewal date (ISO yyyy-mm-dd). Every line in a chain
@@ -17964,8 +17965,8 @@ function clientAggRenewalEvents(parent, customer) {
     (byVendor[c.vendor] = byVendor[c.vendor] || []).push({
       kind: 'renewal',
       ms: renewalMs, ymStr: ym, ...lbl,
-      netSell: (c.contractRev || c.stSalesTotal) / Math.max(1, c.termYears || 1),
-      contractRev: c.contractRev, stSalesTotal: c.stSalesTotal, termYears: c.termYears,
+      netSell: (c.contractRev || c.stSalesTotal || c.openSellTotal) / Math.max(1, c.termYears || 1),
+      contractRev: c.contractRev, stSalesTotal: c.stSalesTotal, openSellTotal: c.openSellTotal, termYears: c.termYears,
       customer: c.customer,
       poNumber: c.poNumber,
       confidence: c.confidence,
@@ -18043,7 +18044,7 @@ function clientAggRenewalEvents(parent, customer) {
     if (!billAgg.has(aggKey)) {
       billAgg.set(aggKey, { ms, yy, mm, day, ym, vendor: v, chainKey, customer: cust, poNumber: r.poNumber || '', netSell: 0 });
     }
-    billAgg.get(aggKey).netSell += Number(r.stSales) || 0;
+    billAgg.get(aggKey).netSell += Number(r.stSales) || Number(r.openSell) || 0;
   }
   for (const b of billAgg.values()) {
     if (b.ms < minMs) minMs = b.ms;
@@ -18486,10 +18487,14 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
                        : ev.confidence === 'estimated' ? 'Estimated (billing dates)'
                        : ev.confidence === 'derived'   ? 'Derived (last invoice + 12mo)'
                        : 'Unknown';
-      const _total = ev.contractRev || ev.stSalesTotal || 0;
+      const _total = ev.contractRev || ev.stSalesTotal || ev.openSellTotal || 0;
+      const _totalSrc = ev.contractRev ? 'Contract total (_annualizedRev)'
+                      : ev.stSalesTotal ? 'Billed ST Net Sell'
+                      : ev.openSellTotal ? 'Open Sell (unbilled)'
+                      : 'Unknown';
       const _term  = ev.termYears || 1;
       const _renewalInfo = ev.kind === 'renewal' && ev.netSell > 0
-        ? `Annual Renewal Cost\nST Net Sell: ${clientFmtMoney(_total)}\nTerm: ${_term}yr\n${clientFmtMoney(_total)} ÷ ${_term} = ${clientFmtMoney(ev.netSell)}/yr\nConfidence: ${_confLabel}`
+        ? `Annual Renewal Cost\nTotal: ${clientFmtMoney(_total)} (${_totalSrc})\nTerm: ${_term}yr\n${clientFmtMoney(_total)} ÷ ${_term} = ${clientFmtMoney(ev.netSell)}/yr\nConfidence: ${_confLabel}`
         : ev.kind === 'purchase' && ev.netSell > 0
         ? `Initial Purchase\nST Net Sell: ${clientFmtMoney(ev.netSell)}\nSource: earliest invoice date on record`
         : ev.kind === 'annualBill' && ev.netSell > 0
