@@ -1868,7 +1868,13 @@
   body.light .sg-table thead th:hover { background: #f1f5f9; color: #1e293b; }
   body.light .sg-table tbody tr { border-bottom-color: #f1f5f9; }
   body.light .sg-table tbody tr:hover { background: rgba(99,102,241,0.03); }
-  body.light .sg-table tbody td { color: #334155; }
+  /* Force all table cell content dark — overrides any Tailwind text-* class
+     on child spans/divs inside cells that might otherwise render in a muted
+     dark-mode color (text-slate-400, text-indigo-300, text-cbd5e1, etc.) */
+  body.light .sg-table tbody td { color: #1e293b !important; }
+  body.light .sg-table tbody td * { color: inherit; }
+  body.light .sg-table tbody td span[style*="color"],
+  body.light .sg-table tbody td div[style*="color"] { color: inherit !important; }
   body.light .crm-list-wrap .sg-table thead th { background: #f8fafc; }
   body.light .crm-list-wrap .sg-table thead tr.filter-row th { background: #f1f5f9; }
   body.light .sg-table thead tr.filter-row th:hover { background: #f1f5f9; }
@@ -1897,9 +1903,9 @@
   body.light .border-slate-700\/60 { border-color: #e2e8f0 !important; }
   body.light .text-white { color: #1e293b !important; }
   body.light .text-slate-200 { color: #1e293b !important; }
-  body.light .text-slate-300 { color: #334155 !important; }
-  body.light .text-slate-400 { color: #475569 !important; }
-  body.light .text-slate-500 { color: #64748b !important; }
+  body.light .text-slate-300 { color: #1e293b !important; }
+  body.light .text-slate-400 { color: #334155 !important; }
+  body.light .text-slate-500 { color: #475569 !important; }
   body.light .hover\:text-white:hover { color: #0f172a !important; }
   body.light .hover\:bg-slate-800\/80:hover,
   body.light .hover\:bg-slate-700:hover { background-color: rgba(226,232,240,0.6) !important; }
