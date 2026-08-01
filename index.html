@@ -1924,38 +1924,42 @@
   body.light [class*="border-indigo-700/"] { border-color: rgba(99,102,241,0.22) !important; }
   body.light [class*="border-indigo-500/"] { border-color: rgba(99,102,241,0.30) !important; }
 
-  /* All dark-palette gradient families — background-image:none kills the
-     gradient; background-color fills with white so every colored card
-     (emerald GP tiles, amber margin tiles, sky open-sell tiles, etc.)
-     renders as a clean white card in light mode. */
+  /* Dark gradient families → light pastel tints that preserve color-coding.
+     background-image:none removes the gradient; background-color fills with
+     the matching *-50 Tailwind swatch so each tile family stays identifiable
+     (indigo = violet-50, emerald = emerald-50, amber = amber-50, sky = sky-50). */
   body.light [class*="from-indigo-9"],
   body.light [class*="from-purple-9"],
-  body.light [class*="from-violet-9"],
+  body.light [class*="from-violet-9"] { background-image:none !important; background-color:#f5f3ff !important; }
+
   body.light [class*="from-emerald-9"],
   body.light [class*="from-teal-9"],
-  body.light [class*="from-green-9"],
+  body.light [class*="from-green-9"] { background-image:none !important; background-color:#ecfdf5 !important; }
+
   body.light [class*="from-amber-9"],
-  body.light [class*="from-orange-9"],
+  body.light [class*="from-orange-9"] { background-image:none !important; background-color:#fffbeb !important; }
+
   body.light [class*="from-sky-9"],
   body.light [class*="from-cyan-9"],
-  body.light [class*="from-blue-9"],
-  body.light [class*="from-red-9"],
-  body.light [class*="from-rose-9"] {
-    background-image: none !important;
-    background-color: #ffffff !important;
-  }
+  body.light [class*="from-blue-9"] { background-image:none !important; background-color:#f0f9ff !important; }
 
-  /* Colored tile borders (emerald/amber/sky etc.) → neutral light border */
+  body.light [class*="from-red-9"],
+  body.light [class*="from-rose-9"] { background-image:none !important; background-color:#fff1f2 !important; }
+
+  /* Colored tile borders → subtle tinted border matching each family */
+  body.light [class*="border-indigo-7"],
+  body.light [class*="border-violet-7"],
+  body.light [class*="border-purple-7"] { border-color: rgba(99,102,241,0.22) !important; }
   body.light [class*="border-emerald-7"],
   body.light [class*="border-teal-7"],
-  body.light [class*="border-green-7"],
+  body.light [class*="border-green-7"] { border-color: rgba(16,185,129,0.25) !important; }
   body.light [class*="border-amber-7"],
-  body.light [class*="border-orange-7"],
+  body.light [class*="border-orange-7"] { border-color: rgba(245,158,11,0.25) !important; }
   body.light [class*="border-sky-7"],
   body.light [class*="border-cyan-7"],
-  body.light [class*="border-blue-7"],
+  body.light [class*="border-blue-7"] { border-color: rgba(14,165,233,0.25) !important; }
   body.light [class*="border-red-7"],
-  body.light [class*="border-rose-7"] { border-color: #e2e8f0 !important; }
+  body.light [class*="border-rose-7"] { border-color: rgba(239,68,68,0.22) !important; }
 
   /* Client banner / card chips — correct pattern is 900/ not 9/ */
   body.light [class*="bg-purple-900/"] { background-color: rgba(139,92,246,0.07) !important; }
@@ -2005,14 +2009,14 @@
     background: #f8fafc !important; border-color: #e2e8f0 !important; color: #1e293b !important;
   }
 
-  /* Grouped table parent / child rows — dramatically reduce the indigo tint
-     (.row-parent uses custom CSS rgba, not caught by any Tailwind selector) */
-  body.light .row-parent { background: rgba(99,102,241,0.05) !important; }
-  body.light .row-parent:hover { background: rgba(99,102,241,0.09) !important; }
-  body.light .row-parent td { border-top-color: rgba(99,102,241,0.14) !important; }
+  /* Grouped table rows — transparent base so rows read as clean white; very
+     subtle indigo only on hover to keep interactivity affordance. */
+  body.light .row-parent { background: transparent !important; color: #1e293b !important; }
+  body.light .row-parent:hover { background: rgba(99,102,241,0.05) !important; }
+  body.light .row-parent td { border-top-color: #e2e8f0 !important; }
   body.light .row-child { background: transparent !important; color: #334155 !important; }
-  body.light .row-child:hover { background: rgba(99,102,241,0.04) !important; }
-  body.light .row-child td { border-top-color: rgba(0,0,0,0.05) !important; }
+  body.light .row-child:hover { background: rgba(99,102,241,0.03) !important; }
+  body.light .row-child td { border-top-color: #f1f5f9 !important; }
 
   /* Commission Pay accordion rows use bg-slate-950/* variant */
   body.light [class*="bg-slate-950/"] { background-color: #f1f5f9 !important; }
