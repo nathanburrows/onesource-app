@@ -1920,10 +1920,11 @@
   body.light [class*="bg-slate-800/"] { background-color: #ffffff !important; }
   body.light [class*="border-slate-700/"],
   body.light [class*="border-slate-800/"] { border-color: #e2e8f0 !important; }
-  body.light [class*="border-indigo-7/"],
-  body.light [class*="border-indigo-5/"] { border-color: rgba(99,102,241,0.22) !important; }
+  /* Border opacity variants — correct pattern uses 700/ not 7/ */
+  body.light [class*="border-indigo-700/"] { border-color: rgba(99,102,241,0.22) !important; }
+  body.light [class*="border-indigo-500/"] { border-color: rgba(99,102,241,0.30) !important; }
 
-  /* Dark gradient backgrounds → light violet-50 tint */
+  /* Dark gradient backgrounds (from-indigo-9 substring matches from-indigo-900/30 etc.) */
   body.light [class*="from-indigo-9"],
   body.light [class*="from-purple-9"],
   body.light [class*="from-violet-9"] {
@@ -1931,33 +1932,65 @@
     background-color: #f5f3ff !important;
   }
 
-  /* Client banner chips */
-  body.light [class*="bg-purple-9/"] { background-color: rgba(139,92,246,0.08) !important; }
-  body.light [class*="bg-indigo-9/"] { background-color: rgba(99,102,241,0.08) !important; }
+  /* Client banner / card chips — correct pattern is 900/ not 9/ */
+  body.light [class*="bg-purple-900/"] { background-color: rgba(139,92,246,0.07) !important; }
+  body.light [class*="bg-indigo-900/"] { background-color: rgba(99,102,241,0.07) !important; }
   body.light .text-purple-300 { color: #7c3aed !important; }
   body.light .text-indigo-300 { color: #4338ca !important; }
 
-  /* Today date number in calendar — emerald-300 is too pale on white */
+  /* Today date number — emerald-300 too pale on white bg */
   body.light .text-emerald-300 { color: #059669 !important; }
 
-  /* Filter row — base state fix for non-CRM-wrapped tables */
+  /* Filter row — base state for ALL tables (not just inside .crm-list-wrap) */
   body.light .sg-table thead tr.filter-row th {
     background: #f1f5f9 !important; border-bottom-color: #e2e8f0 !important;
   }
   body.light .sg-table thead tr.filter-row th:hover { background: #e8edf5 !important; }
 
-  /* Column filter inputs — these use custom CSS (not Tailwind), so the
-     bg-slate catch-all above misses them. Override all states explicitly. */
+  /* Column filter inputs — use custom CSS not Tailwind, must be overridden directly */
   body.light .col-filter-input {
-    background: #f8fafc !important; color: #1e293b !important;
-    border-color: #e2e8f0 !important;
+    background: #f8fafc !important; color: #1e293b !important; border-color: #e2e8f0 !important;
   }
-  body.light .col-filter-input:focus {
-    background: #ffffff !important; border-color: #6366f1 !important;
-  }
+  body.light .col-filter-input:focus { background: #ffffff !important; border-color: #6366f1 !important; }
   body.light .col-filter-input::placeholder { color: #94a3b8 !important; font-style: italic; }
   body.light .col-filter-clear { color: #94a3b8; }
   body.light .col-filter-clear:hover { color: #1e293b !important; background: rgba(99,102,241,0.10) !important; }
+
+  /* ── REMAINING DARK ELEMENTS ────────────────────────────────────────────── */
+
+  /* KPI tiles — clean white cards (gradients used dark rgba fills) */
+  body.light .tile { background: #ffffff !important; border-color: #e8edf5 !important; }
+  body.light .tile-val { color: #1e293b !important; }
+  body.light .tile-sub { color: #64748b !important; }
+
+  /* Scatter chart card (Commission Recon) */
+  body.light .viz-chart-card {
+    background: #ffffff !important; border-color: #e2e8f0 !important;
+  }
+  body.light .chart-title { color: #475569 !important; }
+
+  /* STAGE / diagnostics bar (Commission Recon) */
+  body.light .diag-panel {
+    background: #f8fafc !important; border-color: #e2e8f0 !important; color: #475569 !important;
+  }
+  body.light .diag-stage-tag { color: #4338ca !important; }
+
+  /* Recon toolbar search input (.filter-input — custom CSS, not Tailwind) */
+  body.light .filter-input {
+    background: #f8fafc !important; border-color: #e2e8f0 !important; color: #1e293b !important;
+  }
+
+  /* Grouped table parent / child rows — dramatically reduce the indigo tint
+     (.row-parent uses custom CSS rgba, not caught by any Tailwind selector) */
+  body.light .row-parent { background: rgba(99,102,241,0.05) !important; }
+  body.light .row-parent:hover { background: rgba(99,102,241,0.09) !important; }
+  body.light .row-parent td { border-top-color: rgba(99,102,241,0.14) !important; }
+  body.light .row-child { background: transparent !important; color: #334155 !important; }
+  body.light .row-child:hover { background: rgba(99,102,241,0.04) !important; }
+  body.light .row-child td { border-top-color: rgba(0,0,0,0.05) !important; }
+
+  /* Commission Pay accordion rows use bg-slate-950/* variant */
+  body.light [class*="bg-slate-950/"] { background-color: #f1f5f9 !important; }
 </style>
 <script>
   /* Theme toggle — runs before body renders to prevent flash of wrong theme */
