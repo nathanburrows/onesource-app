@@ -1775,9 +1775,161 @@
   .pin-key:active { transform: scale(0.93); background: #1e3a5f; }
   .pin-key.del { font-size: 16px; color: #94a3b8; }
   .pin-error { color: #f87171; font-size: 13px; margin-top: 14px; min-height: 18px; }
+
+  /* ── DARK / LIGHT THEME TOGGLE ────────────────────────────────────────────
+     Default palette is dark (all rules above). Adding body.light below flips
+     the key structural surfaces without touching Electron-specific layouts or
+     the print stylesheet. Tailwind utility class overrides appear at the end
+     of this block so they win over CDN-generated specificity.           */
+
+  .theme-toggle-btn {
+    background: transparent; border: 1px solid #334155; color: #94a3b8;
+    border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 500;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+    transition: all 0.15s; flex-shrink: 0; -webkit-app-region: no-drag;
+    white-space: nowrap; font-family: inherit;
+  }
+  .theme-toggle-btn:hover { background: #1e293b; color: #e2e8f0; border-color: #475569; }
+  /* In sidebar mode the fixed global-search-bar carries the toggle; hide the
+     in-page header copy so only one is visible at a time. */
+  body.with-sidebar #theme-toggle-header { display: none; }
+
+  /* body */
+  body.light { background: #f1f5f9 !important; color: #334155 !important; }
+  body.light ::-webkit-scrollbar-track { background: #e2e8f0; }
+  body.light ::-webkit-scrollbar-thumb { background: #94a3b8; }
+  body.light .theme-toggle-btn { border-color: #e2e8f0; color: #64748b; }
+  body.light .theme-toggle-btn:hover { background: #e8edf5; color: #1e293b; border-color: #cbd5e1; }
+
+  /* Global search bar */
+  body.light #global-search-bar { background: #ffffff; border-bottom-color: #e2e8f0; }
+  body.light #global-search-input { background: #f8fafc; border-color: #e2e8f0; color: #1e293b; }
+  body.light #global-search-input::placeholder { color: #94a3b8; }
+  body.light #global-search-results { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+  body.light .gs-brand-divider { background: #e2e8f0; }
+  body.light .gs-brand-ver-label { color: #94a3b8; }
+  body.light .gs-brand-ver-num { color: #6366f1; }
+  body.light .gs-brand-ver-ts { color: #94a3b8; }
+  body.light .gs-row { background: #ffffff; }
+  body.light .gs-row:hover { background: #f8fafc; }
+  body.light .gs-row .gs-label { color: #1e293b; }
+  body.light .gs-row .gs-snippet { color: #475569; }
+  body.light .gs-row .gs-type { color: #94a3b8; }
+
+  /* Sidebar */
+  body.light #dash-sidebar { background: #ffffff; border-right-color: #e2e8f0; }
+  body.light #dash-sidebar:hover,
+  body.light #dash-sidebar:focus-within { box-shadow: 4px 0 16px rgba(0,0,0,0.06); }
+  body.light .ds-brand { border-bottom-color: #e2e8f0; }
+  body.light .ds-nav-section { border-top-color: rgba(99,102,241,0.15); color: #6366f1; }
+  body.light .ds-nav-section-short { color: #6366f1; }
+  body.light .ds-nav-item { color: #64748b; }
+  body.light .ds-nav-item:hover { background: rgba(99,102,241,0.06); color: #1e293b; }
+  body.light .ds-nav-item.active {
+    background: linear-gradient(to right,rgba(99,102,241,0.10),rgba(168,85,247,0.07));
+    color: #4f46e5;
+    box-shadow: inset 4px 0 0 0 #6366f1, inset 0 0 0 1px rgba(99,102,241,0.18);
+  }
+  body.light .ds-nav-item.active svg { color: #6366f1; stroke: #6366f1; }
+  body.light .ds-nav-item.active-parent { color: #6366f1; background: rgba(99,102,241,0.05); box-shadow: inset 4px 0 0 0 rgba(99,102,241,0.3); }
+  body.light .ds-nav-item.active-parent svg { color: #6366f1; stroke: #6366f1; }
+  body.light .ds-nav-child { color: #64748b; }
+  body.light .ds-nav-child::before { border-left-color: rgba(99,102,241,0.15); }
+  body.light .ds-nav-child:hover { background: rgba(99,102,241,0.05); color: #1e293b; }
+  body.light .ds-nav-child.active {
+    background: linear-gradient(to right,rgba(99,102,241,0.10),rgba(168,85,247,0.05));
+    color: #4f46e5;
+    box-shadow: inset 3px 0 0 0 #6366f1, inset 0 0 0 1px rgba(99,102,241,0.15);
+  }
+  body.light .ds-foot { border-top-color: #e2e8f0; }
+  body.light .ds-rep-switch { color: #64748b; }
+  body.light .ds-rep-switch:hover { background: rgba(99,102,241,0.05); color: #334155; border-color: rgba(99,102,241,0.2); }
+  body.light .ds-rep-icon { color: #94a3b8; }
+  body.light .ds-rep-switch:hover .ds-rep-icon { color: #475569; }
+  body.light .ds-rep-caption { color: #94a3b8; }
+  body.light .ds-rep-name { color: #4f46e5; }
+
+  /* Page header */
+  body.light .page-brand-divider { background: #e2e8f0; }
+  body.light .page-sub { color: #94a3b8; }
+  body.light .btn-secondary { background: #f1f5f9; border-color: #e2e8f0; color: #475569; }
+  body.light .btn-secondary:hover { background: #e8edf5; border-color: #cbd5e1; color: #1e293b; }
+
+  /* KPI tiles */
+  body.light .tile { box-shadow: 0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8); }
+  body.light .tile:hover { box-shadow: 0 6px 28px rgba(0,0,0,0.09), inset 0 1px 0 rgba(255,255,255,0.9); }
+  body.light .tile-val { color: #1e293b !important; }
+  body.light .tile-sub { color: #64748b; }
+  body.light .ov-kpi-badge { background: rgba(248,250,252,0.9); color: #475569; border-color: rgba(203,213,225,0.9); }
+
+  /* Tables */
+  body.light .sg-table-wrap { background: #ffffff; border-color: #e2e8f0; }
+  body.light .sg-table thead th { background: #f8fafc; color: #475569; border-bottom-color: #e2e8f0; }
+  body.light .sg-table thead th:hover { background: #f1f5f9; color: #1e293b; }
+  body.light .sg-table tbody tr { border-bottom-color: #f1f5f9; }
+  body.light .sg-table tbody tr:hover { background: rgba(99,102,241,0.03); }
+  body.light .sg-table tbody td { color: #334155; }
+  body.light .crm-list-wrap .sg-table thead th { background: #f8fafc; }
+  body.light .crm-list-wrap .sg-table thead tr.filter-row th { background: #f1f5f9; }
+  body.light .sg-table thead tr.filter-row th:hover { background: #f1f5f9; }
+
+  /* Sticky section sub-navs */
+  body.light #ov-section-nav,
+  body.light #cp-section-nav,
+  body.light #rn-section-nav,
+  body.light #recon-section-nav,
+  body.light #cpay-section-nav {
+    background: rgba(241,245,249,0.92) !important;
+    border-bottom-color: #e2e8f0 !important;
+  }
+
+  /* Tailwind dark-palette utility overrides — these catch bg/text/border
+     classes that inline CSS can't reach. Specificity beats the CDN sheet
+     because body.light is a compound selector (two-class depth). */
+  body.light .bg-slate-950,
+  body.light .bg-slate-950\/85 { background-color: #f8fafc !important; }
+  body.light .bg-slate-900 { background-color: #f1f5f9 !important; }
+  body.light .bg-slate-800 { background-color: #ffffff !important; }
+  body.light .bg-slate-700 { background-color: #f1f5f9 !important; }
+  body.light .bg-slate-800\/80 { background-color: rgba(255,255,255,0.92) !important; }
+  body.light .border-slate-700,
+  body.light .border-slate-800,
+  body.light .border-slate-700\/60 { border-color: #e2e8f0 !important; }
+  body.light .text-white { color: #1e293b !important; }
+  body.light .text-slate-200 { color: #1e293b !important; }
+  body.light .text-slate-300 { color: #334155 !important; }
+  body.light .text-slate-400 { color: #475569 !important; }
+  body.light .text-slate-500 { color: #64748b !important; }
+  body.light .hover\:text-white:hover { color: #0f172a !important; }
+  body.light .hover\:bg-slate-800\/80:hover,
+  body.light .hover\:bg-slate-700:hover { background-color: rgba(226,232,240,0.6) !important; }
+  body.light .hover\:bg-slate-600:hover { background-color: #e2e8f0 !important; }
+
+  /* Form inputs styled with Tailwind dark classes */
+  body.light input[class*="bg-slate"], body.light select[class*="bg-slate"], body.light textarea[class*="bg-slate"] {
+    background-color: #f8fafc !important; border-color: #e2e8f0 !important; color: #1e293b !important;
+  }
+  body.light input::placeholder, body.light textarea::placeholder { color: #94a3b8 !important; }
+  body.light select option { background: #ffffff; color: #1e293b; }
 </style>
+<script>
+  /* Theme toggle — runs before body renders to prevent flash of wrong theme */
+  (function() {
+    if (localStorage.getItem('cmd.theme') === 'light') {
+      document.documentElement.classList.add('light-pending');
+    }
+  })();
+</script>
 </head>
 <body>
+<script>
+  /* Converts the FOUC-prevention html.light-pending flag (set in <head>) to
+     body.light the instant <body> exists, before any content paints. */
+  if (document.documentElement.classList.contains('light-pending')) {
+    document.body.classList.add('light');
+    document.documentElement.classList.remove('light-pending');
+  }
+</script>
 
 <!-- GitHub Pages PIN gate — hidden immediately if not on github.io or already authed -->
 <div id="pin-gate" class="hidden">
@@ -2000,6 +2152,11 @@
     <span class="proxy-status-dot"></span>
     <span id="proxy-sync-label">Checking…</span>
   </div>
+  <button id="theme-toggle-bar" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch between dark and light theme">
+    <svg class="theme-icon-moon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="theme-icon-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <span class="theme-toggle-label">Light</span>
+  </button>
 </div>
 <div id="global-search-results" role="listbox"></div>
 <div id="mob-sidebar-overlay" onclick="toggleMobileMenu()"></div>
@@ -2607,6 +2764,11 @@
       <button class="btn-secondary" id="btn-columns" title="Show / hide columns" data-recon-only>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="6" height="18"/><rect x="11" y="3" width="6" height="18"/><line x1="20" y1="3" x2="20" y2="21"/></svg>
         Columns
+      </button>
+      <button id="theme-toggle-header" class="theme-toggle-btn" onclick="toggleTheme()" title="Switch between dark and light theme">
+        <svg class="theme-icon-moon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="theme-icon-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <span class="theme-toggle-label">Light</span>
       </button>
     </div>
   </header>
@@ -17093,6 +17255,30 @@ function onSearch(v) {
 // Only the live "recon-visual" page is wired today; other pages are visual
 // shells (cloned components) and will get their own data hooks as they
 // graduate from placeholder → wired view.
+/* ── DARK / LIGHT THEME ─────────────────────────────────────────────────── */
+function _updateThemeButtons(isLight) {
+  document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+    const moon = btn.querySelector('.theme-icon-moon');
+    const sun  = btn.querySelector('.theme-icon-sun');
+    const lbl  = btn.querySelector('.theme-toggle-label');
+    if (moon) moon.style.display = isLight ? 'none' : '';
+    if (sun)  sun.style.display  = isLight ? '' : 'none';
+    if (lbl)  lbl.textContent    = isLight ? 'Dark' : 'Light';
+  });
+}
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('cmd.theme', isLight ? 'light' : 'dark');
+  _updateThemeButtons(isLight);
+}
+
+/* Sync button state on load (theme may already be light via boot script) */
+document.addEventListener('DOMContentLoaded', function() {
+  _updateThemeButtons(document.body.classList.contains('light'));
+});
+/* ── END THEME ──────────────────────────────────────────────────────────── */
+
 function toggleMobileMenu() {
   document.body.classList.toggle('mob-menu-open');
 }
