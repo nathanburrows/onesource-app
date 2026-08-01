@@ -1911,6 +1911,53 @@
   }
   body.light input::placeholder, body.light textarea::placeholder { color: #94a3b8 !important; }
   body.light select option { background: #ffffff; color: #1e293b; }
+
+  /* ── OPACITY VARIANT CATCH-ALLS ─────────────────────────────────────────
+     Tailwind generates bg-slate-900/40 as a separate class from bg-slate-900.
+     The plain-class rules above don't touch the /N variants, so we add
+     attribute-substring selectors to catch all of them at once. */
+  body.light [class*="bg-slate-900/"] { background-color: #f8fafc !important; }
+  body.light [class*="bg-slate-800/"] { background-color: #ffffff !important; }
+  body.light [class*="border-slate-700/"],
+  body.light [class*="border-slate-800/"] { border-color: #e2e8f0 !important; }
+  body.light [class*="border-indigo-7/"],
+  body.light [class*="border-indigo-5/"] { border-color: rgba(99,102,241,0.22) !important; }
+
+  /* Dark gradient backgrounds → light violet-50 tint */
+  body.light [class*="from-indigo-9"],
+  body.light [class*="from-purple-9"],
+  body.light [class*="from-violet-9"] {
+    background-image: none !important;
+    background-color: #f5f3ff !important;
+  }
+
+  /* Client banner chips */
+  body.light [class*="bg-purple-9/"] { background-color: rgba(139,92,246,0.08) !important; }
+  body.light [class*="bg-indigo-9/"] { background-color: rgba(99,102,241,0.08) !important; }
+  body.light .text-purple-300 { color: #7c3aed !important; }
+  body.light .text-indigo-300 { color: #4338ca !important; }
+
+  /* Today date number in calendar — emerald-300 is too pale on white */
+  body.light .text-emerald-300 { color: #059669 !important; }
+
+  /* Filter row — base state fix for non-CRM-wrapped tables */
+  body.light .sg-table thead tr.filter-row th {
+    background: #f1f5f9 !important; border-bottom-color: #e2e8f0 !important;
+  }
+  body.light .sg-table thead tr.filter-row th:hover { background: #e8edf5 !important; }
+
+  /* Column filter inputs — these use custom CSS (not Tailwind), so the
+     bg-slate catch-all above misses them. Override all states explicitly. */
+  body.light .col-filter-input {
+    background: #f8fafc !important; color: #1e293b !important;
+    border-color: #e2e8f0 !important;
+  }
+  body.light .col-filter-input:focus {
+    background: #ffffff !important; border-color: #6366f1 !important;
+  }
+  body.light .col-filter-input::placeholder { color: #94a3b8 !important; font-style: italic; }
+  body.light .col-filter-clear { color: #94a3b8; }
+  body.light .col-filter-clear:hover { color: #1e293b !important; background: rgba(99,102,241,0.10) !important; }
 </style>
 <script>
   /* Theme toggle — runs before body renders to prevent flash of wrong theme */
@@ -17271,6 +17318,12 @@ function toggleTheme() {
   const isLight = document.body.classList.toggle('light');
   localStorage.setItem('cmd.theme', isLight ? 'light' : 'dark');
   _updateThemeButtons(isLight);
+  // Calendar pills have inline style colors — re-render so they pick up the new palette.
+  const calView = document.querySelector('[data-rn-subview="calendar"]');
+  if (calView && calView.offsetParent !== null) {
+    if (typeof rnRenderCalendar === 'function') rnRenderCalendar();
+    if (typeof rnRenderMiniCalendar === 'function') rnRenderMiniCalendar();
+  }
 }
 
 /* Sync button state on load (theme may already be light via boot script) */
@@ -29708,39 +29761,42 @@ function rnPillHtml(e) {
   const ven  = (r.vendors[0] || '').slice(0, 14);
   const amt  = e.kind === 'billing' ? (e.ab ? e.ab.rev : 0) : (r.totalRev || r.annualizedRev || 0);
   const amtTxt = ovFmtAbbrev(amt);
+  const light = document.body.classList.contains('light');
   let title;
-  // Translucent dark fill + bright dot indicator. Single canonical palette
-  // — tweak here to restyle every pill.
+  // Translucent fill + bright dot indicator. Palette adapts to light/dark theme.
   let cssBg = '', cssBorder = '', dot = '';
   if (e.kind === 'renewal') {
     if (e.isMixedTerm) {
-      // Mixed-Term: renewal emerald fill + muted dotted border for uncertainty.
-      cssBg    = 'rgba(16,185,129,0.18)';
-      cssBorder= '2px dotted rgba(255,255,255,0.45)';
-      dot      = '#34d399';
+      cssBg    = light ? 'rgba(16,185,129,0.10)' : 'rgba(16,185,129,0.18)';
+      cssBorder= light ? '2px dotted rgba(5,150,105,0.45)' : '2px dotted rgba(255,255,255,0.45)';
+      dot      = light ? '#059669' : '#34d399';
     } else {
-      cssBg    = 'rgba(16,185,129,0.18)';
-      cssBorder= '1px solid rgba(16,185,129,0.45)';
-      dot      = '#34d399';
+      cssBg    = light ? 'rgba(16,185,129,0.10)' : 'rgba(16,185,129,0.18)';
+      cssBorder= light ? '1px solid rgba(5,150,105,0.35)' : '1px solid rgba(16,185,129,0.45)';
+      dot      = light ? '#059669' : '#34d399';
     }
     title    = `Renewal · PO ${r.poNumber}${e.isMixedTerm ? ' · Mixed-Term' : ''}`;
   } else if (e.kind === 'billing') {
-    cssBg    = 'rgba(59,130,246,0.18)';
-    cssBorder= '1px solid rgba(59,130,246,0.45)';
-    dot      = '#60a5fa';
+    cssBg    = light ? 'rgba(59,130,246,0.10)' : 'rgba(59,130,246,0.18)';
+    cssBorder= light ? '1px solid rgba(59,130,246,0.35)' : '1px solid rgba(59,130,246,0.45)';
+    dot      = light ? '#2563eb' : '#60a5fa';
     title    = `Annual Billing · PO ${r.poNumber}`;
   } else {
-    cssBg    = 'rgba(180,83,9,0.32)';
-    cssBorder= '1px solid rgba(217,119,6,0.45)';
-    dot      = '#fb923c';
+    cssBg    = light ? 'rgba(180,83,9,0.12)' : 'rgba(180,83,9,0.32)';
+    cssBorder= light ? '1px solid rgba(180,83,9,0.35)' : '1px solid rgba(217,119,6,0.45)';
+    dot      = light ? '#d97706' : '#fb923c';
     title    = `Estimated Renewal · PO ${r.poNumber}`;
   }
+  const txtCust  = light ? '#1e293b' : '#f1f5f9';
+  const txtVend  = light ? '#475569' : '#94a3b8';
+  const txtAmt   = light ? '#334155' : '#cbd5e1';
+  const txtChain = light ? '#64748b' : '#64748b';
   const wrap = `style="background:${cssBg};border:${cssBorder};"`;
   const dotEl = `<span style="background:${dot};width:6px;height:6px;border-radius:50%;display:inline-block;flex:none;"></span>`;
-  const chainTag = (r.chainSize > 1) ? ` <span style="color:#64748b;font-weight:500;">(${r.chainSize})</span>` : '';
+  const chainTag = (r.chainSize > 1) ? ` <span style="color:${txtChain};font-weight:500;">(${r.chainSize})</span>` : '';
   return `<div class="text-[10px] leading-tight px-1.5 py-1 rounded" ${wrap} title="${cust} · ${ven} · ${amtTxt} · ${title}">
-    <div class="flex items-center gap-1 truncate"><span>${dotEl}</span><span style="color:#f1f5f9;font-weight:700;letter-spacing:0.02em;" class="uppercase truncate">${cust}</span><span class="flex-none">${chainTag}</span></div>
-    <div class="flex items-center justify-between gap-2 mt-0.5"><span style="color:#94a3b8;" class="truncate uppercase">${ven}</span><span style="color:#cbd5e1;font-weight:600;" class="flex-none">${amtTxt}</span></div>
+    <div class="flex items-center gap-1 truncate"><span>${dotEl}</span><span style="color:${txtCust};font-weight:700;letter-spacing:0.02em;" class="uppercase truncate">${cust}</span><span class="flex-none">${chainTag}</span></div>
+    <div class="flex items-center justify-between gap-2 mt-0.5"><span style="color:${txtVend};" class="truncate uppercase">${ven}</span><span style="color:${txtAmt};font-weight:600;" class="flex-none">${amtTxt}</span></div>
   </div>`;
 }
 
