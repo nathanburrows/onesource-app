@@ -1924,13 +1924,38 @@
   body.light [class*="border-indigo-700/"] { border-color: rgba(99,102,241,0.22) !important; }
   body.light [class*="border-indigo-500/"] { border-color: rgba(99,102,241,0.30) !important; }
 
-  /* Dark gradient backgrounds (from-indigo-9 substring matches from-indigo-900/30 etc.) */
+  /* All dark-palette gradient families — background-image:none kills the
+     gradient; background-color fills with white so every colored card
+     (emerald GP tiles, amber margin tiles, sky open-sell tiles, etc.)
+     renders as a clean white card in light mode. */
   body.light [class*="from-indigo-9"],
   body.light [class*="from-purple-9"],
-  body.light [class*="from-violet-9"] {
+  body.light [class*="from-violet-9"],
+  body.light [class*="from-emerald-9"],
+  body.light [class*="from-teal-9"],
+  body.light [class*="from-green-9"],
+  body.light [class*="from-amber-9"],
+  body.light [class*="from-orange-9"],
+  body.light [class*="from-sky-9"],
+  body.light [class*="from-cyan-9"],
+  body.light [class*="from-blue-9"],
+  body.light [class*="from-red-9"],
+  body.light [class*="from-rose-9"] {
     background-image: none !important;
-    background-color: #f5f3ff !important;
+    background-color: #ffffff !important;
   }
+
+  /* Colored tile borders (emerald/amber/sky etc.) → neutral light border */
+  body.light [class*="border-emerald-7"],
+  body.light [class*="border-teal-7"],
+  body.light [class*="border-green-7"],
+  body.light [class*="border-amber-7"],
+  body.light [class*="border-orange-7"],
+  body.light [class*="border-sky-7"],
+  body.light [class*="border-cyan-7"],
+  body.light [class*="border-blue-7"],
+  body.light [class*="border-red-7"],
+  body.light [class*="border-rose-7"] { border-color: #e2e8f0 !important; }
 
   /* Client banner / card chips — correct pattern is 900/ not 9/ */
   body.light [class*="bg-purple-900/"] { background-color: rgba(139,92,246,0.07) !important; }
