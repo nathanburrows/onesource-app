@@ -8088,6 +8088,17 @@ function _amTierBadge(title) {
 
 // ─── Portfolio ───────────────────────────────────────────────────────────────
 
+// Shared avatar helper: shows photo (base64 data URI) if set, else initials div
+function _amAvatar(p, size) {
+  const s = size || 42;
+  const raw = (p.name || '?').replace(/[()]/g, '').split(/\s+/).filter(w => /[A-Za-z]/.test((w || '')[0]));
+  const ini = ((raw[0] || '')[0] || '') + ((raw[1] || '')[0] || '');
+  if (p.photo) {
+    return `<img src="${p.photo}" style="width:${s}px;height:${s}px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(0,0,0,0.1);">`;
+  }
+  return `<div style="width:${s}px;height:${s}px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#14b8a6);display:flex;align-items:center;justify-content:center;font-size:${Math.round(s * 0.35)}px;font-weight:700;color:#fff;flex-shrink:0;text-transform:uppercase;">${ini || '?'}</div>`;
+}
+
 function renderAMPortfolio() {
   const host = document.getElementById('am-portfolio-root');
   if (!host) return;
@@ -8121,7 +8132,7 @@ function renderAMPortfolio() {
   const sortedPeople = [...(am.people||[])].sort((a,b)=>(a.priority||9)-(b.priority||9));
   const peopleHtml = sortedPeople.map(p => `
     <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid ${border};">
-      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#14b8a6);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">${((p.name||'?').charAt(0))}</div>
+      ${_amAvatar(p, 36)}
       <div style="flex:1;min-width:0;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <span style="font-size:13.5px;font-weight:650;color:${textHead};${p.left?'opacity:.6;':''}">${p.name||'Unknown'}</span>
@@ -8149,6 +8160,200 @@ function renderAMPortfolio() {
 // ─── Contacts / Matrix ───────────────────────────────────────────────────────
 
 let _amSearch = '', _amStanceFilter = '', _amTierFilter = '';
+let _amDetailId = null;  // currently open contact detail panel
+
+function _amOpenDetail(id) {
+  _amDetailId = id;
+  _amRenderDetail();
+}
+function _amCloseDetail() {
+  _amDetailId = null;
+  const panel = document.getElementById('am-detail-panel');
+  if (panel) { panel.style.transform = 'translateX(107%)'; setTimeout(() => { if (!_amDetailId) panel.remove(); }, 260); }
+}
+
+function _amRenderDetail() {
+  const am = STATE.accountMapper;
+  if (!am) return;
+  const id = _amDetailId;
+  const p = (am.people||[]).find(x => x.id === id);
+  if (!p) return;
+  const isLight = document.body.classList.contains('light');
+  const card = isLight ? '#ffffff' : '#1e293b';
+  const border = isLight ? '#e2e8f0' : '#1e3a5f';
+  const textMut = isLight ? '#64748b' : '#94a3b8';
+  const textHead = isLight ? '#0f172a' : '#f1f5f9';
+  const inputBg = isLight ? '#f8fafc' : '#0f172a';
+  const inputBorder = isLight ? '#d1d5db' : '#334155';
+  const inSt = `width:100%;background:${inputBg};border:1px solid ${inputBorder};color:${textHead};border-radius:8px;padding:7px 9px;font:inherit;font-size:13px;box-sizing:border-box;`;
+
+  // find or create panel
+  let panel = document.getElementById('am-detail-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'am-detail-panel';
+    panel.style.cssText = `position:fixed;top:0;right:0;bottom:0;width:380px;max-width:94vw;background:${card};border-left:1px solid ${border};transform:translateX(107%);transition:transform .22s;z-index:120;overflow-y:auto;padding:20px 18px;box-shadow:-4px 0 24px rgba(0,0,0,0.22);`;
+    document.body.appendChild(panel);
+    setTimeout(() => { panel.style.transform = 'none'; }, 10);
+  } else {
+    panel.style.background = card;
+    panel.style.borderLeftColor = border;
+    panel.style.transform = 'none';
+  }
+
+  const reports = am.reports || {};
+  const byId = {};
+  (am.people||[]).forEach(q => { byId[q.id] = q; });
+  const mgrId = reports[p.id] || '';
+  const mgr = byId[mgrId];
+  const directReports = (am.people||[]).filter(q => (reports[q.id]||'') === p.id);
+
+  const s = AM_STANCES[p.stance];
+  const glowStyle = s ? `box-shadow:0 0 0 2px ${s.color};border-color:${s.color};` : '';
+
+  const STANCE_OPTS = ['Champion','Decision Maker','Target','Influencer','Blocker'];
+  const stanceOptsHtml = `<option value="">○ Neutral / Unknown</option>` +
+    STANCE_OPTS.map(k => {
+      const sd = AM_STANCES[k];
+      return `<option value="${k}" ${p.stance===k?'selected':''}>${sd?sd.emoji:''} ${k}</option>`;
+    }).join('');
+
+  const AM_TIER_DEFS = [
+    {key:'C-Level',color:'rgba(255,193,64,.42)',text:'#fbbf24'},
+    {key:'VP',color:'rgba(58,141,255,.40)',text:'#60a5fa'},
+    {key:'Senior Director',color:'rgba(37,194,160,.38)',text:'#34d399'},
+    {key:'Director',color:'rgba(120,205,120,.36)',text:'#86efac'},
+    {key:'Associate Director',color:'rgba(168,130,255,.38)',text:'#c084fc'},
+    {key:'Team',color:'rgba(147,161,189,.32)',text:'#94a3b8'},
+  ];
+  const tierOptsHtml = `<option value="">Auto (from title)</option>` +
+    AM_TIER_DEFS.map(t => `<option value="${t.key}" ${p.tier===t.key?'selected':''}>${t.label||t.key}</option>`).join('');
+
+  const allPeople = am.people||[];
+  const mgrOptsHtml = `<option value="">— no manager (top level) —</option>` +
+    allPeople.filter(q => q.id !== p.id).map(q =>
+      `<option value="${q.id}" ${mgrId===q.id?'selected':''}>${q.name}</option>`).join('');
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:${textMut};">Contact Detail</div>
+      <button onclick="window._amCloseDetail()" style="background:none;border:none;cursor:pointer;color:${textMut};font-size:18px;line-height:1;padding:2px 6px;">✕</button>
+    </div>
+    <div style="display:flex;gap:13px;align-items:center;margin-bottom:16px;">
+      <div id="am-detail-av" style="position:relative;flex-shrink:0;">
+        ${_amAvatar(p, 56)}
+        <label title="Change photo" style="position:absolute;bottom:-3px;right:-3px;background:#0d9488;border:2px solid ${card};border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:#fff;">✎<input type="file" id="am-detail-photo" accept="image/*" style="display:none;"></label>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:17px;font-weight:700;color:${textHead};margin-bottom:3px;">${p.name||'Unknown'}</div>
+        <div style="font-size:12.5px;color:${textMut};">${p.title||''}</div>
+        ${p.loc?`<div style="font-size:11.5px;color:${textMut};margin-top:2px;">📍 ${p.loc}</div>`:''}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      ${_amStanceBadge(p.stance)} ${_amTierBadge(p.title)}
+      ${p.left?'<span style="font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;background:#4b5563;color:#9ca3af;">LEFT</span>':''}
+    </div>
+
+    <div id="am-detail-view">
+      ${mgr ? `<div style="font-size:12px;color:${textMut};margin-bottom:8px;">Reports to: <b style="color:${textHead};">${mgr.name}</b></div>` : ''}
+      ${directReports.length ? `<div style="font-size:12px;color:${textMut};margin-bottom:8px;">Direct reports: <b style="color:${textHead};">${directReports.map(d=>d.name).join(', ')}</b></div>` : ''}
+      ${p.email ? `<div style="font-size:12.5px;margin-bottom:6px;"><a href="mailto:${p.email}" style="color:#60a5fa;text-decoration:none;">✉ ${p.email}</a></div>` : ''}
+      ${p.li ? `<div style="font-size:12.5px;margin-bottom:6px;"><a href="${p.li}" target="_blank" style="color:#60a5fa;text-decoration:none;">🔗 LinkedIn</a></div>` : ''}
+      ${p.fit ? `<div style="font-size:12.5px;color:${textHead};margin-bottom:8px;padding:8px 10px;background:${inputBg};border-radius:8px;border:1px solid ${border};line-height:1.45;"><b style="font-size:10.5px;color:${textMut};text-transform:uppercase;letter-spacing:.3px;">Opportunity Fit</b><br>${p.fit}</div>` : ''}
+      ${p.notes ? `<div style="font-size:12.5px;color:${textHead};margin-bottom:8px;padding:8px 10px;background:${inputBg};border-radius:8px;border:1px solid ${border};line-height:1.45;white-space:pre-wrap;"><b style="font-size:10.5px;color:${textMut};text-transform:uppercase;letter-spacing:.3px;">Notes</b><br>${p.notes}</div>` : ''}
+      <button id="am-detail-edit-btn" style="width:100%;padding:9px;border:1px solid ${border};border-radius:9px;background:${inputBg};color:${textHead};font:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;">✎ Edit</button>
+    </div>
+
+    <div id="am-detail-edit" style="display:none;">
+      <label style="display:block;margin-top:6px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Relationship</div>
+        <select id="am-de-stance" style="${inSt}">${stanceOptsHtml}</select></label>
+      <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Name</div>
+        <input id="am-de-name" value="${(p.name||'').replace(/"/g,'&quot;')}" style="${inSt}"></label>
+      <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Title</div>
+        <input id="am-de-title" value="${(p.title||'').replace(/"/g,'&quot;')}" style="${inSt}"></label>
+      <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Location</div>
+        <input id="am-de-loc" value="${(p.loc||'').replace(/"/g,'&quot;')}" style="${inSt}"></label>
+      <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Email</div>
+        <input id="am-de-email" value="${(p.email||'').replace(/"/g,'&quot;')}" style="${inSt}"></label>
+      <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">LinkedIn URL</div>
+        <input id="am-de-li" value="${(p.li||'').replace(/"/g,'&quot;')}" style="${inSt}"></label>
+      <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Opportunity Fit</div>
+        <textarea id="am-de-fit" style="${inSt}min-height:60px;resize:vertical;">${p.fit||''}</textarea></label>
+      <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Notes</div>
+        <textarea id="am-de-notes" style="${inSt}min-height:80px;resize:vertical;">${p.notes||''}</textarea></label>
+      <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Seniority Tier (override)</div>
+        <select id="am-de-tier" style="${inSt}">${tierOptsHtml}</select></label>
+      <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Reports To</div>
+        <select id="am-de-mgr" style="${inSt}">${mgrOptsHtml}</select></label>
+      ${p.photo ? `<button id="am-de-rmphoto" style="margin-top:10px;padding:6px 10px;border:1px solid ${inputBorder};border-radius:8px;background:none;color:${textMut};font:inherit;font-size:12px;cursor:pointer;">Remove photo</button>` : ''}
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button id="am-de-cancel" style="flex:1;padding:9px;border:1px solid ${border};border-radius:9px;background:none;color:${textMut};font:inherit;font-size:13px;cursor:pointer;">Cancel</button>
+        <button id="am-de-save" style="flex:2;padding:9px;border:none;border-radius:9px;background:#0d9488;color:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer;">Save Changes</button>
+      </div>
+    </div>`;
+
+  // wire edit toggle
+  const editBtn = panel.querySelector('#am-detail-edit-btn');
+  if (editBtn) editBtn.onclick = () => {
+    panel.querySelector('#am-detail-view').style.display = 'none';
+    panel.querySelector('#am-detail-edit').style.display = '';
+  };
+  const cancelBtn = panel.querySelector('#am-de-cancel');
+  if (cancelBtn) cancelBtn.onclick = () => {
+    panel.querySelector('#am-detail-view').style.display = '';
+    panel.querySelector('#am-detail-edit').style.display = 'none';
+  };
+
+  // photo upload
+  const photoInp = panel.querySelector('#am-detail-photo');
+  if (photoInp) photoInp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const rd = new FileReader(); rd.onload = () => {
+      const img = new Image(); img.onload = () => {
+        const c = document.createElement('canvas');
+        const S = 300; let w = img.width, h = img.height, sc = Math.min(S/w, S/h, 1);
+        w = Math.round(w*sc); h = Math.round(h*sc); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        p.photo = c.toDataURL('image/jpeg', 0.85);
+        _amOpenDetail(id);
+        renderAMMatrix();
+      }; img.src = rd.result;
+    }; rd.readAsDataURL(f);
+  };
+
+  // remove photo
+  const rmPhoto = panel.querySelector('#am-de-rmphoto');
+  if (rmPhoto) rmPhoto.onclick = () => { p.photo = ''; _amOpenDetail(id); renderAMMatrix(); };
+
+  // save
+  const saveBtn = panel.querySelector('#am-de-save');
+  if (saveBtn) saveBtn.onclick = () => {
+    p.name    = panel.querySelector('#am-de-name').value.trim() || p.name;
+    p.title   = panel.querySelector('#am-de-title').value.trim();
+    p.loc     = panel.querySelector('#am-de-loc').value.trim();
+    p.email   = panel.querySelector('#am-de-email').value.trim();
+    p.li      = panel.querySelector('#am-de-li').value.trim();
+    p.fit     = panel.querySelector('#am-de-fit').value.trim();
+    p.notes   = panel.querySelector('#am-de-notes').value.trim();
+    p.stance  = panel.querySelector('#am-de-stance').value;
+    p.tier    = panel.querySelector('#am-de-tier').value;
+    const newMgr = panel.querySelector('#am-de-mgr').value;
+    if (am.reports) am.reports[p.id] = newMgr;
+    if (!p.updated) p.updated = new Date().toISOString().slice(0,10);
+    _amOpenDetail(id);  // re-render detail with saved values
+    renderAMMatrix();
+    if (typeof renderAMOrgChart === 'function' && document.getElementById('am-org-root') &&
+        document.querySelector('[data-page="am-org"]') &&
+        !document.querySelector('[data-page="am-org"]').classList.contains('hidden')) {
+      renderAMOrgChart();
+    }
+  };
+}
+
+window._amCloseDetail = _amCloseDetail;
+window._amOpenDetail  = _amOpenDetail;
 
 function renderAMMatrix() {
   const host = document.getElementById('am-matrix-root');
@@ -8168,7 +8373,7 @@ function renderAMMatrix() {
   let filtered = allPeople;
   if (_amSearch) {
     const q = _amSearch.toLowerCase();
-    filtered = filtered.filter(p => (p.name||'').toLowerCase().includes(q) || (p.title||'').toLowerCase().includes(q) || (p.role||'').toLowerCase().includes(q));
+    filtered = filtered.filter(p => [p.name,p.title,p.role,p.loc,p.fit,p.email,p.notes,p.stance].join(' ').toLowerCase().includes(q));
   }
   if (_amStanceFilter) filtered = filtered.filter(p => p.stance === _amStanceFilter);
   if (_amTierFilter) {
@@ -8184,15 +8389,18 @@ function renderAMMatrix() {
   }
 
   const cardsHtml = filtered.map(p => {
-    const bord = p.stance === 'Blocker' ? 'rgba(239,68,68,0.45)' : border;
+    const s = AM_STANCES[p.stance];
+    const bord = p.stance === 'Blocker' ? 'rgba(239,68,68,0.45)' : (s ? s.border : border);
+    const glowShadow = s ? `box-shadow:0 0 0 2px ${s.color}44;` : '';
     return `
-      <div style="background:${card};border:1px solid ${bord};border-radius:13px;padding:14px;display:flex;flex-direction:column;gap:8px;${p.left?'opacity:.58;':''}">
+      <div data-am-pid="${p.id}" style="background:${card};border:1px solid ${bord};${glowShadow}border-radius:13px;padding:14px;display:flex;flex-direction:column;gap:8px;${p.left?'opacity:.58;':''}cursor:pointer;transition:border-color .15s;">
         <div style="display:flex;gap:10px;align-items:flex-start;">
-          <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#14b8a6);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;">${(p.name||'?').charAt(0)}</div>
+          ${_amAvatar(p, 42)}
           <div style="flex:1;min-width:0;">
             <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
               <span style="font-size:13.5px;font-weight:650;color:${textHead};">${p.name||'Unknown'}</span>
               ${p.left?'<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:5px;background:#4b5563;color:#9ca3af;">LEFT</span>':''}
+              ${p.notes ? '<span title="Has notes" style="font-size:12px;">📝</span>' : ''}
             </div>
             <div style="font-size:12px;color:${textMut};margin-top:2px;line-height:1.3;">${p.title||''}</div>
             ${p.role ? `<div style="font-size:11px;color:${textMut};margin-top:1px;">${p.role}</div>` : ''}
@@ -8203,8 +8411,9 @@ function renderAMMatrix() {
           ${_amTierBadge(p.title)}
           ${p.loc ? `<span style="font-size:11px;color:${textMut};">📍 ${p.loc}</span>` : ''}
         </div>
-        ${p.notes ? `<div style="font-size:12px;color:${textMut};line-height:1.4;font-style:italic;border-top:1px solid ${border};padding-top:8px;">${p.notes}</div>` : ''}
-        ${p.email ? `<div style="font-size:12px;"><a href="mailto:${p.email}" style="color:#60a5fa;text-decoration:none;">✉ ${p.email}</a></div>` : ''}
+        ${p.fit ? `<div style="font-size:12px;color:${textMut};line-height:1.4;padding:6px 8px;background:${inputBg};border-radius:7px;border:1px solid ${border};">${p.fit.slice(0,120)}${p.fit.length>120?'…':''}</div>` : ''}
+        ${p.notes ? `<div style="font-size:12px;color:${textMut};line-height:1.4;font-style:italic;border-top:1px solid ${border};padding-top:8px;">${p.notes.slice(0,100)}${p.notes.length>100?'…':''}</div>` : ''}
+        ${p.email ? `<div style="font-size:12px;"><a href="mailto:${p.email}" onclick="event.stopPropagation()" style="color:#60a5fa;text-decoration:none;">✉ ${p.email}</a></div>` : ''}
       </div>`;
   }).join('');
 
@@ -8213,7 +8422,7 @@ function renderAMMatrix() {
     <div style="max-width:1100px;">
       ${_amHeader(isLight, 'am-matrix')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
-        <input type="search" id="am-search" placeholder="Search contacts…" value="${_amSearch.replace(/"/g,'&quot;')}" style="flex:1;min-width:180px;background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:8px 12px;border-radius:9px;font-size:13.5px;font-family:inherit;outline:none;">
+        <input type="search" id="am-search" placeholder="Search name, title, role, location, notes…" value="${_amSearch.replace(/"/g,'&quot;')}" style="flex:1;min-width:180px;background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:8px 12px;border-radius:9px;font-size:13.5px;font-family:inherit;outline:none;">
         <select id="am-stance-filter" style="${selStyle}">
           <option value="">All stances</option>
           ${['Champion','Decision Maker','Target','Influencer','Blocker'].map(s=>`<option value="${s}" ${_amStanceFilter===s?'selected':''}>${s}</option>`).join('')}
@@ -8235,61 +8444,507 @@ function renderAMMatrix() {
   if (sf) sf.onchange = () => { _amStanceFilter = sf.value; renderAMMatrix(); };
   const tf = host.querySelector('#am-tier-filter');
   if (tf) tf.onchange = () => { _amTierFilter = tf.value; renderAMMatrix(); };
+  // card click → detail panel
+  host.querySelectorAll('[data-am-pid]').forEach(card => {
+    card.onclick = () => _amOpenDetail(card.dataset.amPid);
+  });
+  // if detail already open, re-render it with fresh data
+  if (_amDetailId && STATE.accountMapper && (STATE.accountMapper.people||[]).find(x=>x.id===_amDetailId)) {
+    _amRenderDetail();
+  }
 }
 
-// ─── Org Chart ───────────────────────────────────────────────────────────────
+// ─── Org Chart (interactive pan/zoom) ────────────────────────────────────────
+
+// Tier definitions mirroring the original AccountMapper app
+const AM_ORG_TIER_DEFS = [
+  { key:'C-Level',           label:'C-Level',           color:'rgba(255,193,64,.35)',  text:'#fbbf24' },
+  { key:'VP',                label:'VP',                color:'rgba(58,141,255,.32)',  text:'#60a5fa' },
+  { key:'Senior Director',   label:'Senior Director',   color:'rgba(37,194,160,.30)',  text:'#34d399' },
+  { key:'Director',          label:'Director',          color:'rgba(120,205,120,.28)', text:'#86efac' },
+  { key:'Associate Director',label:'Associate Director',color:'rgba(168,130,255,.30)', text:'#c084fc' },
+  { key:'Team',              label:'Team / Reports',    color:'rgba(147,161,189,.24)', text:'#94a3b8' },
+];
+const AM_ORG_TIER_KEYS = new Set(AM_ORG_TIER_DEFS.map(t => t.key));
+
+function _amOrgTierKey(p) {
+  if (p && p.tier && AM_ORG_TIER_KEYS.has(p.tier)) return p.tier;
+  const t = ((p && p.title) || '').toLowerCase();
+  if (!t) return 'Team';
+  if (/chief|\bceo\b|\bcio\b|\bcto\b|\bcfo\b|\bcoo\b|\bcdo\b|\bciso\b|\bcmo\b|\bcso\b|c-level/.test(t)) return 'C-Level';
+  const hasDir    = /\bdirector\b|\bdir\b/.test(t);
+  const hasAssoc  = /\bassociate\b|\bassoc\.?\b/.test(t);
+  const hasSenior = /\bsenior\b|\bsr\.?\b|\bsnr\.?\b/.test(t);
+  if (hasDir && hasAssoc)  return 'Associate Director';
+  if (hasDir && hasSenior) return 'Senior Director';
+  if (/\bvice president\b|\bvp\b|\bsvp\b|\bevp\b|\bavp\b/.test(t)) return 'VP';
+  if (hasDir || /\bhead of\b/.test(t)) return 'Director';
+  return 'Team';
+}
+
+// Per-instance state (reset on each renderAMOrgChart call)
+let _amOrgState = null;
+
+function _amOrgGetState() { return _amOrgState; }
 
 function renderAMOrgChart() {
   const host = document.getElementById('am-org-root');
   if (!host) return;
   const isLight = document.body.classList.contains('light');
-  const card = isLight ? '#ffffff' : '#1e293b';
-  const border = isLight ? '#e2e8f0' : '#1e3a5f';
-  const textMut = isLight ? '#64748b' : '#94a3b8';
-  const textHead = isLight ? '#0f172a' : '#f1f5f9';
-  if (!STATE.accountMapper) { _amEmptyState(host, isLight); return; }
-  const am = STATE.accountMapper;
-  const people = am.people || [];
-  const reports = am.reports || {};
-  const byId = {};
-  people.forEach(p => { byId[p.id] = p; });
-  const children = {};
-  people.forEach(p => { children[p.id] = []; });
-  people.forEach(p => { const mgr = reports[p.id]; if (mgr && byId[mgr]) children[mgr].push(p.id); });
-  const roots = people.filter(p => !reports[p.id] || !byId[reports[p.id]]).map(p => p.id);
-
-  function renderNode(id, depth) {
-    const p = byId[id];
-    if (!p) return '';
-    const kids = children[id] || [];
-    const s = AM_STANCES[p.stance];
-    const cardBorder = s ? s.border : border;
-    return `
-      <div style="margin-left:${depth * 28}px;margin-bottom:8px;">
-        <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:${card};border:1px solid ${cardBorder};border-radius:10px;${p.left?'opacity:.55;':''}position:relative;">
-          ${depth > 0 ? `<div style="position:absolute;left:-20px;top:18px;width:16px;height:1px;background:${border};"></div>` : ''}
-          <div style="width:34px;height:34px;border-radius:50%;background:${s?s.bg:'rgba(20,184,166,0.15)'};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${s?s.color:'#14b8a6'};flex-shrink:0;">${(p.name||'?').charAt(0)}</div>
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
-              <span style="font-size:13px;font-weight:650;color:${textHead};">${p.name}</span>
-              ${s?`<span>${s.emoji}</span>`:''}
-              ${_amTierBadge(p.title)}
-            </div>
-            <div style="font-size:11.5px;color:${textMut};">${p.title||''}</div>
-          </div>
-          ${kids.length ? `<span style="font-size:10.5px;color:${textMut};white-space:nowrap;flex-shrink:0;">${kids.length} direct${kids.length>1?'s':''}</span>` : ''}
-        </div>
-        ${kids.map(kid => renderNode(kid, depth + 1)).join('')}
-      </div>`;
+  if (!STATE.accountMapper) {
+    host.style.cssText = 'height:100%;overflow-y:auto;padding:20px 24px 60px;';
+    _amEmptyState(host, isLight);
+    return;
   }
 
+  // Make host a position:relative overflow:hidden container (no padding for viewport)
+  host.style.cssText = 'height:100%;overflow:hidden;position:relative;';
+
+  const am = STATE.accountMapper;
+  const people = (am.people || []);
+  const reports = am.reports || {};
+  const posMap  = am.pos     || {};  // saved positions
+
+  const byId = {};
+  people.forEach(p => { byId[p.id] = p; });
+
+  // Theme colors
+  const card       = isLight ? '#ffffff'  : '#1e293b';
+  const border     = isLight ? '#e2e8f0'  : '#1e3a5f';
+  const textMut    = isLight ? '#64748b'  : '#94a3b8';
+  const textHead   = isLight ? '#0f172a'  : '#f1f5f9';
+  const canvasBg   = isLight ? '#e8edf5'  : '#0b0f1a';
+  const hdrBg      = isLight ? '#f1f5f9'  : '#0c111b';
+  const labelBg    = isLight ? 'rgba(241,245,249,.88)' : 'rgba(9,13,22,.82)';
+  const labelBord  = isLight ? 'rgba(0,0,0,.12)'      : 'rgba(255,255,255,.14)';
+  const connColor  = '#3a8dff';
+
+  const NW = 212, NH = 110, HGAP = 34, VGAP = 60;
+
+  // Build a compact top-header (account name + tab buttons + import) + toolbar row + viewport
+  const amName   = (am.accountName || 'Account');
+  const tabNavBg = isLight ? '#f1f5f9' : '#0f172a';
+  const amTabs   = [
+    { id: 'am-portfolio', label: 'Portfolio' },
+    { id: 'am-matrix',   label: 'Contacts' },
+    { id: 'am-org',      label: 'Org Chart' },
+    { id: 'am-intel',    label: 'Intel' },
+    { id: 'am-sales',    label: 'Sales' },
+  ];
+  const tabBtns = amTabs.map(t => {
+    const on = t.id === 'am-org';
+    return `<button onclick="setActivePage('${t.id}')" style="padding:5px 12px;border:none;border-radius:7px;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:${on?'700':'500'};background:${on?(isLight?'#fff':'#1e3a5f'):'transparent'};color:${on?(isLight?'#0d9488':'#2dd4bf'):(isLight?'#64748b':'#94a3b8')};box-shadow:${on?'0 2px 5px rgba(0,0,0,.12)':'none'};">${t.label}</button>`;
+  }).join('');
+
   host.innerHTML = `
-    <div style="max-width:900px;">
-      ${_amHeader(isLight, 'am-org')}
-      <div style="font-size:12px;color:${textMut};margin-bottom:14px;">Indented by reporting chain · stance emoji shown on each card</div>
-      <div>${roots.map(r => renderNode(r, 0)).join('') || `<div style="color:${textMut};text-align:center;padding:40px;">No org chart data.</div>`}</div>
+    <div id="am-org-header" style="position:absolute;top:0;left:0;right:0;background:${hdrBg};border-bottom:1px solid ${border};z-index:11;padding:8px 12px 6px;">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div style="font-size:15px;font-weight:700;color:${textHead};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;">${amName}</div>
+        <div style="display:flex;gap:3px;padding:3px;background:${tabNavBg};border-radius:9px;border:1px solid ${border};">${tabBtns}</div>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <input type="file" id="am-reimport-input" accept=".html,.htm,.json" style="display:none">
+          <button onclick="document.getElementById('am-reimport-input').click()" style="padding:5px 10px;border:1px solid ${border};border-radius:7px;background:${card};color:${textMut};font-size:12px;cursor:pointer;font-family:inherit;">⭱ Import</button>
+          <button onclick="if(confirm('Clear AccountMapper data?'))clearAccountMapper()" style="padding:5px 10px;border:1px solid ${isLight?'#fca5a5':'#7f1d1d'};border-radius:7px;background:transparent;color:${isLight?'#ef4444':'#fca5a5'};font-size:12px;cursor:pointer;font-family:inherit;">Clear</button>
+        </div>
+      </div>
+    </div>
+    <div id="am-org-toolbar" style="position:absolute;top:44px;left:0;right:0;height:42px;display:flex;gap:6px;align-items:center;padding:0 10px;border-bottom:1px solid ${border};background:${hdrBg};z-index:10;overflow:hidden;">
+      <input type="text" id="am-orgq" placeholder="🔍 Find…" style="background:${card};border:1px solid ${border};color:${textHead};padding:4px 8px;border-radius:7px;font-size:12.5px;width:150px;font-family:inherit;outline:none;">
+      <button id="am-orgqx" title="Clear search" style="padding:4px 7px;border:1px solid ${border};border-radius:7px;background:${card};color:${textMut};cursor:pointer;font-family:inherit;font-size:11.5px;">✕</button>
+      <span style="width:1px;height:18px;background:${border};"></span>
+      <button id="am-org-zin"  title="Zoom in"   style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-size:14px;font-weight:700;">＋</button>
+      <button id="am-org-zout" title="Zoom out"  style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-size:14px;font-weight:700;">－</button>
+      <button id="am-org-fit"  title="Fit all"   style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-family:inherit;font-size:12px;">Fit</button>
+      <button id="am-org-arrange" title="Re-layout" style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-family:inherit;font-size:12px;">⤵ Organize</button>
+      <select id="am-org-layout" style="background:${card};border:1px solid ${border};color:${textHead};padding:4px 7px;border-radius:7px;font-size:12px;font-family:inherit;">
+        <option value="tierflow">🎂 Tiers + flow</option>
+        <option value="tree">🌳 Reporting tree</option>
+      </select>
+      <span style="font-size:11px;color:${textMut};margin-left:auto;white-space:nowrap;">Drag card onto another to reassign manager · scroll to zoom · drag background to pan</span>
+    </div>
+    <div id="am-org-viewport" style="position:absolute;top:86px;left:0;right:0;bottom:0;overflow:hidden;cursor:grab;background:${canvasBg};">
+      <div id="am-org-world" style="position:absolute;top:0;left:0;transform-origin:0 0;">
+        <div id="am-org-bands" style="position:absolute;top:0;left:0;pointer-events:none;z-index:0;"></div>
+        <svg id="am-org-conn" style="position:absolute;top:0;left:0;overflow:visible;pointer-events:none;z-index:1;"></svg>
+      </div>
+      <div id="am-org-tierlabels" style="position:absolute;inset:0;pointer-events:none;z-index:5;overflow:hidden;"></div>
     </div>`;
+
   _wireAMReimport(host);
+
+  const viewport   = document.getElementById('am-org-viewport');
+  const world      = document.getElementById('am-org-world');
+  const connEl     = document.getElementById('am-org-conn');
+  const bandsEl    = document.getElementById('am-org-bands');
+  const tierLabels = document.getElementById('am-org-tierlabels');
+
+  // Per-render state object
+  const ST = {
+    scale: 1, tx: 40, ty: 20,
+    layout: 'tierflow',
+    pos: {},          // id -> {x,y}  (in-world coordinates)
+    nodeEls: {},      // id -> DOM node element
+    drag: null,
+    pan: null,
+    dropTarget: null,
+    bandRects: [],
+  };
+  _amOrgState = ST;
+
+  // Load saved positions if available
+  Object.assign(ST.pos, posMap);
+
+  function effMgr(id) {
+    const m = reports[id]; return (m && byId[m]) ? m : '';
+  }
+  function effChildrenOf(id) {
+    return people.filter(p => effMgr(p.id) === id && !p.left).map(p => p.id);
+  }
+  function effRoots() {
+    return people.filter(p => !p.left && !effMgr(p.id)).map(p => p.id);
+  }
+  function isDescendant(anc, node) {
+    let cur = reports[node], g = 0;
+    while (cur && g++ < 300) { if (cur === anc) return true; cur = reports[cur]; }
+    return false;
+  }
+  function applyT() {
+    world.style.transform = `translate(${ST.tx}px,${ST.ty}px) scale(${ST.scale})`;
+    updateTierLabels();
+  }
+
+  // ─── LAYOUT algorithms ───────────────────────────────────────────────────
+
+  function place2(c, row) { return { x: c * (NW + HGAP), y: row * (NH + VGAP) }; }
+
+  function treeArrange() {
+    let col = 0; const seen = new Set();
+    function place(id, depth) {
+      if (seen.has(id)) return col++;
+      seen.add(id);
+      const ch = effChildrenOf(id).filter(c => !seen.has(c));
+      if (!ch.length) { ST.pos[id] = place2(col, depth); return col++; }
+      const cols = ch.map(c => place(c, depth + 1));
+      const c = (Math.min(...cols) + Math.max(...cols)) / 2;
+      ST.pos[id] = place2(c, depth);
+      return c;
+    }
+    const roots = effRoots();
+    const trees   = roots.filter(id => effChildrenOf(id).length);
+    const singles = roots.filter(id => !effChildrenOf(id).length);
+    trees.forEach(r => { place(r, 0); col += 1; });
+    const placed = [...seen].map(id => ST.pos[id]).filter(Boolean);
+    const baseY  = placed.length ? Math.max(...placed.map(p => p.y)) : 0;
+    const gcols  = 8, gy = baseY + NH + VGAP + 30;
+    singles.forEach((id, i) => { seen.add(id); ST.pos[id] = { x: (i % gcols) * (NW + HGAP), y: gy + Math.floor(i / gcols) * (NH + VGAP) }; });
+    people.forEach(p => { if (!ST.pos[p.id] && !p.left) ST.pos[p.id] = place2(col++, 0); });
+  }
+
+  function tierFlowArrange() {
+    const vis = people.filter(p => !p.left);
+    const present = AM_ORG_TIER_DEFS.filter(t => vis.some(p => _amOrgTierKey(p) === t.key));
+    const rowOf = {}; present.forEach((t, i) => { rowOf[t.key] = i; });
+    let col = 0; const xcol = {}, seen = new Set();
+    function assign(id) {
+      if (seen.has(id)) return xcol[id] || 0;
+      seen.add(id);
+      const kids = effChildrenOf(id).filter(c => !seen.has(c));
+      if (!kids.length) { xcol[id] = col++; return xcol[id]; }
+      const cs = kids.map(assign);
+      xcol[id] = (Math.min(...cs) + Math.max(...cs)) / 2;
+      return xcol[id];
+    }
+    const roots   = effRoots();
+    const trees   = roots.filter(id => effChildrenOf(id).length);
+    const singles = roots.filter(id => !effChildrenOf(id).length);
+    trees.forEach(r => { assign(r); col += 0.6; });
+    singles.forEach(r => { assign(r); col += 0.2; });
+    vis.forEach(p => { if (!seen.has(p.id)) { xcol[p.id] = col++; seen.add(p.id); } });
+    vis.forEach(p => {
+      const k = _amOrgTierKey(p), r = rowOf[k] || 0, c = xcol[p.id] || 0;
+      ST.pos[p.id] = { x: c * (NW + HGAP), y: r * (NH + VGAP) };
+    });
+    // de-overlap within each tier
+    present.forEach(t => {
+      const ns = vis.filter(p => _amOrgTierKey(p) === t.key && ST.pos[p.id]);
+      ns.sort((a, b) => ST.pos[a.id].x - ST.pos[b.id].x);
+      let last = -1e9;
+      ns.forEach(p => { if (ST.pos[p.id].x < last + NW + HGAP) ST.pos[p.id].x = last + NW + HGAP; last = ST.pos[p.id].x; });
+    });
+  }
+
+  function applyLayout() {
+    if (ST.layout === 'tierflow') tierFlowArrange(); else treeArrange();
+    layout();
+  }
+
+  // ─── DRAW bands ──────────────────────────────────────────────────────────
+  function drawBands() {
+    ST.bandRects = [];
+    if (ST.layout !== 'tierflow') { bandsEl.innerHTML = ''; updateTierLabels(); return; }
+    const vis = people.filter(p => !p.left && ST.pos[p.id]);
+    if (!vis.length) { bandsEl.innerHTML = ''; return; }
+    const allXY = vis.map(p => ST.pos[p.id]);
+    const minX = Math.min(...allXY.map(q => q.x)) - 48;
+    const maxX = Math.max(...allXY.map(q => q.x)) + NW + 48;
+    const minY = Math.min(...allXY.map(q => q.y)) - 34;
+    const maxY = Math.max(...allXY.map(q => q.y)) + NH + 34;
+    const present = AM_ORG_TIER_DEFS.filter(t => vis.some(p => _amOrgTierKey(p) === t.key));
+    let html = '';
+    present.forEach((t, i) => {
+      const ns = vis.filter(p => _amOrgTierKey(p) === t.key);
+      const ys  = ns.map(p => ST.pos[p.id].y);
+      const y0  = Math.min(...ys) - 18;
+      const y1  = Math.max(...ys) + NH + 18;
+      const py0 = i === 0 ? y0 - NH : y0;
+      const py1 = i === present.length - 1 ? y1 + NH : y1;
+      ST.bandRects.push({ key: t.key, label: t.label, text: t.text, x0: minX, x1: maxX, y0: py0, y1: py1 });
+      html += `<div style="position:absolute;left:${minX}px;top:${py0}px;width:${maxX - minX}px;height:${py1 - py0}px;background:${t.color};border-left:6px solid ${t.text};border-radius:14px;border:1px solid rgba(255,255,255,.06);box-sizing:border-box;"></div>`;
+    });
+    bandsEl.innerHTML = html;
+    updateTierLabels();
+  }
+
+  function updateTierLabels() {
+    if (!tierLabels) return;
+    if (!ST.bandRects.length) { tierLabels.innerHTML = ''; return; }
+    const vh = viewport.clientHeight;
+    let html = '';
+    ST.bandRects.forEach(r => {
+      let y = ((r.y0 + r.y1) / 2) * ST.scale + ST.ty;
+      y = Math.min(Math.max(y, 18), vh - 18);
+      html += `<div style="position:absolute;left:10px;top:${y}px;color:${r.text};transform:translateY(-50%);font-size:12.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;background:${labelBg};border:1px solid ${labelBord};padding:5px 11px;border-radius:8px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.3);">${r.label}</div>`;
+    });
+    tierLabels.innerHTML = html;
+  }
+
+  // ─── DRAW connections ─────────────────────────────────────────────────────
+  function drawConns() {
+    let s = '';
+    people.forEach(p => {
+      if (p.left) return;
+      const m = effMgr(p.id);
+      if (!m || !ST.pos[m] || !ST.pos[p.id]) return;
+      const a = ST.pos[m], b = ST.pos[p.id];
+      const x1 = a.x + NW / 2, y1 = a.y + NH;
+      const x2 = b.x + NW / 2, y2 = b.y;
+      const my = y2 - Math.min(30, (y2 - y1) / 2);
+      s += `<path d="M${x1} ${y1} V${my} H${x2} V${y2}" fill="none" stroke="${connColor}" stroke-width="2" opacity=".7"/>`;
+    });
+    connEl.innerHTML = s;
+  }
+
+  // ─── LAYOUT (place nodes) ─────────────────────────────────────────────────
+  function layout() {
+    people.forEach(p => {
+      const el = ST.nodeEls[p.id]; if (!el) return;
+      if (p.left) { el.style.display = 'none'; return; }
+      el.style.display = '';
+      if (ST.pos[p.id]) { el.style.left = ST.pos[p.id].x + 'px'; el.style.top = ST.pos[p.id].y + 'px'; }
+      // update tier bar color
+      const tb = el.querySelector('.am-org-tbar');
+      const td = AM_ORG_TIER_DEFS.find(t => t.key === _amOrgTierKey(p));
+      if (tb) tb.style.background = td ? td.text : 'transparent';
+    });
+    drawConns();
+    drawBands();
+  }
+
+  // ─── FIT view ────────────────────────────────────────────────────────────
+  function fitView() {
+    const xs = people.filter(p => !p.left && ST.pos[p.id]).map(p => ST.pos[p.id]);
+    if (!xs.length) return;
+    const minx = Math.min(...xs.map(q => q.x)), maxx = Math.max(...xs.map(q => q.x)) + NW;
+    const miny = Math.min(...xs.map(q => q.y)), maxy = Math.max(...xs.map(q => q.y)) + NH;
+    const vw = viewport.clientWidth - 60, vh = viewport.clientHeight - 60;
+    ST.scale = Math.min(vw / (maxx - minx), vh / (maxy - miny), 1.1);
+    ST.scale = Math.max(ST.scale, 0.15);
+    ST.tx = 30 - minx * ST.scale + (vw - (maxx - minx) * ST.scale) / 2;
+    ST.ty = 30 - miny * ST.scale + (vh - (maxy - miny) * ST.scale) / 2;
+    applyT();
+  }
+
+  // ─── CREATE NODE ELEMENTS ────────────────────────────────────────────────
+  function makeNode(p) {
+    const s    = AM_STANCES[p.stance];
+    const td   = AM_ORG_TIER_DEFS.find(t => t.key === _amOrgTierKey(p));
+    const glow = s ? `box-shadow:0 0 0 2px ${s.color}77,0 4px 14px rgba(0,0,0,.35);border-color:${s.color};` : 'box-shadow:0 4px 14px rgba(0,0,0,.35);';
+    const el = document.createElement('div');
+    el.dataset.id = p.id;
+    el.style.cssText = `position:absolute;width:${NW}px;background:${card};border:1px solid ${border};${glow}border-radius:12px;padding:13px 9px 9px;cursor:grab;user-select:none;z-index:2;`;
+    const avHtml = p.photo
+      ? `<img src="${p.photo}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid ${border};">`
+      : `<div style="width:42px;height:42px;border-radius:50%;background:${s?s.bg:'rgba(20,184,166,0.15)'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${s?s.color:'#14b8a6'};flex-shrink:0;">${((p.name||'?').replace(/[()]/g,'').split(/\s+/).filter(w=>/[A-Za-z]/.test(w[0])).slice(0,2).map(w=>w[0]).join('').toUpperCase())||'?'}</div>`;
+    el.innerHTML = `
+      <div class="am-org-tbar" style="position:absolute;top:0;left:0;right:0;height:10px;border-radius:11px 11px 0 0;background:${td?td.text:'transparent'};"></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        ${avHtml}
+        <div style="flex:1;min-width:0;overflow:hidden;">
+          <div style="font-size:13px;font-weight:650;color:${textHead};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name||'?'}</div>
+          <div style="font-size:11px;color:${textMut};margin-top:1px;line-height:1.2;max-height:26px;overflow:hidden;">${p.title||''}</div>
+          ${p.loc ? `<div style="font-size:10.5px;color:${textMut};opacity:.7;margin-top:2px;">${p.loc}</div>` : ''}
+        </div>
+      </div>
+      ${s ? `<div style="margin-top:5px;padding-top:5px;border-top:1px solid ${border};"><span style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:20px;background:${s.bg};color:${s.color};border:1px solid ${s.border};">${s.emoji} ${p.stance}</span></div>` : ''}
+      ${p.left ? '<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#7a869c;color:#fff;font-size:9px;font-weight:800;padding:1px 7px;border-radius:6px;letter-spacing:.6px;">LEFT</div>' : ''}`;
+
+    world.insertBefore(el, connEl);
+    ST.nodeEls[p.id] = el;
+
+    // drag
+    el.addEventListener('mousedown', ev => { if (ev.button !== 0) return; ev.stopPropagation(); startNodeDrag(ev, p.id); });
+    // double-click → detail
+    el.addEventListener('dblclick', ev => { ev.stopPropagation(); _amOpenDetail(p.id); });
+    return el;
+  }
+
+  // ─── NODE DRAG ────────────────────────────────────────────────────────────
+  function nodeAtWorld(wx, wy, exceptId) {
+    for (const q of people) {
+      if (q.id === exceptId || q.left) continue;
+      const pos = ST.pos[q.id]; if (!pos) continue;
+      if (wx >= pos.x && wx <= pos.x + NW && wy >= pos.y && wy <= pos.y + NH) return q.id;
+    }
+    return null;
+  }
+  function startNodeDrag(ev, id) {
+    ST.drag = { id, moved: false, downX: ev.clientX, downY: ev.clientY,
+      offX: (ev.clientX - ST.tx) / ST.scale - ST.pos[id].x,
+      offY: (ev.clientY - ST.ty) / ST.scale - ST.pos[id].y };
+    ST.nodeEls[id].style.cursor = 'grabbing';
+    ST.nodeEls[id].style.zIndex = '20';
+  }
+
+  // ─── PAN ─────────────────────────────────────────────────────────────────
+  viewport.addEventListener('mousedown', ev => {
+    if (ev.target.closest('[data-id]')) return;
+    ST.pan = { sx: ev.clientX, sy: ev.clientY, tx: ST.tx, ty: ST.ty };
+    viewport.style.cursor = 'grabbing';
+  });
+
+  // ─── ZOOM ────────────────────────────────────────────────────────────────
+  viewport.addEventListener('wheel', ev => {
+    ev.preventDefault();
+    const r = viewport.getBoundingClientRect();
+    const mx = ev.clientX - r.left, my = ev.clientY - r.top;
+    const wx = (mx - ST.tx) / ST.scale, wy = (my - ST.ty) / ST.scale;
+    ST.scale *= ev.deltaY < 0 ? 1.1 : 0.9;
+    ST.scale = Math.max(0.15, Math.min(2.5, ST.scale));
+    ST.tx = mx - wx * ST.scale; ST.ty = my - wy * ST.scale;
+    applyT();
+  }, { passive: false });
+
+  // ─── GLOBAL MOUSE MOVE / UP ───────────────────────────────────────────────
+  function _amOrgMouseMove(ev) {
+    if (ST.pan) {
+      ST.tx = ST.pan.tx + (ev.clientX - ST.pan.sx);
+      ST.ty = ST.pan.ty + (ev.clientY - ST.pan.sy);
+      applyT(); return;
+    }
+    if (!ST.drag) return;
+    if (Math.abs(ev.clientX - ST.drag.downX) + Math.abs(ev.clientY - ST.drag.downY) > 3) ST.drag.moved = true;
+    const nx = (ev.clientX - ST.tx) / ST.scale - ST.drag.offX;
+    const ny = (ev.clientY - ST.ty) / ST.scale - ST.drag.offY;
+    ST.pos[ST.drag.id] = { x: nx, y: ny };
+    const el = ST.nodeEls[ST.drag.id];
+    if (el) { el.style.left = nx + 'px'; el.style.top = ny + 'px'; }
+    const cx = nx + NW / 2, cy = ny + NH / 2;
+    let t = nodeAtWorld(cx, cy, ST.drag.id);
+    if (t && (t === reports[ST.drag.id] || isDescendant(ST.drag.id, t))) t = null;
+    if (t !== ST.dropTarget) {
+      if (ST.dropTarget && ST.nodeEls[ST.dropTarget]) ST.nodeEls[ST.dropTarget].style.outline = '';
+      ST.dropTarget = t;
+      if (t && ST.nodeEls[t]) ST.nodeEls[t].style.outline = '3px solid #25c2a0';
+    }
+    drawConns();
+  }
+  function _amOrgMouseUp() {
+    if (ST.pan) { ST.pan = null; viewport.style.cursor = 'grab'; return; }
+    if (!ST.drag) return;
+    const { id, moved } = ST.drag;
+    ST.nodeEls[id].style.cursor = 'grab';
+    ST.nodeEls[id].style.zIndex = '2';
+    if (ST.dropTarget) {
+      reports[id] = ST.dropTarget;
+      if (am.reports) am.reports[id] = ST.dropTarget;
+      if (ST.nodeEls[ST.dropTarget]) ST.nodeEls[ST.dropTarget].style.outline = '';
+      ST.dropTarget = null;
+      applyLayout();
+    } else if (moved) {
+      // save position
+      if (!am.pos) am.pos = {};
+      am.pos[id] = { ...ST.pos[id] };
+      drawConns(); drawBands();
+    }
+    ST.drag = null;
+  }
+  window.addEventListener('mousemove', _amOrgMouseMove);
+  window.addEventListener('mouseup',   _amOrgMouseUp);
+
+  // Clean up listeners when navigating away
+  const cleanupObs = new MutationObserver(() => {
+    const page = document.querySelector('[data-page="am-org"]');
+    if (!page || page.classList.contains('hidden') || (page.style.display === 'none')) {
+      window.removeEventListener('mousemove', _amOrgMouseMove);
+      window.removeEventListener('mouseup',   _amOrgMouseUp);
+      cleanupObs.disconnect();
+    }
+  });
+  cleanupObs.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class', 'style'] });
+
+  // ─── TOOLBAR buttons ──────────────────────────────────────────────────────
+  document.getElementById('am-org-zin').onclick  = () => { ST.scale = Math.min(2.5, ST.scale * 1.15); applyT(); };
+  document.getElementById('am-org-zout').onclick = () => { ST.scale = Math.max(0.15, ST.scale * 0.87); applyT(); };
+  document.getElementById('am-org-fit').onclick  = fitView;
+  document.getElementById('am-org-arrange').onclick = () => {
+    ST.pos = {};
+    if (am.pos) Object.keys(am.pos).forEach(k => delete am.pos[k]);
+    applyLayout(); fitView();
+  };
+  document.getElementById('am-org-layout').onchange = e => {
+    ST.layout = e.target.value; ST.pos = {}; applyLayout(); fitView();
+  };
+
+  // ─── SEARCH ──────────────────────────────────────────────────────────────
+  const orgq = document.getElementById('am-orgq');
+  orgq.addEventListener('input', () => {
+    const q = orgq.value.toLowerCase().trim();
+    let matches = [];
+    people.forEach(p => {
+      const el = ST.nodeEls[p.id]; if (!el) return;
+      const hit = !q || [p.name,p.title,p.role,p.loc,p.notes].join(' ').toLowerCase().includes(q);
+      el.style.opacity = (q && !hit) ? '0.2' : '';
+      el.style.outline = '';
+      if (q && hit) matches.push(p.id);
+    });
+    if (q && matches.length) {
+      matches.forEach(id => { if (ST.nodeEls[id]) ST.nodeEls[id].style.outline = '3px solid #25c2a0'; });
+      const first = ST.pos[matches[0]];
+      if (first) {
+        if (ST.scale < 0.55) ST.scale = 0.9;
+        ST.tx = viewport.clientWidth / 2 - (first.x + NW / 2) * ST.scale;
+        ST.ty = viewport.clientHeight / 2 - (first.y + NH / 2) * ST.scale;
+        applyT();
+      }
+    }
+  });
+  document.getElementById('am-orgqx').onclick = () => {
+    orgq.value = '';
+    people.forEach(p => { const el = ST.nodeEls[p.id]; if (el) { el.style.opacity = ''; el.style.outline = ''; } });
+  };
+
+  // ─── BUILD ────────────────────────────────────────────────────────────────
+  people.forEach(p => makeNode(p));
+
+  // Use saved positions if they exist; otherwise auto-layout
+  const hasSavedPos = people.some(p => posMap[p.id]);
+  if (hasSavedPos) {
+    Object.assign(ST.pos, posMap);
+    layout();
+  } else {
+    applyLayout();
+  }
+  fitView();
 }
 
 // ─── Intel ───────────────────────────────────────────────────────────────────
