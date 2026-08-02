@@ -984,6 +984,7 @@
   .type-card.violet:hover  { border-color:rgba(168,85,247,0.6); background:#1e293b; box-shadow:0 4px 14px rgba(168,85,247,0.15); }
   .type-card.rose:hover    { border-color:rgba(251,113,133,0.6); background:#1e293b; box-shadow:0 4px 14px rgba(251,113,133,0.15); }
   .type-card.sky:hover     { border-color:rgba(96,165,250,0.6);  background:#1e293b; box-shadow:0 4px 14px rgba(96,165,250,0.15); }
+  .type-card.teal:hover    { border-color:rgba(20,184,166,0.6); background:#1e293b; box-shadow:0 4px 14px rgba(20,184,166,0.15); }
   .type-card-head { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
   .type-card-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
   .type-card.indigo  .type-card-icon { background:rgba(67,56,202,0.5);  border:1px solid rgba(99,102,241,0.4); }
@@ -992,6 +993,7 @@
   .type-card.cyan    .type-card-icon { background:rgba(14,116,144,0.5); border:1px solid rgba(34,211,238,0.4); }
   .type-card.violet  .type-card-icon { background:rgba(88,28,135,0.5);  border:1px solid rgba(168,85,247,0.4); }
   .type-card.sky     .type-card-icon { background:rgba(12,74,110,0.5);  border:1px solid rgba(96,165,250,0.4); }
+  .type-card.teal    .type-card-icon { background:rgba(19,78,74,0.5);   border:1px solid rgba(20,184,166,0.4); }
   .type-card-title { color:#f1f5f9; font-size:13px; font-weight:600; margin:0; line-height:1.2; }
   .type-card-sub { color:#64748b; font-size:11px; margin:2px 0 0; line-height:1.35; }
   .type-card-source { color:#475569; font-weight:400; font-size:11px; }
@@ -1003,6 +1005,7 @@
   .type-card.cyan    .type-card-status { color:#22d3ee; }
   .type-card.violet  .type-card-status { color:#c084fc; }
   .type-card.sky     .type-card-status { color:#60a5fa; }
+  .type-card.teal    .type-card-status { color:#2dd4bf; }
   .type-card-arrow { color:#475569; font-size:14px; transition:transform .15s, color .15s; }
   .type-card:hover .type-card-arrow { transform:translateX(2px); color:#94a3b8; }
 
@@ -2785,6 +2788,28 @@
       <span>Planner</span>
     </button>
 
+    <div class="ds-nav-section"><span class="ds-nav-section-full">Account</span><span class="ds-nav-section-short"><span>Acct</span></span></div>
+    <button class="ds-nav-item" data-page-target="am-portfolio" onclick="setActivePage('am-portfolio')">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+      <span>Portfolio</span>
+    </button>
+    <button class="ds-nav-item" data-page-target="am-matrix" onclick="setActivePage('am-matrix')">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Contacts</span>
+    </button>
+    <button class="ds-nav-item" data-page-target="am-org" onclick="setActivePage('am-org')">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v4m0 0-5 6m5-6 5 6"/></svg>
+      <span>Org Chart</span>
+    </button>
+    <button class="ds-nav-item" data-page-target="am-intel" onclick="setActivePage('am-intel')">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <span>Intel</span>
+    </button>
+    <button class="ds-nav-item" data-page-target="am-sales" onclick="setActivePage('am-sales')">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span>AM Sales</span>
+    </button>
+
     <div class="ds-nav-section"><span class="ds-nav-section-full">Client</span><span class="ds-nav-section-short"><span>Client</span></span></div>
     <button class="ds-nav-item" data-page-target="client-review" onclick="setActivePage('client-review')">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>
@@ -4077,6 +4102,31 @@
     <div id="planner-page-root" style="height:100%;overflow-y:auto;padding:20px 24px 60px"></div>
   </div><!-- /data-page="planner" -->
 
+  <!-- ── PAGE: ACCOUNT MAPPER — Portfolio ── -->
+  <div data-page="am-portfolio" class="dash-page">
+    <div id="am-portfolio-root" style="height:100%;overflow-y:auto;padding:20px 24px 60px"></div>
+  </div><!-- /data-page="am-portfolio" -->
+
+  <!-- ── PAGE: ACCOUNT MAPPER — Contacts / Matrix ── -->
+  <div data-page="am-matrix" class="dash-page">
+    <div id="am-matrix-root" style="height:100%;overflow-y:auto;padding:20px 24px 60px"></div>
+  </div><!-- /data-page="am-matrix" -->
+
+  <!-- ── PAGE: ACCOUNT MAPPER — Org Chart ── -->
+  <div data-page="am-org" class="dash-page">
+    <div id="am-org-root" style="height:100%;overflow-y:auto;padding:20px 24px 60px"></div>
+  </div><!-- /data-page="am-org" -->
+
+  <!-- ── PAGE: ACCOUNT MAPPER — Intel ── -->
+  <div data-page="am-intel" class="dash-page">
+    <div id="am-intel-root" style="height:100%;overflow-y:auto;padding:20px 24px 60px"></div>
+  </div><!-- /data-page="am-intel" -->
+
+  <!-- ── PAGE: ACCOUNT MAPPER — Sales (from SalesTrak) ── -->
+  <div data-page="am-sales" class="dash-page">
+    <div id="am-sales-root" style="height:100%;overflow-y:auto;padding:20px 24px 60px"></div>
+  </div><!-- /data-page="am-sales" -->
+
   <!-- ── PAGE: RECON VISUAL (the live, wired view) ── -->
   <div data-page="recon-visual" class="dash-page">
 
@@ -5262,6 +5312,28 @@
             </div>
           </div>
 
+          <div class="type-card teal" id="ds-card-accountmapper" data-source="accountmapper" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn,.ds-empty-cta'))setActivePage('am-portfolio')">
+            <div class="type-card-corner">
+              <input type="file" id="am-settings-input" accept=".html,.htm,.json" style="display:none">
+              <button type="button" class="ds-corner-btn" title="Import AccountMapper file" onclick="event.stopPropagation();document.getElementById('am-settings-input').click()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+              <button type="button" class="ds-corner-btn" title="Clear AccountMapper data" onclick="event.stopPropagation();if(confirm('Clear account data?'))clearAccountMapper()">🗑</button>
+            </div>
+            <div class="type-card-head">
+              <div class="type-card-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <p class="type-card-title">Account Mapper <span class="type-card-source">(Contacts & Org)</span></p>
+                <p class="type-card-sub">Import a saved AccountMapper file — contacts, org chart, intel, sales history</p>
+              </div>
+            </div>
+            <div class="ds-status-block loading" id="ds-status-accountmapper">No account loaded</div>
+            <div class="type-card-meta">
+              <span class="type-card-status">View Account</span>
+              <span class="type-card-arrow">→</span>
+            </div>
+          </div>
+
           <div class="type-card violet" data-source="transitions" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn,.ds-empty-cta,.ds-st-drop,.ds-bm-block,.ds-trans-toggle'))openDataSourceTable('transitions')">
             <div class="type-card-corner">
               <button type="button" class="ds-corner-btn" data-action="resync" data-source="transitions" title="Upload customer transition ST file" onclick="event.stopPropagation();window.dsTriggerResyncExt&&window.dsTriggerResyncExt('transitions')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
@@ -6074,6 +6146,7 @@ const STATE = {
   // customer is already the active rep's. See .planning/CRM-MERGE-GAMEPLAN.md.
   crmRaw: [],             // [{ customer, normKey, ...crmList per-customer summary + oppsDetail/errsDetail }]
   planner: null,          // { savedAt, planId, planName, buckets, labels, tasks[] } — set by hydratePlannerFromProxy
+  accountMapper: null,    // parsed AccountMapper state JSON (people, reports, intel, etc.) — set by importAccountMapper()
   crmIndex: null,         // Map(normKey → row), populated by hydrateCrmFromProxy
   crmStatus: null,        // { count, lastSyncedAt, oldestSyncedAt, ageMinutes, persistedAt }
   crmSource: null,        // 'proxy' | null
@@ -7858,6 +7931,517 @@ function renderPlannerPage() {
       renderPlannerPage();
     };
   });
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ACCOUNT MAPPER INTEGRATION
+   Five read-only tabs: Portfolio · Contacts · Org Chart · Intel · AM Sales
+   Data comes from an imported AccountMapper HTML file (parse <script id="STATE">)
+   or JSON export. AM Sales filters the already-loaded STATE.stRaw by account name.
+   ──────────────────────────────────────────────────────────────────────── */
+
+function importAccountMapper(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const text = e.target.result;
+      let data;
+      if (file.name.toLowerCase().endsWith('.json')) {
+        data = JSON.parse(text);
+      } else {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        const stEl = doc.querySelector('script#STATE');
+        if (!stEl) throw new Error('No <script id="STATE"> tag found — make sure this is a saved AccountMapper file.');
+        data = JSON.parse(stEl.textContent);
+      }
+      if (!data || !Array.isArray(data.people)) throw new Error('Invalid AccountMapper file — missing people array.');
+      STATE.accountMapper = data;
+      const page = STATE.activePage;
+      if (page === 'am-portfolio') renderAMPortfolio();
+      else if (page === 'am-matrix') renderAMMatrix();
+      else if (page === 'am-org') renderAMOrgChart();
+      else if (page === 'am-intel') renderAMIntel();
+      else if (page === 'am-sales') renderAMSales();
+      toast('success', 'Account loaded', `${data.accountName || 'Account'} · ${data.people.length} contact${data.people.length === 1 ? '' : 's'}`);
+    } catch(err) {
+      toast('error', 'AccountMapper import failed', err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function clearAccountMapper() {
+  STATE.accountMapper = null;
+  const page = STATE.activePage;
+  if (page === 'am-portfolio') renderAMPortfolio();
+  else if (page === 'am-matrix') renderAMMatrix();
+  else if (page === 'am-org') renderAMOrgChart();
+  else if (page === 'am-intel') renderAMIntel();
+  else if (page === 'am-sales') renderAMSales();
+  toast('info', 'Account cleared', 'Import a new AccountMapper file to load another account.');
+}
+
+function _amEmptyState(host, isLight) {
+  const textMut = isLight ? '#64748b' : '#94a3b8';
+  const textPrimary = isLight ? '#1e293b' : '#e2e8f0';
+  host.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:70vh;text-align:center;gap:16px;">
+      <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#0d9488,#14b8a6);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(20,184,166,0.3);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div>
+        <div style="font-size:18px;font-weight:700;color:${textPrimary};margin-bottom:6px;">No account loaded</div>
+        <div style="font-size:13px;color:${textMut};max-width:340px;line-height:1.5;">Import a saved AccountMapper HTML file to view contacts, org chart, intel notes, and matched SalesTrak orders.</div>
+      </div>
+      <input type="file" id="am-import-input" accept=".html,.htm,.json" style="display:none">
+      <button onclick="document.getElementById('am-import-input').click()" style="background:linear-gradient(135deg,#0d9488,#14b8a6);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(20,184,166,0.3);">
+        Import AccountMapper File
+      </button>
+    </div>`;
+  const inp = host.querySelector('#am-import-input');
+  if (inp) inp.onchange = e => { const f = e.target.files[0]; if (f) importAccountMapper(f); inp.value = ''; };
+}
+
+function _amHeader(isLight, activeTab) {
+  const am = STATE.accountMapper;
+  const name = (am && am.accountName) ? am.accountName : 'Account';
+  const sub  = (am && am.accountSub)  ? am.accountSub  : '';
+  const count = am && am.people ? am.people.length : 0;
+  const border = isLight ? '#e2e8f0' : '#1e3a5f';
+  const textMut = isLight ? '#64748b' : '#94a3b8';
+  const textHead = isLight ? '#0f172a' : '#f1f5f9';
+  const tabNavBg = isLight ? '#f1f5f9' : '#0f172a';
+  const tabs = [
+    { id: 'am-portfolio', label: 'Portfolio' },
+    { id: 'am-matrix',   label: 'Contacts' },
+    { id: 'am-org',      label: 'Org Chart' },
+    { id: 'am-intel',    label: 'Intel' },
+    { id: 'am-sales',    label: 'Sales' },
+  ];
+  const tabHtml = tabs.map(t => {
+    const on = t.id === activeTab;
+    return `<button onclick="setActivePage('${t.id}')" style="padding:6px 14px;border:none;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:${on?'700':'500'};background:${on?(isLight?'#fff':'#1e3a5f'):'transparent'};color:${on?(isLight?'#0d9488':'#2dd4bf'):(isLight?'#64748b':'#94a3b8')};box-shadow:${on?'0 2px 6px rgba(0,0,0,0.12)':'none'};">${t.label}</button>`;
+  }).join('');
+  return `
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+        <div>
+          <div style="font-size:21px;font-weight:800;color:${textHead};letter-spacing:-0.02em;">${name}</div>
+          ${sub ? `<div style="font-size:12px;color:${textMut};margin-top:2px;">${sub}</div>` : ''}
+          <div style="font-size:12px;color:${textMut};margin-top:2px;">${count} contact${count===1?'':'s'}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="file" id="am-reimport-input" accept=".html,.htm,.json" style="display:none">
+          <button onclick="document.getElementById('am-reimport-input').click()" style="padding:7px 14px;border:1px solid ${isLight?'#d1d5db':'#334155'};border-radius:8px;background:${isLight?'#fff':'#1e293b'};color:${isLight?'#374151':'#94a3b8'};font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;">⭱ Import / Update</button>
+          <button onclick="if(confirm('Clear AccountMapper data for this account?'))clearAccountMapper()" style="padding:7px 14px;border:1px solid ${isLight?'#fca5a5':'#7f1d1d'};border-radius:8px;background:transparent;color:${isLight?'#ef4444':'#fca5a5'};font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;">Clear</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:4px;padding:4px;background:${tabNavBg};border-radius:10px;border:1px solid ${border};width:fit-content;">${tabHtml}</div>
+    </div>`;
+}
+
+function _wireAMReimport(host) {
+  const ri = host.querySelector('#am-reimport-input');
+  if (ri) ri.onchange = e => { const f = e.target.files[0]; if (f) importAccountMapper(f); ri.value = ''; };
+}
+
+const AM_STANCES = {
+  'Champion':       { emoji:'⭐', color:'#22c55e', bg:'rgba(34,197,94,0.15)',  border:'rgba(34,197,94,0.4)' },
+  'Decision Maker': { emoji:'💰', color:'#eab308', bg:'rgba(234,179,8,0.15)',  border:'rgba(234,179,8,0.4)' },
+  'Target':         { emoji:'🎯', color:'#06b6d4', bg:'rgba(6,182,212,0.15)', border:'rgba(6,182,212,0.4)' },
+  'Influencer':     { emoji:'🔗', color:'#a855f7', bg:'rgba(168,85,247,0.15)',border:'rgba(168,85,247,0.4)' },
+  'Blocker':        { emoji:'⛔', color:'#ef4444', bg:'rgba(239,68,68,0.15)', border:'rgba(239,68,68,0.4)' },
+};
+
+function _amStanceBadge(stance) {
+  if (!stance) return '';
+  const s = AM_STANCES[stance];
+  if (!s) return '';
+  return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:${s.bg};color:${s.color};border:1px solid ${s.border};letter-spacing:.2px;">${s.emoji} ${stance}</span>`;
+}
+
+function _amTierBadge(title) {
+  const t = (title || '').toLowerCase();
+  let label = '', color = '#64748b', bg = 'rgba(100,116,139,0.12)';
+  if (/chief|c-level|\bceo\b|\bcio\b|\bcto\b|\bcfo\b|\bcoo\b|\bcdo\b|\bciso\b/.test(t)) { label='C-Level'; color='#fbbf24'; bg='rgba(251,191,36,0.15)'; }
+  else if (/vice president|\bvp\b|\bsvp\b|\bevp\b|\bavp\b/.test(t))                     { label='VP'; color='#60a5fa'; bg='rgba(96,165,250,0.15)'; }
+  else if (/senior director|\bsr\.?\s*dir/.test(t))                                     { label='Sr. Director'; color='#818cf8'; bg='rgba(129,140,248,0.15)'; }
+  else if (/associate director|\bassoc\.?\s*dir/.test(t))                               { label='Assoc. Dir'; color='#c084fc'; bg='rgba(192,132,252,0.15)'; }
+  else if (/\bdirector\b|\bhead of\b/.test(t))                                          { label='Director'; color='#a5b4fc'; bg='rgba(165,180,252,0.15)'; }
+  if (!label) return '';
+  return `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:${bg};color:${color};letter-spacing:.3px;">${label}</span>`;
+}
+
+// ─── Portfolio ───────────────────────────────────────────────────────────────
+
+function renderAMPortfolio() {
+  const host = document.getElementById('am-portfolio-root');
+  if (!host) return;
+  const isLight = document.body.classList.contains('light');
+  const card = isLight ? '#ffffff' : '#1e293b';
+  const border = isLight ? '#e2e8f0' : '#1e3a5f';
+  const textMut = isLight ? '#64748b' : '#94a3b8';
+  const textHead = isLight ? '#0f172a' : '#f1f5f9';
+  if (!STATE.accountMapper) { _amEmptyState(host, isLight); return; }
+  const am = STATE.accountMapper;
+  const people = (am.people || []).filter(p => !p.left);
+  const byStance = s => people.filter(p => p.stance === s);
+  const champions = byStance('Champion');
+  const dms = byStance('Decision Maker');
+  const blockers = byStance('Blocker');
+  const targets = byStance('Target');
+  const influencers = byStance('Influencer');
+  const kpis = [
+    { label:'Total Contacts', val: (am.people||[]).length, color:'#60a5fa' },
+    { label:'Champions',      val: champions.length,       color:'#22c55e' },
+    { label:'Decision Makers',val: dms.length,             color:'#eab308' },
+    { label:'Targets',        val: targets.length,         color:'#06b6d4' },
+    { label:'Influencers',    val: influencers.length,     color:'#a855f7' },
+    { label:'Blockers',       val: blockers.length,        color:'#ef4444' },
+  ];
+  const kpiHtml = kpis.map(k => `
+    <div style="background:${card};border:1px solid ${border};border-radius:12px;padding:14px 18px;min-width:100px;flex:1;">
+      <div style="font-size:24px;font-weight:800;color:${k.color};letter-spacing:-0.5px;">${k.val}</div>
+      <div style="font-size:11px;color:${textMut};margin-top:3px;text-transform:uppercase;letter-spacing:.5px;">${k.label}</div>
+    </div>`).join('');
+  const sortedPeople = [...(am.people||[])].sort((a,b)=>(a.priority||9)-(b.priority||9));
+  const peopleHtml = sortedPeople.map(p => `
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid ${border};">
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#14b8a6);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">${((p.name||'?').charAt(0))}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:13.5px;font-weight:650;color:${textHead};${p.left?'opacity:.6;':''}">${p.name||'Unknown'}</span>
+          ${p.left?'<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:5px;background:#4b5563;color:#9ca3af;">LEFT</span>':''}
+          ${_amStanceBadge(p.stance)}
+          ${_amTierBadge(p.title)}
+        </div>
+        <div style="font-size:12px;color:${textMut};margin-top:2px;">${p.title||''}</div>
+        ${p.notes ? `<div style="font-size:11.5px;color:${textMut};margin-top:4px;font-style:italic;line-height:1.4;">${p.notes}</div>` : ''}
+      </div>
+    </div>`).join('');
+  host.innerHTML = `
+    <div style="max-width:900px;">
+      ${_amHeader(isLight, 'am-portfolio')}
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">${kpiHtml}</div>
+      ${(blockers.length > 0 && champions.length === 0) ? `<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.35);border-radius:10px;padding:10px 14px;font-size:12.5px;color:#fca5a5;margin-bottom:16px;">⚠ Risk: ${blockers.length} blocker${blockers.length>1?'s':''} with no champions identified yet.</div>` : ''}
+      <div style="background:${card};border:1px solid ${border};border-radius:14px;overflow:hidden;">
+        <div style="padding:12px 16px;border-bottom:1px solid ${border};font-size:11px;font-weight:700;color:${textMut};text-transform:uppercase;letter-spacing:.5px;">All Contacts · Sorted by Priority</div>
+        ${peopleHtml || `<div style="padding:24px;text-align:center;color:${textMut};font-size:13px;">No contacts.</div>`}
+      </div>
+    </div>`;
+  _wireAMReimport(host);
+}
+
+// ─── Contacts / Matrix ───────────────────────────────────────────────────────
+
+let _amSearch = '', _amStanceFilter = '', _amTierFilter = '';
+
+function renderAMMatrix() {
+  const host = document.getElementById('am-matrix-root');
+  if (!host) return;
+  const isLight = document.body.classList.contains('light');
+  const card = isLight ? '#ffffff' : '#1e293b';
+  const border = isLight ? '#e2e8f0' : '#1e3a5f';
+  const textMut = isLight ? '#64748b' : '#94a3b8';
+  const textHead = isLight ? '#0f172a' : '#f1f5f9';
+  const inputBg = isLight ? '#f8fafc' : '#0f172a';
+  const inputBorder = isLight ? '#d1d5db' : '#334155';
+  if (!STATE.accountMapper) { _amEmptyState(host, isLight); return; }
+  const am = STATE.accountMapper;
+  const allPeople = am.people || [];
+  const tierKeys = ['C-Level','VP','Senior Director','Director','Associate Director'];
+
+  let filtered = allPeople;
+  if (_amSearch) {
+    const q = _amSearch.toLowerCase();
+    filtered = filtered.filter(p => (p.name||'').toLowerCase().includes(q) || (p.title||'').toLowerCase().includes(q) || (p.role||'').toLowerCase().includes(q));
+  }
+  if (_amStanceFilter) filtered = filtered.filter(p => p.stance === _amStanceFilter);
+  if (_amTierFilter) {
+    filtered = filtered.filter(p => {
+      const t = (p.title||'').toLowerCase();
+      if (_amTierFilter === 'C-Level')             return /chief|c-level|\bceo\b|\bcio\b|\bcto\b|\bcfo\b|\bcoo\b/.test(t);
+      if (_amTierFilter === 'VP')                  return /vice president|\bvp\b|\bsvp\b|\bevp\b/.test(t);
+      if (_amTierFilter === 'Senior Director')     return /senior director/.test(t);
+      if (_amTierFilter === 'Director')            return /\bdirector\b/.test(t);
+      if (_amTierFilter === 'Associate Director')  return /associate director/.test(t);
+      return true;
+    });
+  }
+
+  const cardsHtml = filtered.map(p => {
+    const bord = p.stance === 'Blocker' ? 'rgba(239,68,68,0.45)' : border;
+    return `
+      <div style="background:${card};border:1px solid ${bord};border-radius:13px;padding:14px;display:flex;flex-direction:column;gap:8px;${p.left?'opacity:.58;':''}">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#14b8a6);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;">${(p.name||'?').charAt(0)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+              <span style="font-size:13.5px;font-weight:650;color:${textHead};">${p.name||'Unknown'}</span>
+              ${p.left?'<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:5px;background:#4b5563;color:#9ca3af;">LEFT</span>':''}
+            </div>
+            <div style="font-size:12px;color:${textMut};margin-top:2px;line-height:1.3;">${p.title||''}</div>
+            ${p.role ? `<div style="font-size:11px;color:${textMut};margin-top:1px;">${p.role}</div>` : ''}
+          </div>
+        </div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">
+          ${_amStanceBadge(p.stance)}
+          ${_amTierBadge(p.title)}
+          ${p.loc ? `<span style="font-size:11px;color:${textMut};">📍 ${p.loc}</span>` : ''}
+        </div>
+        ${p.notes ? `<div style="font-size:12px;color:${textMut};line-height:1.4;font-style:italic;border-top:1px solid ${border};padding-top:8px;">${p.notes}</div>` : ''}
+        ${p.email ? `<div style="font-size:12px;"><a href="mailto:${p.email}" style="color:#60a5fa;text-decoration:none;">✉ ${p.email}</a></div>` : ''}
+      </div>`;
+  }).join('');
+
+  const selStyle = `background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:8px 10px;border-radius:9px;font-size:12.5px;font-family:inherit;`;
+  host.innerHTML = `
+    <div style="max-width:1100px;">
+      ${_amHeader(isLight, 'am-matrix')}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+        <input type="search" id="am-search" placeholder="Search contacts…" value="${_amSearch.replace(/"/g,'&quot;')}" style="flex:1;min-width:180px;background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:8px 12px;border-radius:9px;font-size:13.5px;font-family:inherit;outline:none;">
+        <select id="am-stance-filter" style="${selStyle}">
+          <option value="">All stances</option>
+          ${['Champion','Decision Maker','Target','Influencer','Blocker'].map(s=>`<option value="${s}" ${_amStanceFilter===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+        <select id="am-tier-filter" style="${selStyle}">
+          <option value="">All levels</option>
+          ${tierKeys.map(t=>`<option value="${t}" ${_amTierFilter===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+        <span style="font-size:12px;color:${textMut};">${filtered.length} of ${allPeople.length}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">
+        ${cardsHtml || `<div style="grid-column:1/-1;text-align:center;padding:40px;color:${textMut};font-size:13px;">No contacts match filters.</div>`}
+      </div>
+    </div>`;
+  _wireAMReimport(host);
+  const s = host.querySelector('#am-search');
+  if (s) s.oninput = () => { _amSearch = s.value; renderAMMatrix(); };
+  const sf = host.querySelector('#am-stance-filter');
+  if (sf) sf.onchange = () => { _amStanceFilter = sf.value; renderAMMatrix(); };
+  const tf = host.querySelector('#am-tier-filter');
+  if (tf) tf.onchange = () => { _amTierFilter = tf.value; renderAMMatrix(); };
+}
+
+// ─── Org Chart ───────────────────────────────────────────────────────────────
+
+function renderAMOrgChart() {
+  const host = document.getElementById('am-org-root');
+  if (!host) return;
+  const isLight = document.body.classList.contains('light');
+  const card = isLight ? '#ffffff' : '#1e293b';
+  const border = isLight ? '#e2e8f0' : '#1e3a5f';
+  const textMut = isLight ? '#64748b' : '#94a3b8';
+  const textHead = isLight ? '#0f172a' : '#f1f5f9';
+  if (!STATE.accountMapper) { _amEmptyState(host, isLight); return; }
+  const am = STATE.accountMapper;
+  const people = am.people || [];
+  const reports = am.reports || {};
+  const byId = {};
+  people.forEach(p => { byId[p.id] = p; });
+  const children = {};
+  people.forEach(p => { children[p.id] = []; });
+  people.forEach(p => { const mgr = reports[p.id]; if (mgr && byId[mgr]) children[mgr].push(p.id); });
+  const roots = people.filter(p => !reports[p.id] || !byId[reports[p.id]]).map(p => p.id);
+
+  function renderNode(id, depth) {
+    const p = byId[id];
+    if (!p) return '';
+    const kids = children[id] || [];
+    const s = AM_STANCES[p.stance];
+    const cardBorder = s ? s.border : border;
+    return `
+      <div style="margin-left:${depth * 28}px;margin-bottom:8px;">
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;background:${card};border:1px solid ${cardBorder};border-radius:10px;${p.left?'opacity:.55;':''}position:relative;">
+          ${depth > 0 ? `<div style="position:absolute;left:-20px;top:18px;width:16px;height:1px;background:${border};"></div>` : ''}
+          <div style="width:34px;height:34px;border-radius:50%;background:${s?s.bg:'rgba(20,184,166,0.15)'};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:${s?s.color:'#14b8a6'};flex-shrink:0;">${(p.name||'?').charAt(0)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+              <span style="font-size:13px;font-weight:650;color:${textHead};">${p.name}</span>
+              ${s?`<span>${s.emoji}</span>`:''}
+              ${_amTierBadge(p.title)}
+            </div>
+            <div style="font-size:11.5px;color:${textMut};">${p.title||''}</div>
+          </div>
+          ${kids.length ? `<span style="font-size:10.5px;color:${textMut};white-space:nowrap;flex-shrink:0;">${kids.length} direct${kids.length>1?'s':''}</span>` : ''}
+        </div>
+        ${kids.map(kid => renderNode(kid, depth + 1)).join('')}
+      </div>`;
+  }
+
+  host.innerHTML = `
+    <div style="max-width:900px;">
+      ${_amHeader(isLight, 'am-org')}
+      <div style="font-size:12px;color:${textMut};margin-bottom:14px;">Indented by reporting chain · stance emoji shown on each card</div>
+      <div>${roots.map(r => renderNode(r, 0)).join('') || `<div style="color:${textMut};text-align:center;padding:40px;">No org chart data.</div>`}</div>
+    </div>`;
+  _wireAMReimport(host);
+}
+
+// ─── Intel ───────────────────────────────────────────────────────────────────
+
+let _amIntelSearch = '';
+
+function renderAMIntel() {
+  const host = document.getElementById('am-intel-root');
+  if (!host) return;
+  const isLight = document.body.classList.contains('light');
+  const card = isLight ? '#ffffff' : '#1e293b';
+  const border = isLight ? '#e2e8f0' : '#1e3a5f';
+  const textMut = isLight ? '#64748b' : '#94a3b8';
+  const textHead = isLight ? '#0f172a' : '#f1f5f9';
+  const inputBg = isLight ? '#f8fafc' : '#0f172a';
+  const inputBorder = isLight ? '#d1d5db' : '#334155';
+  if (!STATE.accountMapper) { _amEmptyState(host, isLight); return; }
+  const am = STATE.accountMapper;
+  let intel = am.intel || [];
+  if (_amIntelSearch) {
+    const q = _amIntelSearch.toLowerCase();
+    intel = intel.filter(i => (i.title||'').toLowerCase().includes(q) || (i.body||'').toLowerCase().includes(q));
+  }
+  const cardsHtml = intel.map(item => `
+    <div style="background:${card};border:1px solid ${border};border-radius:13px;padding:16px 18px;margin-bottom:12px;">
+      <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+        <span style="font-size:15px;font-weight:700;color:${textHead};flex:1;">${item.title||'Untitled'}</span>
+        ${item.tag ? `<span style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 8px;border-radius:20px;background:${inputBg};color:#60a5fa;border:1px solid ${border};">${item.tag}</span>` : ''}
+      </div>
+      <div style="font-size:13px;line-height:1.65;color:${textHead};white-space:pre-wrap;">${item.body||''}</div>
+      <div style="font-size:11px;color:${textMut};margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+        ${item.updated ? `<span>Updated ${item.updated}</span>` : ''}
+        ${item.by ? `<span>by ${item.by}</span>` : ''}
+      </div>
+    </div>`).join('');
+  host.innerHTML = `
+    <div style="max-width:820px;">
+      ${_amHeader(isLight, 'am-intel')}
+      <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;">
+        <input type="search" id="am-intel-search" placeholder="Search intel…" value="${_amIntelSearch.replace(/"/g,'&quot;')}" style="flex:1;background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:8px 12px;border-radius:9px;font-size:13.5px;font-family:inherit;outline:none;">
+        <span style="font-size:12px;color:${textMut};">${intel.length} note${intel.length===1?'':'s'}</span>
+      </div>
+      ${cardsHtml || `<div style="text-align:center;padding:40px;color:${textMut};font-size:13px;">No intel notes${_amIntelSearch?' matching your search':' for this account'}.</div>`}
+    </div>`;
+  _wireAMReimport(host);
+  const is = host.querySelector('#am-intel-search');
+  if (is) is.oninput = () => { _amIntelSearch = is.value; renderAMIntel(); };
+}
+
+// ─── Sales (filtered from SalesTrak STATE.stRaw by account name) ─────────────
+
+let _amSalesSearch = '', _amSalesSort = { col: 'invoiceDate', dir: 'desc' };
+
+function renderAMSales() {
+  const host = document.getElementById('am-sales-root');
+  if (!host) return;
+  const isLight = document.body.classList.contains('light');
+  const card = isLight ? '#ffffff' : '#1e293b';
+  const border = isLight ? '#e2e8f0' : '#1e3a5f';
+  const textMut = isLight ? '#64748b' : '#94a3b8';
+  const textHead = isLight ? '#0f172a' : '#f1f5f9';
+  const inputBg = isLight ? '#f8fafc' : '#0f172a';
+  const inputBorder = isLight ? '#d1d5db' : '#334155';
+  if (!STATE.accountMapper) { _amEmptyState(host, isLight); return; }
+  const am = STATE.accountMapper;
+  const acctName = am.accountName || '';
+  const normAcct = normalizeCustomer(acctName);
+
+  const stRows = STATE.stRaw || [];
+  let rows = stRows.filter(r => {
+    const nc = normalizeCustomer(r.customer || '');
+    const np = normalizeCustomer(r.custParent || '');
+    if (nc === normAcct || np === normAcct) return true;
+    if (normAcct.length > 4) return nc.includes(normAcct) || normAcct.includes(nc) || np.includes(normAcct);
+    return false;
+  });
+
+  if (_amSalesSearch) {
+    const q = _amSalesSearch.toLowerCase();
+    rows = rows.filter(r => String(r.orderNumber||'').toLowerCase().includes(q) || String(r.customer||'').toLowerCase().includes(q) || String(r.vendor||'').toLowerCase().includes(q));
+  }
+
+  rows = [...rows].sort((a, b) => {
+    const { col, dir } = _amSalesSort;
+    let av = a[col], bv = b[col];
+    if (col === 'invoiceDate') {
+      av = av ? new Date(av).getTime() : 0;
+      bv = bv ? new Date(bv).getTime() : 0;
+    } else {
+      av = Number(av) || 0; bv = Number(bv) || 0;
+    }
+    return dir === 'asc' ? (av > bv ? 1 : -1) : (av < bv ? 1 : -1);
+  });
+
+  const fmt$ = n => (n == null || isNaN(Number(n))) ? '—' : '$' + Number(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  const fmtPct = n => (n == null || isNaN(Number(n))) ? '—' : Number(n).toFixed(1) + '%';
+
+  const totalSales  = rows.reduce((s, r) => s + (Number(r.stSales)  || 0), 0);
+  const totalMargin = rows.reduce((s, r) => s + (Number(r.stMargin) || 0), 0);
+  const avgPct      = rows.length ? rows.reduce((s, r) => s + (Number(r.marginPct) || 0), 0) / rows.length : 0;
+
+  const kpis = [
+    { label:'Matched Orders', val: rows.length.toLocaleString(), color:'#60a5fa' },
+    { label:'Net Sales',      val: fmt$(totalSales),             color:'#22c55e' },
+    { label:'Gross Profit',   val: fmt$(totalMargin),            color:'#34d399' },
+    { label:'Avg GP%',        val: fmtPct(avgPct),               color:'#a78bfa' },
+  ];
+  const kpiHtml = kpis.map(k => `
+    <div style="background:${card};border:1px solid ${border};border-radius:12px;padding:14px 18px;flex:1;min-width:100px;">
+      <div style="font-size:22px;font-weight:800;color:${k.color};letter-spacing:-0.5px;">${k.val}</div>
+      <div style="font-size:11px;color:${textMut};margin-top:3px;text-transform:uppercase;letter-spacing:.5px;">${k.label}</div>
+    </div>`).join('');
+
+  const si = col => _amSalesSort.col === col ? (_amSalesSort.dir === 'asc' ? ' ↑' : ' ↓') : '';
+  const ths = `padding:9px 10px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${textMut};cursor:pointer;white-space:nowrap;background:${inputBg};user-select:none;border-bottom:1px solid ${border};`;
+  const tds = `padding:9px 10px;font-size:12.5px;border-bottom:1px solid ${border};color:${textHead};white-space:nowrap;`;
+  const tdr = tds + 'text-align:right;font-variant-numeric:tabular-nums;';
+
+  const rowsHtml = rows.map(r => `<tr>
+    <td style="${tds}">${r.orderNumber||'—'}</td>
+    <td style="${tds}">${r.customer||'—'}</td>
+    <td style="${tds}">${r.vendor||'—'}</td>
+    <td style="${tdr}">${fmt$(r.stSales)}</td>
+    <td style="${tdr}">${fmt$(r.stMargin)}</td>
+    <td style="${tdr}">${fmtPct(r.marginPct)}</td>
+    <td style="${tds}">${r.invoiceDate||'—'}</td>
+  </tr>`).join('');
+
+  const noST    = !stRows.length;
+  const noMatch = stRows.length > 0 && rows.length === 0;
+
+  host.innerHTML = `
+    <div style="max-width:1100px;">
+      ${_amHeader(isLight, 'am-sales')}
+      ${noST ? `<div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.35);border-radius:10px;padding:10px 14px;font-size:12.5px;color:#fbbf24;margin-bottom:16px;">No SalesTrak data loaded — import an ST file from Data Sources first, then return here.</div>` : ''}
+      ${noMatch ? `<div style="background:${inputBg};border:1px solid ${border};border-radius:10px;padding:10px 14px;font-size:12.5px;color:${textMut};margin-bottom:16px;">No SalesTrak orders found matching "<b>${acctName}</b>". Verify the account name matches your ST customer/parent column.</div>` : ''}
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">${kpiHtml}</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
+        <input type="search" id="am-sales-search" placeholder="Search orders…" value="${_amSalesSearch.replace(/"/g,'&quot;')}" style="flex:1;max-width:300px;background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:8px 12px;border-radius:9px;font-size:13px;font-family:inherit;outline:none;">
+        <span style="font-size:12px;color:${textMut};">${rows.length} order${rows.length===1?'':'s'} matched</span>
+      </div>
+      <div style="overflow-x:auto;border-radius:12px;border:1px solid ${border};">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead><tr>
+            <th style="${ths}" onclick="window.__amSalCol('orderNumber')">Order #${si('orderNumber')}</th>
+            <th style="${ths}" onclick="window.__amSalCol('customer')">Customer${si('customer')}</th>
+            <th style="${ths}" onclick="window.__amSalCol('vendor')">Vendor${si('vendor')}</th>
+            <th style="${ths};text-align:right" onclick="window.__amSalCol('stSales')">Net Sales${si('stSales')}</th>
+            <th style="${ths};text-align:right" onclick="window.__amSalCol('stMargin')">GP${si('stMargin')}</th>
+            <th style="${ths};text-align:right" onclick="window.__amSalCol('marginPct')">GP%${si('marginPct')}</th>
+            <th style="${ths}" onclick="window.__amSalCol('invoiceDate')">Invoice Date${si('invoiceDate')}</th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    </div>`;
+  _wireAMReimport(host);
+  const ss = host.querySelector('#am-sales-search');
+  if (ss) ss.oninput = () => { _amSalesSearch = ss.value; renderAMSales(); };
+  window.__amSalCol = col => {
+    if (_amSalesSort.col === col) _amSalesSort.dir = _amSalesSort.dir === 'asc' ? 'desc' : 'asc';
+    else { _amSalesSort.col = col; _amSalesSort.dir = 'desc'; }
+    renderAMSales();
+  };
 }
 
 // ── Proxy sync status chip ────────────────────────────────────────────────────
@@ -17800,6 +18384,12 @@ function toggleTheme() {
   if (plannerRoot && plannerRoot.offsetParent !== null && typeof renderPlannerPage === 'function') {
     renderPlannerPage();
   }
+  const amPage = STATE.activePage;
+  if (amPage === 'am-portfolio') renderAMPortfolio();
+  else if (amPage === 'am-matrix') renderAMMatrix();
+  else if (amPage === 'am-org') renderAMOrgChart();
+  else if (amPage === 'am-intel') renderAMIntel();
+  else if (amPage === 'am-sales') renderAMSales();
 }
 
 /* Sync button state on load (theme may already be light via boot script) */
@@ -17903,6 +18493,11 @@ function setActivePage(name) {
   }
   if (name === 'customer-perf') renderCustomerPerf();
   if (name === 'planner') renderPlannerPage();
+  if (name === 'am-portfolio') renderAMPortfolio();
+  if (name === 'am-matrix')    renderAMMatrix();
+  if (name === 'am-org')       renderAMOrgChart();
+  if (name === 'am-intel')     renderAMIntel();
+  if (name === 'am-sales')     renderAMSales();
   if (name === 'settings') { try { crmStatusRefresh(); } catch(_) {} }
   // Drill-down panel only lives on the timeline pages (Client Overview /
   // Client Renewals — Timeline). Close it on any other route.
@@ -41083,6 +41678,22 @@ Use the response format from SYSTEM_PROMPT.`;
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fb7185" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>')}
           ${card('planner', { cls:'sky' }, 'Planner <span class="type-card-source">(MS Planner)</span>', 'Board mirror — tasks, buckets, assignments, due dates',
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>')}
+          <div class="type-card teal" data-source="accountmapper" role="button" tabindex="0" onclick="if(!event.target.closest('.ds-corner-btn')){document.getElementById('ds-overlay').remove();setActivePage('am-portfolio');}">
+            <div class="type-card-corner">
+              <input type="file" id="am-overlay-input" accept=".html,.htm,.json" style="display:none">
+              <button type="button" class="ds-corner-btn" title="Import AccountMapper file" onclick="event.stopPropagation();document.getElementById('am-overlay-input').click()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+              <button type="button" class="ds-corner-btn" title="Clear AccountMapper data" onclick="event.stopPropagation();if(confirm('Clear account data?'))clearAccountMapper()">🗑</button>
+            </div>
+            <div class="type-card-head">
+              <div class="type-card-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div style="flex:1;min-width:0;">
+                <p class="type-card-title">Account Mapper <span class="type-card-source">(Contacts & Org)</span></p>
+                <p class="type-card-sub">Import a saved AccountMapper file — contacts, org chart, intel, sales</p>
+              </div>
+            </div>
+            <div class="ds-status-block" style="font-size:11px;color:#94a3b8;">${STATE.accountMapper ? ('Loaded · ' + (STATE.accountMapper.accountName||'Account') + ' · ' + (STATE.accountMapper.people||[]).length + ' contacts') : 'No account loaded'}</div>
+            <div class="type-card-meta"><span class="type-card-status">View Account</span><span class="type-card-arrow">→</span></div>
+          </div>
           ${card('transitions', { cls:'violet' }, 'Customer Transitions <span class="type-card-source">(ST)</span>', 'Visibility-only — excluded from commission/pay totals',
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/><path stroke-linecap="round" stroke-linejoin="round" d="M3 4v16"/></svg>')}
           ${card('avant', { cls:'cyan' }, 'Avant <span class="type-card-source">(Non-AR Cash)</span>', 'Telecom residuals — Provider, Run Month, Sales Commission',
@@ -41162,6 +41773,34 @@ Use the response format from SYSTEM_PROMPT.`;
     dsLoadBookmarklets(); // fire-and-forget; renderStatusEmpty re-renders when ready
     await Promise.allSettled([populateCrmCard(), populateNiceCard(), populateStCard(), populateAvantCard(), populateQuotesCard(), populatePlannerCard()]);
     try { populateTransitionsCard(); } catch (_) {}
+    // AccountMapper status block
+    try {
+      const amStatus = document.getElementById('ds-status-accountmapper');
+      if (amStatus) {
+        if (STATE.accountMapper) {
+          const n = (STATE.accountMapper.people||[]).length;
+          amStatus.textContent = `Loaded · ${STATE.accountMapper.accountName||'Account'} · ${n} contact${n===1?'':'s'}`;
+          amStatus.className = 'ds-status-block';
+          amStatus.style.cssText = 'font-size:11px;color:#2dd4bf;';
+        } else {
+          amStatus.textContent = 'No account loaded — click ↑ to import';
+          amStatus.className = 'ds-status-block';
+          amStatus.style.cssText = 'font-size:11px;color:#94a3b8;';
+        }
+      }
+      // Wire Settings page file input
+      const si = document.getElementById('am-settings-input');
+      if (si && !si.__amWired) {
+        si.__amWired = true;
+        si.onchange = e => { const f = e.target.files[0]; if (f) { importAccountMapper(f); si.value = ''; } };
+      }
+      // Wire overlay file input if present
+      const oi = document.getElementById('am-overlay-input');
+      if (oi && !oi.__amWired) {
+        oi.__amWired = true;
+        oi.onchange = e => { const f = e.target.files[0]; if (f) { importAccountMapper(f); oi.value = ''; } };
+      }
+    } catch (_) {}
     // After every populate cycle, stage detection re-runs. Triggers the
     // banner whenever ANY source (proxy CRM, proxy/imported NICE, imported ST)
     // reports data — proxy-only sources (CRM with no STATE rows) used to slip
