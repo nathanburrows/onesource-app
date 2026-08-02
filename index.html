@@ -2038,6 +2038,18 @@
 
   /* Commission Pay accordion rows use bg-slate-950/* variant */
   body.light [class*="bg-slate-950/"] { background-color: #f1f5f9 !important; }
+
+  /* ── Toast notifications — light-mode overrides ── */
+  body.light .live-toast {
+    background: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10) !important;
+  }
+  body.light .toast-title { color: #1e293b !important; }
+  body.light .toast-sub   { color: #475569 !important; }
+  body.light .toast-close { color: #94a3b8 !important; }
+  body.light .toast-close:hover { background: rgba(226,232,240,0.7) !important; color: #1e293b !important; }
+  body.light .live-toast.persistent .toast-pin { color: #94a3b8 !important; }
 </style>
 <script>
   /* Theme toggle — runs before body renders to prevent flash of wrong theme */
@@ -36617,6 +36629,21 @@ window.closeColumnsModal = closeColumnsModal;
     transform:rotate(45deg);}
   @keyframes aiToastIn{from{opacity:0;transform:translateY(10px) scale(0.9);}to{opacity:1;transform:none;}}
   @keyframes aiToastOut{to{opacity:0;transform:translateY(8px) scale(0.95);}}
+  /* AI notification toast — light-mode overrides */
+  body.light #ai-toast {
+    background: rgba(255,255,255,0.97) !important;
+    border-color: rgba(168,85,247,0.3) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10), 0 0 0 1px rgba(99,102,241,0.08) !important;
+    color: #1e293b !important;
+  }
+  body.light #ai-toast .ai-toast-msg { color: #475569 !important; }
+  body.light #ai-toast .ai-toast-x   { color: #94a3b8 !important; }
+  body.light #ai-toast .ai-toast-x:hover { color: #1e293b !important; }
+  body.light #ai-toast::after {
+    background: linear-gradient(135deg,rgba(255,255,255,0.97),rgba(255,255,255,0.97)) !important;
+    border-right-color: rgba(168,85,247,0.3) !important;
+    border-bottom-color: rgba(168,85,247,0.3) !important;
+  }
 </style>
 
 <svg id="ai-glyph-defs" width="0" height="0" style="position:absolute" aria-hidden="true">
