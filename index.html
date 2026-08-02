@@ -7726,6 +7726,10 @@ async function hydratePlannerFromProxy({ silent = false } = {}) {
 /* ─────────────────────────────────────────────────────────────────────────
    PLANNER PAGE
    ──────────────────────────────────────────────────────────────────────── */
+let _plannerView     = 'board';
+let _plDragging      = null;
+let _plAddingBucket  = null;
+let _plRenameBucket  = null;
 let _plannerSearch   = '';
 let _plannerSort     = { col: 'dueDate', dir: 'asc' };
 let _plannerBucket   = '';
@@ -7741,7 +7745,6 @@ function renderPlannerPage() {
   const hdrBg  = isLight ? '#f8fafc'              : 'rgba(15,23,42,0.5)';
   const txMut  = isLight ? '#64748b'              : '#94a3b8';
   const txMain = isLight ? '#1e293b'              : '#f1f5f9';
-  const rowHov = isLight ? '#f1f5f9'              : 'rgba(51,65,85,0.5)';
   const inpBg  = isLight ? '#f8fafc'              : 'rgba(15,23,42,0.8)';
   const inpBd  = isLight ? '#cbd5e1'              : 'rgba(71,85,105,0.6)';
 
@@ -7773,8 +7776,9 @@ function renderPlannerPage() {
     return d >= now7 && d <= soon7 && (t.progress||'').toLowerCase() !== 'completed';
   }).length;
 
-  const buckets      = [...new Set(tasks.map(t=>t.bucketName||'').filter(Boolean))].sort();
-  const progressOpts = [...new Set(tasks.map(t=>t.progress||'').filter(Boolean))].sort();
+  const allBuckets    = (STATE.planner.buckets && STATE.planner.buckets.length) ? STATE.planner.buckets : [...new Set(tasks.map(t=>t.bucketName||'').filter(Boolean))].sort();
+  const filterBuckets = [...new Set(tasks.map(t=>t.bucketName||'').filter(Boolean))].sort();
+  const progressOpts  = [...new Set(tasks.map(t=>t.progress||'').filter(Boolean))].sort();
 
   let filtered = tasks.slice();
   if (_plannerSearch) {
@@ -7796,42 +7800,10 @@ function renderPlannerPage() {
     return String(x).localeCompare(String(y)) * dir;
   });
 
-  const fmtD = s => {
-    if (!s) return '—';
-    const d = new Date(s);
-    return isNaN(d) ? s : d.toLocaleDateString('en-US', {month:'short',day:'numeric',year:'2-digit'});
-  };
+  const wrapStyle = _plannerView === 'board' ? 'width:100%' : 'max-width:1400px;margin:0 auto';
+  let h = `<div style="${wrapStyle}">`;
 
-  const progressBadge = p => {
-    p = (p||'').trim(); const low = p.toLowerCase();
-    if (low.includes('complet'))   return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.4)">${escHtml(p)||'Completed'}</span>`;
-    if (low.includes('in prog'))   return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.4)">${escHtml(p)||'In Progress'}</span>`;
-    if (low.includes('not start')||!p) return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(148,163,184,.14);color:${txMut};border:1px solid rgba(148,163,184,.3)">${escHtml(p)||'Not Started'}</span>`;
-    return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(148,163,184,.12);color:${txMut};border:1px solid rgba(148,163,184,.25)">${escHtml(p)}</span>`;
-  };
-
-  const priorityBadge = p => {
-    p = (p||'').trim(); const low = p.toLowerCase();
-    if (low.includes('urgent'))  return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.4)">⚑ ${escHtml(p)}</span>`;
-    if (low.includes('import'))  return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.4)">⚑ ${escHtml(p)}</span>`;
-    if (low.includes('medium'))  return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(234,179,8,.15);color:${isLight?'#a16207':'#facc15'};border:1px solid rgba(234,179,8,.35)">⚑ ${escHtml(p)}</span>`;
-    if (low.includes('low'))     return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.3)">⚑ ${escHtml(p)}</span>`;
-    return p ? `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(148,163,184,.12);color:${txMut};border:1px solid rgba(148,163,184,.25)">${escHtml(p)}</span>` : `<span style="color:${txMut}">—</span>`;
-  };
-
-  const lateBadge = v => (String(v||'').toLowerCase()==='yes'||v===true)
-    ? `<span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:12px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.35);margin-left:5px;vertical-align:middle">LATE</span>`
-    : '';
-
-  const thSort = (col, label) => {
-    const active = _plannerSort.col === col;
-    const arrow  = active ? (_plannerSort.dir === 'asc' ? ' ↑' : ' ↓') : '';
-    return `<th data-plcol="${col}" style="text-align:left;padding:8px 10px;border-bottom:1px solid ${bd};font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:${active?'#818cf8':txMut};background:${hdrBg};cursor:pointer;user-select:none;white-space:nowrap">${escHtml(label)}${arrow}</th>`;
-  };
-
-  let h = `<div style="max-width:1400px;margin:0 auto">`;
-
-  // Heading
+  // Heading row
   h += `<input type="file" id="pl-import-input" accept=".xlsx" style="display:none">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
     <h2 style="margin:0;font-size:1.15rem;font-weight:800;color:${txMain};display:flex;align-items:center;gap:9px">
@@ -7839,13 +7811,19 @@ function renderPlannerPage() {
     </h2>
     <span style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;background:${isLight?'rgba(99,102,241,.09)':'rgba(99,102,241,.18)'};color:${isLight?'#4f46e5':'#818cf8'};border:1px solid ${isLight?'rgba(99,102,241,.2)':'rgba(99,102,241,.35)'}">MS Planner</span>
     <span style="font-size:11px;color:${txMut}">${total} task${total===1?'':'s'} total</span>
-    <button onclick="document.getElementById('pl-import-input').click()" style="margin-left:auto;padding:6px 13px;background:${isLight?'rgba(96,165,250,.1)':'rgba(96,165,250,.12)'};border:1px solid rgba(96,165,250,.35);border-radius:8px;font-size:11.5px;font-weight:700;color:#60a5fa;cursor:pointer">⭱ Import / Update</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;border:1px solid ${bd};border-radius:8px;overflow:hidden">
+        <button id="pl-view-board" style="padding:5px 14px;font-size:11.5px;font-weight:700;cursor:pointer;border:none;outline:none;background:${_plannerView==='board'?(isLight?'#e0e7ff':'rgba(99,102,241,.3)'):(isLight?'#f8fafc':'rgba(15,23,42,0.4)')};color:${_plannerView==='board'?(isLight?'#4f46e5':'#818cf8'):txMut}">Board</button>
+        <button id="pl-view-list" style="padding:5px 14px;font-size:11.5px;font-weight:700;cursor:pointer;border:none;outline:none;background:${_plannerView==='list'?(isLight?'#e0e7ff':'rgba(99,102,241,.3)'):(isLight?'#f8fafc':'rgba(15,23,42,0.4)')};color:${_plannerView==='list'?(isLight?'#4f46e5':'#818cf8'):txMut}">List</button>
+      </div>
+      <button onclick="document.getElementById('pl-import-input').click()" style="padding:6px 13px;background:${isLight?'rgba(96,165,250,.1)':'rgba(96,165,250,.12)'};border:1px solid rgba(96,165,250,.35);border-radius:8px;font-size:11.5px;font-weight:700;color:#60a5fa;cursor:pointer">⭱ Import / Update</button>
+    </div>
   </div>`;
 
   // KPI tiles
   h += `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">`;
   [
-    { n: total,     l: 'Total Tasks',   c: txMain   },
+    { n: total,     l: 'Total Tasks',   c: txMain    },
     { n: inProg,    l: 'In Progress',   c: '#818cf8' },
     { n: completed, l: 'Completed',     c: '#10b981' },
     { n: notStart,  l: 'Not Started',   c: txMut     },
@@ -7865,7 +7843,7 @@ function renderPlannerPage() {
       style="flex:1;min-width:200px;background:${inpBg};border:1px solid ${inpBd};color:${txMain};padding:8px 12px;border-radius:9px;font-size:13px;outline:none">
     <select id="pl-bucket" style="background:${inpBg};border:1px solid ${inpBd};color:${txMain};padding:8px 10px;border-radius:9px;font-size:12.5px;cursor:pointer">
       <option value="">All Buckets</option>
-      ${buckets.map(b=>`<option value="${escHtml(b)}"${_plannerBucket===b?' selected':''}>${escHtml(b)}</option>`).join('')}
+      ${filterBuckets.map(b=>`<option value="${escHtml(b)}"${_plannerBucket===b?' selected':''}>${escHtml(b)}</option>`).join('')}
     </select>
     <select id="pl-progress" style="background:${inpBg};border:1px solid ${inpBd};color:${txMain};padding:8px 10px;border-radius:9px;font-size:12.5px;cursor:pointer">
       <option value="">All Statuses</option>
@@ -7874,56 +7852,18 @@ function renderPlannerPage() {
     <span style="font-size:11.5px;color:${txMut};white-space:nowrap">${filtered.length} task${filtered.length===1?'':'s'}</span>
   </div>`;
 
-  // Table
-  h += `<div style="background:${bg};border:1px solid ${bd};border-radius:14px;overflow:hidden">
-    <div style="overflow-x:auto">
-    <table id="pl-table" style="width:100%;border-collapse:collapse;font-size:12.5px">
-      <thead><tr>
-        ${thSort('title',       'Task')}
-        ${thSort('bucketName',  'Bucket')}
-        ${thSort('progress',    'Status')}
-        ${thSort('priority',    'Priority')}
-        ${thSort('assignedTo',  'Assigned To')}
-        ${thSort('dueDate',     'Due Date')}
-        ${thSort('startDate',   'Start')}
-        <th style="text-align:left;padding:8px 10px;border-bottom:1px solid ${bd};font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:${txMut};background:${hdrBg};white-space:nowrap">Checklist</th>
-        ${thSort('labels',      'Labels')}
-      </tr></thead>
-      <tbody>`;
-
-  if (!filtered.length) {
-    h += `<tr><td colspan="9" style="text-align:center;padding:48px 20px;color:${txMut};font-size:13.5px">No tasks match your filters.</td></tr>`;
-  } else {
-    filtered.slice(0, 500).forEach(t => {
-      const checklist = (Number(t.checklistTotal) > 0)
-        ? `<span style="font-size:11px;color:${Number(t.checklistDone)===Number(t.checklistTotal)?'#10b981':txMut}">${t.checklistDone||0}/${t.checklistTotal}</span>`
-        : `<span style="color:${txMut}">—</span>`;
-      const labelHtml = t.labels
-        ? String(t.labels).split(',').map(l=>l.trim()).filter(Boolean).map(l=>`<span style="display:inline-block;font-size:9.5px;font-weight:600;padding:1px 6px;border-radius:12px;background:${isLight?'rgba(99,102,241,.1)':'rgba(99,102,241,.15)'};color:${isLight?'#4f46e5':'#818cf8'};border:1px solid ${isLight?'rgba(99,102,241,.2)':'rgba(99,102,241,.3)'};margin:1px 2px">${escHtml(l)}</span>`).join('')
-        : `<span style="color:${txMut}">—</span>`;
-      h += `<tr style="border-bottom:1px solid ${bd}" onmouseover="this.style.background='${rowHov}'" onmouseout="this.style.background=''">
-        <td style="padding:8px 10px;max-width:280px;word-break:break-word;font-weight:600;color:${txMain}">${escHtml(t.title||'—')}${lateBadge(t.late)}</td>
-        <td style="padding:8px 10px;white-space:nowrap;color:${txMut}">${escHtml(t.bucketName||'—')}</td>
-        <td style="padding:8px 10px;white-space:nowrap">${progressBadge(t.progress)}</td>
-        <td style="padding:8px 10px;white-space:nowrap">${priorityBadge(t.priority)}</td>
-        <td style="padding:8px 10px;white-space:nowrap;color:${txMut}">${escHtml(t.assignedTo||'—')}</td>
-        <td style="padding:8px 10px;white-space:nowrap;color:${txMain}">${fmtD(t.dueDate)}</td>
-        <td style="padding:8px 10px;white-space:nowrap;color:${txMut}">${fmtD(t.startDate)}</td>
-        <td style="padding:8px 10px;white-space:nowrap">${checklist}</td>
-        <td style="padding:8px 10px;max-width:220px">${labelHtml}</td>
-      </tr>`;
-    });
-    if (filtered.length > 500) {
-      h += `<tr><td colspan="9" style="text-align:center;padding:10px;color:${txMut};font-size:11.5px">Showing first 500 of ${filtered.length} tasks — narrow with the filters above.</td></tr>`;
-    }
-  }
-
-  h += `</tbody></table></div></div></div>`;
+  h += `<div id="pl-view-root"></div></div>`;
   host.innerHTML = h;
 
   // Wire import input
   const importEl = document.getElementById('pl-import-input');
   if (importEl) importEl.onchange = e => { const f = e.target.files; if (f && f.length) routeFiles(f); e.target.value = ''; };
+
+  // Wire view toggle buttons
+  const viewBoard = document.getElementById('pl-view-board');
+  const viewList  = document.getElementById('pl-view-list');
+  if (viewBoard) viewBoard.onclick = () => { _plannerView = 'board'; renderPlannerPage(); };
+  if (viewList)  viewList.onclick  = () => { _plannerView = 'list';  renderPlannerPage(); };
 
   // Wire filter controls
   const searchEl   = document.getElementById('pl-search');
@@ -7933,16 +7873,444 @@ function renderPlannerPage() {
   if (bucketEl)   bucketEl.onchange   = () => { _plannerBucket   = bucketEl.value;   renderPlannerPage(); };
   if (progressEl) progressEl.onchange = () => { _plannerProgress = progressEl.value; renderPlannerPage(); };
 
+  // Dispatch to board or list
+  const viewRoot = document.getElementById('pl-view-root');
+  if (!viewRoot) return;
+  if (_plannerView === 'board') {
+    renderPlannerBoard(viewRoot, filtered, allBuckets, isLight, bg, bd, hdrBg, txMut, txMain, inpBg, inpBd);
+  } else {
+    renderPlannerList(viewRoot, filtered, isLight, bg, bd, hdrBg, txMut, txMain, inpBg, inpBd);
+  }
+}
+
+function renderPlannerBoard(host, filtered, allBuckets, isLight, bg, bd, hdrBg, txMut, txMain, inpBg, inpBd) {
+  const colBg  = isLight ? '#f1f5f9'          : 'rgba(15,23,42,0.4)';
+  const cardBg = isLight ? '#ffffff'           : 'rgba(30,41,59,0.7)';
+
+  // Merge bucket order from state with any bucket names only on tasks
+  const taskBuckets = [...new Set(STATE.planner.tasks.map(t=>t.bucketName||'').filter(Boolean))];
+  const allCols = [...new Set([...allBuckets, ...taskBuckets])];
+
+  const fmtD = s => { if (!s) return null; const d=new Date(s); return isNaN(d)?null:d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}); };
+  const now0 = new Date(); now0.setHours(0,0,0,0);
+  const soon0 = new Date(now0); soon0.setDate(soon0.getDate()+7);
+  const isOverdue = s => { if (!s) return false; const d=new Date(s); return !isNaN(d)&&d<now0; };
+  const isDueSoon = s => { if (!s) return false; const d=new Date(s); return !isNaN(d)&&d>=now0&&d<=soon0; };
+  const priBorder = p => { p=(p||'').toLowerCase(); if(p.includes('urgent')) return '#ef4444'; if(p.includes('import')) return '#f97316'; if(p.includes('medium')) return '#eab308'; return '#3b82f6'; };
+
+  const pgBadge = p => {
+    p=(p||'').trim(); const low=p.toLowerCase();
+    if(low.includes('complet')) return `<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.4)">${escHtml(p)||'Completed'}</span>`;
+    if(low.includes('in prog')) return `<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.4)">${escHtml(p)||'In Progress'}</span>`;
+    return `<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(148,163,184,.14);color:${txMut};border:1px solid rgba(148,163,184,.3)">${escHtml(p)||'Not Started'}</span>`;
+  };
+  const priBadge = p => {
+    p=(p||'').trim(); const low=p.toLowerCase();
+    if(low.includes('urgent')) return `<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.4)">⚑ Urgent</span>`;
+    if(low.includes('import')) return `<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.4)">⚑ Important</span>`;
+    if(low.includes('medium')) return `<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(234,179,8,.15);color:${isLight?'#a16207':'#facc15'};border:1px solid rgba(234,179,8,.35)">⚑ Medium</span>`;
+    if(low.includes('low'))    return `<span style="font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.3)">⚑ Low</span>`;
+    return '';
+  };
+  const lateBadge = v => (String(v||'').toLowerCase()==='yes'||v===true)
+    ? `<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.35)">LATE</span>`
+    : '';
+  const lblHtml = labels => !labels ? '' : String(labels).split(',').map(l=>l.trim()).filter(Boolean)
+    .map(l=>`<span style="font-size:9px;font-weight:600;padding:1px 5px;border-radius:10px;background:${isLight?'rgba(99,102,241,.1)':'rgba(99,102,241,.15)'};color:${isLight?'#4f46e5':'#818cf8'};border:1px solid ${isLight?'rgba(99,102,241,.2)':'rgba(99,102,241,.3)'}">${escHtml(l)}</span>`).join(' ');
+
+  let h = `<div style="overflow-x:auto;padding-bottom:16px"><div id="pl-board" style="display:flex;gap:12px;align-items:flex-start;min-width:max-content;padding:4px 2px">`;
+
+  allCols.forEach(bucket => {
+    const colTasks    = filtered.filter(t => (t.bucketName||'') === bucket);
+    const allColCount = STATE.planner.tasks.filter(t => (t.bucketName||'') === bucket).length;
+    const isRenaming  = _plRenameBucket === bucket;
+
+    h += `<div class="pl-col" data-bucket="${escHtml(bucket)}" style="width:280px;min-width:280px;background:${colBg};border:1px solid ${bd};border-radius:12px;padding:10px;display:flex;flex-direction:column">`;
+
+    // Column header
+    h += `<div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;padding:0 2px">`;
+    if (isRenaming) {
+      h += `<input id="pl-rename-inp" data-oldbucket="${escHtml(bucket)}" value="${escHtml(bucket)}" style="flex:1;background:${inpBg};border:1px solid rgba(99,102,241,.5);color:${txMain};padding:4px 8px;border-radius:7px;font-size:12.5px;font-weight:700;outline:none">
+        <button id="pl-rename-save" style="padding:3px 8px;font-size:11px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#818cf8;border-radius:6px;cursor:pointer">&#10003;</button>
+        <button id="pl-rename-cancel" style="padding:3px 7px;font-size:11px;background:${inpBg};border:1px solid ${inpBd};color:${txMut};border-radius:6px;cursor:pointer">&#10005;</button>`;
+    } else {
+      h += `<span style="flex:1;font-size:12.5px;font-weight:700;color:${txMain};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px" title="${escHtml(bucket)}">${escHtml(bucket)}</span>
+        <span style="font-size:10.5px;font-weight:600;color:${txMut};background:${isLight?'rgba(148,163,184,.15)':'rgba(148,163,184,.1)'};border-radius:20px;padding:1px 7px">${allColCount}</span>
+        <button class="pl-col-rename" data-bucket="${escHtml(bucket)}" style="padding:3px 6px;font-size:12px;background:none;border:none;color:${txMut};cursor:pointer;border-radius:5px" title="Rename">&#9998;</button>
+        <button class="pl-col-delete" data-bucket="${escHtml(bucket)}" style="padding:3px 6px;font-size:12px;background:none;border:none;color:${txMut};cursor:pointer;border-radius:5px" title="Delete">&#128465;</button>`;
+    }
+    h += `</div>`;
+
+    // Cards
+    h += `<div class="pl-cards" style="display:flex;flex-direction:column;gap:7px;min-height:40px;flex:1">`;
+    if (colTasks.length) {
+      colTasks.forEach(t => {
+        const dueFmt   = fmtD(t.dueDate);
+        const dueColor = (t.late==='Yes'||t.late===true||isOverdue(t.dueDate)) ? '#f87171' : isDueSoon(t.dueDate) ? '#fb923c' : txMut;
+        const hasCL    = Number(t.checklistTotal) > 0;
+        h += `<div class="pl-card" data-taskid="${escHtml(t.id||'')}" draggable="true"
+          style="background:${cardBg};border:1px solid ${bd};border-left:3px solid ${priBorder(t.priority)};border-radius:9px;padding:10px 10px 8px;cursor:pointer;transition:box-shadow .12s">
+          <div style="font-size:12.5px;font-weight:600;color:${txMain};line-height:1.4;margin-bottom:6px;word-break:break-word">${escHtml(t.title||'Untitled')} ${lateBadge(t.late)}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${pgBadge(t.progress)}${priBadge(t.priority)}</div>
+          ${(dueFmt||hasCL||t.assignedTo)?`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:${t.labels?'5px':'0'}">
+            ${dueFmt?`<span style="font-size:10.5px;color:${dueColor}">&#128197; ${dueFmt}</span>`:''}
+            ${hasCL?`<span style="font-size:10.5px;color:${Number(t.checklistDone)===Number(t.checklistTotal)?'#10b981':txMut}">&#9745; ${t.checklistDone||0}/${t.checklistTotal}</span>`:''}
+            ${t.assignedTo?`<span style="font-size:10.5px;color:${txMut};margin-left:auto">&#128100; ${escHtml(t.assignedTo)}</span>`:''}
+          </div>`:''}
+          ${t.labels?`<div style="display:flex;flex-wrap:wrap;gap:3px">${lblHtml(t.labels)}</div>`:''}
+        </div>`;
+      });
+    } else {
+      h += `<div style="font-size:11.5px;color:${txMut};text-align:center;padding:16px 8px;opacity:.55">No tasks</div>`;
+    }
+    h += `</div>`; // end .pl-cards
+
+    // Add task inline or button
+    if (_plAddingBucket === bucket) {
+      h += `<div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">
+        <input id="pl-addtask-inp" placeholder="Task title&#8230;" style="background:${inpBg};border:1px solid rgba(99,102,241,.5);color:${txMain};padding:7px 10px;border-radius:8px;font-size:12.5px;outline:none">
+        <div style="display:flex;gap:6px">
+          <button id="pl-addtask-confirm" data-bucket="${escHtml(bucket)}" style="flex:1;padding:6px;font-size:12px;font-weight:700;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#818cf8;border-radius:7px;cursor:pointer">Add</button>
+          <button id="pl-addtask-cancel" style="padding:6px 10px;font-size:12px;background:${inpBg};border:1px solid ${inpBd};color:${txMut};border-radius:7px;cursor:pointer">Cancel</button>
+        </div>
+      </div>`;
+    } else {
+      h += `<button class="pl-add-task-btn" data-bucket="${escHtml(bucket)}" style="margin-top:8px;width:100%;padding:7px;font-size:12px;font-weight:600;color:${txMut};background:none;border:1px dashed ${bd};border-radius:8px;cursor:pointer">&#xff0b; Add task</button>`;
+    }
+
+    h += `</div>`; // end .pl-col
+  });
+
+  // Add bucket ghost column
+  if (_plAddingBucket === '__new__') {
+    h += `<div style="width:260px;min-width:260px;background:${colBg};border:1px dashed ${bd};border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:12px;font-weight:700;color:${txMut};margin-bottom:2px">New Bucket</div>
+      <input id="pl-addbucket-inp" placeholder="Bucket name&#8230;" style="background:${inpBg};border:1px solid rgba(99,102,241,.5);color:${txMain};padding:7px 10px;border-radius:8px;font-size:12.5px;outline:none">
+      <div style="display:flex;gap:6px">
+        <button id="pl-addbucket-confirm" style="flex:1;padding:6px;font-size:12px;font-weight:700;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#818cf8;border-radius:7px;cursor:pointer">Add</button>
+        <button id="pl-addbucket-cancel" style="padding:6px 10px;font-size:12px;background:${inpBg};border:1px solid ${inpBd};color:${txMut};border-radius:7px;cursor:pointer">Cancel</button>
+      </div>
+    </div>`;
+  } else {
+    h += `<div style="display:flex;align-items:flex-start;padding-top:4px">
+      <button id="pl-add-bucket-btn" style="width:200px;padding:10px 16px;font-size:12.5px;font-weight:600;color:${txMut};background:${colBg};border:1px dashed ${bd};border-radius:12px;cursor:pointer;white-space:nowrap">&#xff0b; Add bucket</button>
+    </div>`;
+  }
+
+  h += `</div></div>`; // end #pl-board, scroll wrapper
+  host.innerHTML = h;
+
+  // Wire drag-and-drop on columns
+  host.querySelectorAll('.pl-col').forEach(col => {
+    col.addEventListener('dragover', e => { e.preventDefault(); col.style.borderColor = '#818cf8'; });
+    col.addEventListener('dragleave', () => { col.style.borderColor = bd; });
+    col.addEventListener('drop', e => {
+      e.preventDefault(); col.style.borderColor = bd;
+      const id = _plDragging; _plDragging = null;
+      if (!id) return;
+      const task = STATE.planner.tasks.find(t => t.id === id);
+      if (task) task.bucketName = col.dataset.bucket;
+      renderPlannerPage();
+    });
+  });
+
+  // Wire card click + drag events
+  host.querySelectorAll('.pl-card').forEach(card => {
+    card.onclick = () => openPlannerModal(card.dataset.taskid);
+    card.addEventListener('dragstart', e => { _plDragging = card.dataset.taskid; e.dataTransfer.setData('text/plain', card.dataset.taskid); card.style.opacity = '0.5'; });
+    card.addEventListener('dragend',   () => { card.style.opacity = ''; });
+    card.addEventListener('mouseover', () => { card.style.boxShadow = '0 2px 12px rgba(0,0,0,.18)'; });
+    card.addEventListener('mouseout',  () => { card.style.boxShadow = ''; });
+  });
+
+  // Rename / delete column buttons
+  host.querySelectorAll('.pl-col-rename').forEach(btn => {
+    btn.onclick = () => { _plRenameBucket = btn.dataset.bucket; renderPlannerPage(); };
+  });
+  host.querySelectorAll('.pl-col-delete').forEach(btn => {
+    btn.onclick = () => {
+      const b = btn.dataset.bucket;
+      if (!confirm('Delete bucket "' + b + '" and all its tasks?')) return;
+      STATE.planner.tasks = STATE.planner.tasks.filter(t => t.bucketName !== b);
+      const bi = STATE.planner.buckets.indexOf(b); if (bi !== -1) STATE.planner.buckets.splice(bi, 1);
+      if (_plRenameBucket === b) _plRenameBucket = null;
+      renderPlannerPage();
+    };
+  });
+
+  // Rename save / cancel
+  const renameSaveBtn   = document.getElementById('pl-rename-save');
+  const renameCancelBtn = document.getElementById('pl-rename-cancel');
+  const renameInp       = document.getElementById('pl-rename-inp');
+  if (renameInp) {
+    renameInp.focus(); renameInp.select();
+    renameInp.onkeydown = e => { if(e.key==='Enter') renameSaveBtn&&renameSaveBtn.click(); if(e.key==='Escape') renameCancelBtn&&renameCancelBtn.click(); };
+  }
+  if (renameSaveBtn) {
+    renameSaveBtn.onclick = () => {
+      const oldName = renameInp ? renameInp.dataset.oldbucket : _plRenameBucket;
+      const newName = renameInp ? renameInp.value.trim() : '';
+      if (!newName || newName === oldName) { _plRenameBucket = null; renderPlannerPage(); return; }
+      STATE.planner.tasks.forEach(t => { if (t.bucketName === oldName) t.bucketName = newName; });
+      const bi = STATE.planner.buckets.indexOf(oldName);
+      if (bi !== -1) STATE.planner.buckets[bi] = newName; else STATE.planner.buckets.push(newName);
+      _plRenameBucket = null; renderPlannerPage();
+    };
+  }
+  if (renameCancelBtn) { renameCancelBtn.onclick = () => { _plRenameBucket = null; renderPlannerPage(); }; }
+
+  // Add task inline
+  host.querySelectorAll('.pl-add-task-btn').forEach(btn => {
+    btn.onclick = () => { _plAddingBucket = btn.dataset.bucket; renderPlannerPage(); };
+  });
+  const addTaskInp     = document.getElementById('pl-addtask-inp');
+  const addTaskConfirm = document.getElementById('pl-addtask-confirm');
+  const addTaskCancel  = document.getElementById('pl-addtask-cancel');
+  if (addTaskInp) {
+    addTaskInp.focus();
+    addTaskInp.onkeydown = e => { if(e.key==='Enter') addTaskConfirm&&addTaskConfirm.click(); if(e.key==='Escape') addTaskCancel&&addTaskCancel.click(); };
+  }
+  if (addTaskConfirm) {
+    addTaskConfirm.onclick = () => {
+      const title  = addTaskInp ? addTaskInp.value.trim() : '';
+      const bucket = addTaskConfirm.dataset.bucket;
+      if (title) {
+        STATE.planner.tasks.push({ id:'t'+Date.now(), title, bucketName:bucket, progress:'Not Started', priority:'', assignedTo:'', startDate:'', dueDate:'', late:false, completedDate:'', createdBy:'', createdDate:new Date().toISOString().slice(0,10), checklistDone:'0', checklistTotal:'0', labels:'', description:'' });
+        if (!STATE.planner.buckets.includes(bucket)) STATE.planner.buckets.push(bucket);
+      }
+      _plAddingBucket = null; renderPlannerPage();
+    };
+  }
+  if (addTaskCancel) { addTaskCancel.onclick = () => { _plAddingBucket = null; renderPlannerPage(); }; }
+
+  // Add bucket
+  const addBucketBtn     = document.getElementById('pl-add-bucket-btn');
+  const addBucketInp     = document.getElementById('pl-addbucket-inp');
+  const addBucketConfirm = document.getElementById('pl-addbucket-confirm');
+  const addBucketCancel  = document.getElementById('pl-addbucket-cancel');
+  if (addBucketBtn) addBucketBtn.onclick = () => { _plAddingBucket = '__new__'; renderPlannerPage(); };
+  if (addBucketInp) {
+    addBucketInp.focus();
+    addBucketInp.onkeydown = e => { if(e.key==='Enter') addBucketConfirm&&addBucketConfirm.click(); if(e.key==='Escape') addBucketCancel&&addBucketCancel.click(); };
+  }
+  if (addBucketConfirm) {
+    addBucketConfirm.onclick = () => {
+      const name = addBucketInp ? addBucketInp.value.trim() : '';
+      if (name && !STATE.planner.buckets.includes(name)) STATE.planner.buckets.push(name);
+      _plAddingBucket = null; renderPlannerPage();
+    };
+  }
+  if (addBucketCancel) { addBucketCancel.onclick = () => { _plAddingBucket = null; renderPlannerPage(); }; }
+}
+
+function renderPlannerList(host, filtered, isLight, bg, bd, hdrBg, txMut, txMain, inpBg, inpBd) {
+  const rowHov = isLight ? '#f1f5f9' : 'rgba(51,65,85,0.5)';
+  const fmtD = s => { if(!s) return '—'; const d=new Date(s); return isNaN(d)?s:d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}); };
+
+  const progressBadge = p => {
+    p=(p||'').trim(); const low=p.toLowerCase();
+    if(low.includes('complet'))       return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.4)">${escHtml(p)||'Completed'}</span>`;
+    if(low.includes('in prog'))       return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.4)">${escHtml(p)||'In Progress'}</span>`;
+    if(low.includes('not start')||!p) return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(148,163,184,.14);color:${txMut};border:1px solid rgba(148,163,184,.3)">${escHtml(p)||'Not Started'}</span>`;
+    return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(148,163,184,.12);color:${txMut};border:1px solid rgba(148,163,184,.25)">${escHtml(p)}</span>`;
+  };
+  const priorityBadge = p => {
+    p=(p||'').trim(); const low=p.toLowerCase();
+    if(low.includes('urgent')) return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.4)">&#9873; ${escHtml(p)}</span>`;
+    if(low.includes('import')) return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.4)">&#9873; ${escHtml(p)}</span>`;
+    if(low.includes('medium')) return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(234,179,8,.15);color:${isLight?'#a16207':'#facc15'};border:1px solid rgba(234,179,8,.35)">&#9873; ${escHtml(p)}</span>`;
+    if(low.includes('low'))    return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,.12);color:#4ade80;border:1px solid rgba(34,197,94,.3)">&#9873; ${escHtml(p)}</span>`;
+    return p ? `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:rgba(148,163,184,.12);color:${txMut};border:1px solid rgba(148,163,184,.25)">${escHtml(p)}</span>` : `<span style="color:${txMut}">&#8212;</span>`;
+  };
+  const lateBadge = v => (String(v||'').toLowerCase()==='yes'||v===true)
+    ? `<span style="display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:12px;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.35);margin-left:5px;vertical-align:middle">LATE</span>`
+    : '';
+  const thSort = (col, label) => {
+    const active = _plannerSort.col === col;
+    const arrow  = active ? (_plannerSort.dir==='asc'?' &#8593;':' &#8595;') : '';
+    return `<th data-plcol="${col}" style="text-align:left;padding:8px 10px;border-bottom:1px solid ${bd};font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:${active?'#818cf8':txMut};background:${hdrBg};cursor:pointer;user-select:none;white-space:nowrap">${escHtml(label)}${arrow}</th>`;
+  };
+
+  let h = `<div style="background:${bg};border:1px solid ${bd};border-radius:14px;overflow:hidden"><div style="overflow-x:auto">
+    <table id="pl-table" style="width:100%;border-collapse:collapse;font-size:12.5px">
+      <thead><tr>
+        ${thSort('title','Task')}${thSort('bucketName','Bucket')}${thSort('progress','Status')}${thSort('priority','Priority')}${thSort('assignedTo','Assigned To')}${thSort('dueDate','Due Date')}${thSort('startDate','Start')}
+        <th style="text-align:left;padding:8px 10px;border-bottom:1px solid ${bd};font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:${txMut};background:${hdrBg};white-space:nowrap">Checklist</th>
+        ${thSort('labels','Labels')}
+      </tr></thead><tbody>`;
+
+  if (!filtered.length) {
+    h += `<tr><td colspan="9" style="text-align:center;padding:48px 20px;color:${txMut};font-size:13.5px">No tasks match your filters.</td></tr>`;
+  } else {
+    filtered.slice(0,500).forEach(t => {
+      const checklist = Number(t.checklistTotal)>0
+        ? `<span style="font-size:11px;color:${Number(t.checklistDone)===Number(t.checklistTotal)?'#10b981':txMut}">${t.checklistDone||0}/${t.checklistTotal}</span>`
+        : `<span style="color:${txMut}">&#8212;</span>`;
+      const lblStr = t.labels
+        ? String(t.labels).split(',').map(l=>l.trim()).filter(Boolean).map(l=>`<span style="display:inline-block;font-size:9.5px;font-weight:600;padding:1px 6px;border-radius:12px;background:${isLight?'rgba(99,102,241,.1)':'rgba(99,102,241,.15)'};color:${isLight?'#4f46e5':'#818cf8'};border:1px solid ${isLight?'rgba(99,102,241,.2)':'rgba(99,102,241,.3)'};margin:1px 2px">${escHtml(l)}</span>`).join('')
+        : `<span style="color:${txMut}">&#8212;</span>`;
+      h += `<tr class="pl-list-row" data-taskid="${escHtml(t.id||'')}" style="border-bottom:1px solid ${bd};cursor:pointer" onmouseover="this.style.background='${rowHov}'" onmouseout="this.style.background=''">
+        <td style="padding:8px 10px;max-width:280px;word-break:break-word;font-weight:600;color:${txMain}">${escHtml(t.title||'&#8212;')}${lateBadge(t.late)}</td>
+        <td style="padding:8px 10px;white-space:nowrap;color:${txMut}">${escHtml(t.bucketName||'&#8212;')}</td>
+        <td style="padding:8px 10px;white-space:nowrap">${progressBadge(t.progress)}</td>
+        <td style="padding:8px 10px;white-space:nowrap">${priorityBadge(t.priority)}</td>
+        <td style="padding:8px 10px;white-space:nowrap;color:${txMut}">${escHtml(t.assignedTo||'&#8212;')}</td>
+        <td style="padding:8px 10px;white-space:nowrap;color:${txMain}">${fmtD(t.dueDate)}</td>
+        <td style="padding:8px 10px;white-space:nowrap;color:${txMut}">${fmtD(t.startDate)}</td>
+        <td style="padding:8px 10px;white-space:nowrap">${checklist}</td>
+        <td style="padding:8px 10px;max-width:220px">${lblStr}</td>
+      </tr>`;
+    });
+    if (filtered.length>500) h += `<tr><td colspan="9" style="text-align:center;padding:10px;color:${txMut};font-size:11.5px">Showing first 500 of ${filtered.length} tasks &#8212; narrow with the filters above.</td></tr>`;
+  }
+
+  h += `</tbody></table></div></div>`;
+  host.innerHTML = h;
+
+  // Wire row clicks to open task modal
+  host.querySelectorAll('.pl-list-row').forEach(row => {
+    row.onclick = () => openPlannerModal(row.dataset.taskid);
+  });
+
   // Wire sortable column headers
   const tbl = document.getElementById('pl-table');
   if (tbl) tbl.querySelectorAll('th[data-plcol]').forEach(th => {
     th.onclick = () => {
       const col = th.dataset.plcol;
-      if (_plannerSort.col === col) _plannerSort.dir = _plannerSort.dir === 'asc' ? 'desc' : 'asc';
-      else { _plannerSort.col = col; _plannerSort.dir = 'asc'; }
+      if (_plannerSort.col===col) _plannerSort.dir=_plannerSort.dir==='asc'?'desc':'asc';
+      else { _plannerSort.col=col; _plannerSort.dir='asc'; }
       renderPlannerPage();
     };
   });
+}
+
+function openPlannerModal(taskId) {
+  const task = STATE.planner.tasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  const isLight = document.body.classList.contains('light');
+  const bg    = isLight ? '#ffffff'          : '#1a2640';
+  const bd    = isLight ? '#e2e8f0'          : 'rgba(71,85,105,0.6)';
+  const txMut = isLight ? '#64748b'          : '#94a3b8';
+  const txMain= isLight ? '#1e293b'          : '#f1f5f9';
+  const inpBg = isLight ? '#f8fafc'          : 'rgba(15,23,42,0.8)';
+  const inpBd = isLight ? '#cbd5e1'          : 'rgba(71,85,105,0.6)';
+
+  const existing = document.getElementById('pl-modal-overlay');
+  if (existing) existing.remove();
+
+  const allBuckets = (STATE.planner.buckets && STATE.planner.buckets.length)
+    ? STATE.planner.buckets
+    : [...new Set(STATE.planner.tasks.map(t=>t.bucketName||'').filter(Boolean))];
+  const bucketOpts = [...new Set([...allBuckets, task.bucketName||''].filter(Boolean))];
+
+  const inp = `width:100%;box-sizing:border-box;background:${inpBg};border:1px solid ${inpBd};color:${txMain};padding:8px 12px;border-radius:9px;font-size:13px;outline:none;margin-top:4px`;
+  const lbl = `display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:${txMut};margin-top:14px`;
+
+  const ovDiv = document.createElement('div');
+  ovDiv.id = 'pl-modal-overlay';
+  ovDiv.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);display:flex;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto';
+  ovDiv.innerHTML = `
+    <div style="background:${bg};border:1px solid ${bd};border-radius:16px;width:100%;max-width:580px;padding:28px 28px 24px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.35)">
+      <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:18px">
+        <div style="flex:1">
+          <label style="${lbl};margin-top:0">Task Title</label>
+          <input id="plm-title" value="${escHtml(task.title||'')}" style="${inp};font-size:15px;font-weight:700">
+        </div>
+        <button id="plm-close" style="margin-top:16px;padding:5px 9px;font-size:17px;background:none;border:none;color:${txMut};cursor:pointer;border-radius:7px">&#10005;</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="${lbl}">Status</label>
+          <select id="plm-progress" style="${inp}">
+            <option value="Not Started"${task.progress==='Not Started'?' selected':''}>Not Started</option>
+            <option value="In Progress"${task.progress==='In Progress'?' selected':''}>In Progress</option>
+            <option value="Completed"${task.progress==='Completed'?' selected':''}>Completed</option>
+            ${task.progress&&!['Not Started','In Progress','Completed'].includes(task.progress)?`<option value="${escHtml(task.progress)}" selected>${escHtml(task.progress)}</option>`:''}
+          </select>
+        </div>
+        <div>
+          <label style="${lbl}">Priority</label>
+          <select id="plm-priority" style="${inp}">
+            <option value=""${!task.priority?' selected':''}>None</option>
+            <option value="Urgent"${task.priority==='Urgent'?' selected':''}>Urgent</option>
+            <option value="Important"${task.priority==='Important'?' selected':''}>Important</option>
+            <option value="Medium"${task.priority==='Medium'?' selected':''}>Medium</option>
+            <option value="Low"${task.priority==='Low'?' selected':''}>Low</option>
+            ${task.priority&&!['Urgent','Important','Medium','Low'].includes(task.priority)?`<option value="${escHtml(task.priority)}" selected>${escHtml(task.priority)}</option>`:''}
+          </select>
+        </div>
+        <div>
+          <label style="${lbl}">Bucket</label>
+          <select id="plm-bucket" style="${inp}">
+            ${bucketOpts.map(b=>`<option value="${escHtml(b)}"${task.bucketName===b?' selected':''}>${escHtml(b)}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="${lbl}">Assigned To</label>
+          <input id="plm-assignedTo" value="${escHtml(task.assignedTo||'')}" style="${inp}">
+        </div>
+        <div>
+          <label style="${lbl}">Start Date</label>
+          <input id="plm-startDate" type="date" value="${task.startDate?task.startDate.slice(0,10):''}" style="${inp}">
+        </div>
+        <div>
+          <label style="${lbl}">Due Date</label>
+          <input id="plm-dueDate" type="date" value="${task.dueDate?task.dueDate.slice(0,10):''}" style="${inp}">
+        </div>
+      </div>
+      <label style="${lbl}">Labels <span style="text-transform:none;font-weight:400;font-size:10.5px">(comma-separated)</span></label>
+      <input id="plm-labels" value="${escHtml(task.labels||'')}" style="${inp}">
+      <label style="${lbl}">Description</label>
+      <textarea id="plm-description" rows="4" style="${inp};resize:vertical;font-family:inherit">${escHtml(task.description||'')}</textarea>
+      <label style="${lbl}">Checklist</label>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <input id="plm-checklistDone" type="number" min="0" value="${Number(task.checklistDone||0)}" style="width:80px;background:${inpBg};border:1px solid ${inpBd};color:${txMain};padding:7px 10px;border-radius:9px;font-size:13px;outline:none;text-align:center">
+        <span style="color:${txMut}">/</span>
+        <input id="plm-checklistTotal" type="number" min="0" value="${Number(task.checklistTotal||0)}" style="width:80px;background:${inpBg};border:1px solid ${inpBd};color:${txMain};padding:7px 10px;border-radius:9px;font-size:13px;outline:none;text-align:center">
+        <span style="font-size:11.5px;color:${txMut}">items completed</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid ${bd}">
+        <button id="plm-delete" style="padding:8px 16px;font-size:12.5px;font-weight:700;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.4);color:#f87171;border-radius:9px;cursor:pointer">Delete Task</button>
+        <div style="flex:1"></div>
+        <button id="plm-cancel" style="padding:8px 16px;font-size:12.5px;font-weight:600;background:${inpBg};border:1px solid ${inpBd};color:${txMut};border-radius:9px;cursor:pointer">Cancel</button>
+        <button id="plm-save" style="padding:8px 18px;font-size:12.5px;font-weight:700;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.5);color:#818cf8;border-radius:9px;cursor:pointer">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ovDiv);
+
+  const onKey = e => { if (e.key === 'Escape') close(); };
+  const close = () => { const ov=document.getElementById('pl-modal-overlay'); if(ov) ov.remove(); document.removeEventListener('keydown', onKey); };
+  ovDiv.addEventListener('click', e => { if (e.target === ovDiv) close(); });
+  document.getElementById('plm-close').onclick  = close;
+  document.getElementById('plm-cancel').onclick = close;
+  document.addEventListener('keydown', onKey);
+
+  document.getElementById('plm-delete').onclick = () => {
+    if (!confirm('Delete task "' + (task.title||'') + '"?')) return;
+    STATE.planner.tasks = STATE.planner.tasks.filter(t => t.id !== taskId);
+    close(); renderPlannerPage();
+  };
+
+  document.getElementById('plm-save').onclick = () => {
+    task.title          = document.getElementById('plm-title').value;
+    task.progress       = document.getElementById('plm-progress').value;
+    task.priority       = document.getElementById('plm-priority').value;
+    task.bucketName     = document.getElementById('plm-bucket').value;
+    task.assignedTo     = document.getElementById('plm-assignedTo').value;
+    task.startDate      = document.getElementById('plm-startDate').value;
+    task.dueDate        = document.getElementById('plm-dueDate').value;
+    task.labels         = document.getElementById('plm-labels').value;
+    task.description    = document.getElementById('plm-description').value;
+    task.checklistDone  = document.getElementById('plm-checklistDone').value;
+    task.checklistTotal = document.getElementById('plm-checklistTotal').value;
+    if (task.dueDate) {
+      const dd=new Date(task.dueDate); dd.setHours(0,0,0,0);
+      const nn=new Date(); nn.setHours(0,0,0,0);
+      task.late = (dd<nn && task.progress!=='Completed') ? 'Yes' : 'No';
+    }
+    close(); renderPlannerPage();
+  };
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
