@@ -8547,7 +8547,45 @@ function renderAMPortfolio() {
 // ─── Contacts / Matrix ───────────────────────────────────────────────────────
 
 let _amSearch = '', _amStanceFilter = '', _amTierFilter = '';
+let _amGroupBy = 'fn', _amSort = 'name', _amPrioOnly = false;
 let _amDetailId = null;  // currently open contact detail panel
+
+const _AM_FUNCTIONS = ['Executive Sponsors','Infrastructure & Data Center','Network, Telecom & Citrix','Data, AI & Architecture','End-User & Service Delivery','Information Security','Finance & Procurement','Program Management','Applications & Development','HR / Talent','Other / To confirm'];
+
+function _amBucketOf(p) {
+  const r = ((p.role || '') + ' ' + (p.title || '')).toLowerCase();
+  if (/vice president|\bvp\b|\bsvp\b|chief|\bcio\b|\bcto\b/.test(r)) return 'Executive Sponsors';
+  if (/security|infosec|\biam\b/.test(r)) return 'Information Security';
+  if (/financ|procure|sourcing|purchas/.test(r)) return 'Finance & Procurement';
+  if (/program management|\bpmo\b/.test(r)) return 'Program Management';
+  if (/network|telecom|citrix/.test(r)) return 'Network, Telecom & Citrix';
+  if (/end.?user|workplace|service desk|desktop|service delivery|contact cent|telephony|help.?desk/.test(r)) return 'End-User & Service Delivery';
+  if (/infrastructur|data.?cent|storage|backup|vmware|linux|windows|unix|private cloud|\bcloud\b|systems|server|\bdba\b|\bsre\b/.test(r)) return 'Infrastructure & Data Center';
+  if (/\bdata\b|analytics|\bai\b|architect|machine learning/.test(r)) return 'Data, AI & Architecture';
+  return 'Other / To confirm';
+}
+
+function _amGrpKey(p, grp, reports, byId) {
+  if (grp === 'fn') return _AM_FUNCTIONS.includes(p.role) ? p.role : _amBucketOf(p);
+  if (grp === 'loc') return (p.loc || '').split(',')[0].trim() || '— No location —';
+  if (grp === 'prio') { const s = AM_STANCES[p.stance]; return s ? (s.emoji + ' ' + p.stance) : '○ Unmapped'; }
+  if (grp === 'mgr') { const mId = (reports || {})[p.id]; return (mId && byId[mId]) ? ('Reports to ' + byId[mId].name) : '— No manager set —'; }
+  return 'All contacts';
+}
+
+function _amNewContact(parentId) {
+  const am = STATE.accountMapper;
+  if (!am) { try { toast('warn', 'No account loaded', 'Import an AccountMapper file first.'); } catch(_) {} return; }
+  if (!am.people) am.people = [];
+  if (!am.reports) am.reports = {};
+  const id = 'x' + Date.now();
+  const p = { id, name: 'New contact', title: '', role: '', loc: '', email: '', li: '', fit: '', notes: '', photo: '', priority: 3, stance: '', left: false, updated: new Date().toISOString().slice(0,10) };
+  am.people.push(p);
+  am.reports[id] = parentId || '';
+  renderAMMatrix();
+  _amOpenDetail(id);
+}
+window._amNewContact = _amNewContact;
 
 function _amOpenDetail(id) {
   _amDetailId = id;
@@ -8656,10 +8694,22 @@ function _amRenderDetail() {
     <div id="am-detail-edit" style="display:none;">
       <label style="display:block;margin-top:6px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Relationship</div>
         <select id="am-de-stance" style="${inSt}">${stanceOptsHtml}</select></label>
+      <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Priority</div>
+        <select id="am-de-priority" style="${inSt}">
+          <option value="1" ${(p.priority||3)===1?'selected':''}>★ Priority (tagged)</option>
+          <option value="2" ${(p.priority||3)===2?'selected':''}>Secondary</option>
+          <option value="3" ${(p.priority||3)===3?'selected':''}>Standard</option>
+        </select></label>
       <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Name</div>
         <input id="am-de-name" value="${(p.name||'').replace(/"/g,'&quot;')}" style="${inSt}"></label>
       <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Title</div>
         <input id="am-de-title" value="${(p.title||'').replace(/"/g,'&quot;')}" style="${inSt}"></label>
+      <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Role / Function</div>
+        <select id="am-de-role" style="${inSt}">
+          <option value="">— select function —</option>
+          ${_AM_FUNCTIONS.map(f => `<option value="${f}" ${p.role===f?'selected':''}>${f}</option>`).join('')}
+          ${p.role && !_AM_FUNCTIONS.includes(p.role) ? `<option value="${(p.role||'').replace(/"/g,'&quot;')}" selected>${(p.role||'').replace(/</g,'&lt;')} (custom)</option>` : ''}
+        </select></label>
       <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Location</div>
         <input id="am-de-loc" value="${(p.loc||'').replace(/"/g,'&quot;')}" style="${inSt}"></label>
       <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Email</div>
@@ -8674,10 +8724,16 @@ function _amRenderDetail() {
         <select id="am-de-tier" style="${inSt}">${tierOptsHtml}</select></label>
       <label style="display:block;margin-top:8px;"><div style="font-size:11px;font-weight:600;color:${textMut};margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;">Reports To</div>
         <select id="am-de-mgr" style="${inSt}">${mgrOptsHtml}</select></label>
-      ${p.photo ? `<button id="am-de-rmphoto" style="margin-top:10px;padding:6px 10px;border:1px solid ${inputBorder};border-radius:8px;background:none;color:${textMut};font:inherit;font-size:12px;cursor:pointer;">Remove photo</button>` : ''}
+      <div style="margin-top:12px;">
+        <button id="am-de-left" style="width:100%;padding:8px;border:1px solid ${p.left?'#6b7280':inputBorder};border-radius:9px;background:${p.left?'#6b7280':'none'};color:${p.left?'#fff':textMut};font:inherit;font-size:12.5px;cursor:pointer;font-weight:600;">${p.left?'✓ Left company — click to restore':'🚪 Mark as "Left company"'}</button>
+      </div>
+      ${p.photo ? `<button id="am-de-rmphoto" style="margin-top:10px;width:100%;padding:6px 10px;border:1px solid ${inputBorder};border-radius:8px;background:none;color:${textMut};font:inherit;font-size:12px;cursor:pointer;">Remove photo</button>` : ''}
       <div style="display:flex;gap:8px;margin-top:14px;">
         <button id="am-de-cancel" style="flex:1;padding:9px;border:1px solid ${border};border-radius:9px;background:none;color:${textMut};font:inherit;font-size:13px;cursor:pointer;">Cancel</button>
         <button id="am-de-save" style="flex:2;padding:9px;border:none;border-radius:9px;background:#0d9488;color:#fff;font:inherit;font-size:13px;font-weight:700;cursor:pointer;">Save Changes</button>
+      </div>
+      <div style="margin-top:14px;border-top:1px solid ${border};padding-top:12px;">
+        <button id="am-de-delete" style="width:100%;padding:8px;border:1px solid rgba(239,68,68,.4);border-radius:9px;background:none;color:#ef4444;font:inherit;font-size:12.5px;cursor:pointer;font-weight:600;">🗑 Delete contact</button>
       </div>
     </div>`;
 
@@ -8717,18 +8773,20 @@ function _amRenderDetail() {
   // save
   const saveBtn = panel.querySelector('#am-de-save');
   if (saveBtn) saveBtn.onclick = () => {
-    p.name    = panel.querySelector('#am-de-name').value.trim() || p.name;
-    p.title   = panel.querySelector('#am-de-title').value.trim();
-    p.loc     = panel.querySelector('#am-de-loc').value.trim();
-    p.email   = panel.querySelector('#am-de-email').value.trim();
-    p.li      = panel.querySelector('#am-de-li').value.trim();
-    p.fit     = panel.querySelector('#am-de-fit').value.trim();
-    p.notes   = panel.querySelector('#am-de-notes').value.trim();
-    p.stance  = panel.querySelector('#am-de-stance').value;
-    p.tier    = panel.querySelector('#am-de-tier').value;
+    p.name     = panel.querySelector('#am-de-name').value.trim() || p.name;
+    p.title    = panel.querySelector('#am-de-title').value.trim();
+    p.role     = panel.querySelector('#am-de-role').value;
+    p.loc      = panel.querySelector('#am-de-loc').value.trim();
+    p.email    = panel.querySelector('#am-de-email').value.trim();
+    p.li       = panel.querySelector('#am-de-li').value.trim();
+    p.fit      = panel.querySelector('#am-de-fit').value.trim();
+    p.notes    = panel.querySelector('#am-de-notes').value.trim();
+    p.stance   = panel.querySelector('#am-de-stance').value;
+    p.tier     = panel.querySelector('#am-de-tier').value;
+    p.priority = Number(panel.querySelector('#am-de-priority').value) || 3;
     const newMgr = panel.querySelector('#am-de-mgr').value;
     if (am.reports) am.reports[p.id] = newMgr;
-    if (!p.updated) p.updated = new Date().toISOString().slice(0,10);
+    p.updated = new Date().toISOString().slice(0,10);
     _amOpenDetail(id);  // re-render detail with saved values
     renderAMMatrix();
     if (typeof renderAMOrgChart === 'function' && document.getElementById('am-org-root') &&
@@ -8736,6 +8794,20 @@ function _amRenderDetail() {
         document.querySelector('[data-page="am-org"]').classList.contains('active')) {
       renderAMOrgChart();
     }
+  };
+
+  // left-company toggle
+  const leftBtn = panel.querySelector('#am-de-left');
+  if (leftBtn) leftBtn.onclick = () => { p.left = !p.left; p.updated = new Date().toISOString().slice(0,10); _amOpenDetail(id); renderAMMatrix(); };
+
+  // delete
+  const delBtn = panel.querySelector('#am-de-delete');
+  if (delBtn) delBtn.onclick = () => {
+    if (!confirm('Delete "' + (p.name||'this contact') + '"? This cannot be undone.')) return;
+    if (am.people) am.people = am.people.filter(q => q.id !== id);
+    if (am.reports) { delete am.reports[id]; Object.keys(am.reports).forEach(k => { if (am.reports[k] === id) am.reports[k] = ''; }); }
+    _amCloseDetail();
+    renderAMMatrix();
   };
 }
 
@@ -8752,16 +8824,21 @@ function renderAMMatrix() {
   const textHead = isLight ? '#0f172a' : '#f1f5f9';
   const inputBg = isLight ? '#f8fafc' : '#0f172a';
   const inputBorder = isLight ? '#d1d5db' : '#334155';
+  const accentGreen = isLight ? '#0d9488' : '#2dd4bf';
   if (!STATE.accountMapper) { _amEmptyState(host, isLight); return; }
   const am = STATE.accountMapper;
   const allPeople = am.people || [];
+  const reports = am.reports || {};
+  const byId = {}; allPeople.forEach(q => { byId[q.id] = q; });
   const tierKeys = ['C-Level','VP','Senior Director','Director','Associate Director'];
 
+  // Apply search + stance + tier + priority filters
   let filtered = allPeople;
   if (_amSearch) {
     const q = _amSearch.toLowerCase();
     filtered = filtered.filter(p => [p.name,p.title,p.role,p.loc,p.fit,p.email,p.notes,p.stance].join(' ').toLowerCase().includes(q));
   }
+  if (_amPrioOnly) filtered = filtered.filter(p => !!AM_STANCES[p.stance]);
   if (_amStanceFilter) filtered = filtered.filter(p => p.stance === _amStanceFilter);
   if (_amTierFilter) {
     filtered = filtered.filter(p => {
@@ -8775,7 +8852,16 @@ function renderAMMatrix() {
     });
   }
 
-  const cardsHtml = filtered.map(p => {
+  // Sort
+  const cmp = (a, b) => {
+    if (_amSort === 'name')  return (a.name||'').localeCompare(b.name||'');
+    if (_amSort === 'pri')   return ((a.priority||9) - (b.priority||9)) || (a.name||'').localeCompare(b.name||'');
+    if (_amSort === 'loc')   return (a.loc||'~').localeCompare(b.loc||'~');
+    if (_amSort === 'title') return (a.title||'~').localeCompare(b.title||'~');
+    return 0;
+  };
+
+  function makeCard(p) {
     const s = AM_STANCES[p.stance];
     const bord = p.stance === 'Blocker' ? 'rgba(239,68,68,0.45)' : (s ? s.border : border);
     const glowShadow = s ? `box-shadow:0 0 0 2px ${s.color}44;` : '';
@@ -8788,6 +8874,7 @@ function renderAMMatrix() {
               <span style="font-size:13.5px;font-weight:650;color:${textHead};">${p.name||'Unknown'}</span>
               ${p.left?'<span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:5px;background:#4b5563;color:#9ca3af;">LEFT</span>':''}
               ${p.notes ? '<span title="Has notes" style="font-size:12px;">📝</span>' : ''}
+              ${p.priority===1?'<span title="Priority contact" style="font-size:11px;font-weight:800;padding:1px 5px;border-radius:5px;background:rgba(234,179,8,0.18);color:#eab308;border:1px solid rgba(234,179,8,0.4);">★</span>':''}
             </div>
             <div style="font-size:12px;color:${textMut};margin-top:2px;line-height:1.3;">${p.title||''}</div>
             ${p.role ? `<div style="font-size:11px;color:${textMut};margin-top:1px;">${p.role}</div>` : ''}
@@ -8800,16 +8887,72 @@ function renderAMMatrix() {
         </div>
         ${p.fit ? `<div style="font-size:12px;color:${textMut};line-height:1.4;padding:6px 8px;background:${inputBg};border-radius:7px;border:1px solid ${border};">${p.fit.slice(0,120)}${p.fit.length>120?'…':''}</div>` : ''}
         ${p.notes ? `<div style="font-size:12px;color:${textMut};line-height:1.4;font-style:italic;border-top:1px solid ${border};padding-top:8px;">${p.notes.slice(0,100)}${p.notes.length>100?'…':''}</div>` : ''}
-        ${p.email ? `<div style="font-size:12px;"><a href="mailto:${p.email}" onclick="event.stopPropagation()" style="color:#60a5fa;text-decoration:none;">✉ ${p.email}</a></div>` : ''}
+        ${p.li ? `<div style="font-size:12px;"><a href="${p.li}" target="_blank" onclick="event.stopPropagation()" style="color:#60a5fa;text-decoration:none;">LinkedIn ▶</a>${p.email?`  <a href="mailto:${p.email}" onclick="event.stopPropagation()" style="color:#60a5fa;text-decoration:none;">✉ ${p.email}</a>`:''}</div>` : (p.email ? `<div style="font-size:12px;"><a href="mailto:${p.email}" onclick="event.stopPropagation()" style="color:#60a5fa;text-decoration:none;">✉ ${p.email}</a></div>` : '')}
       </div>`;
-  }).join('');
+  }
 
-  const selStyle = `background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:8px 10px;border-radius:9px;font-size:12.5px;font-family:inherit;`;
+  // Build grouped or flat HTML
+  let gridHtml = '';
+  const active = filtered.filter(p => !p.left).sort(cmp);
+  const left   = filtered.filter(p => p.left).sort(cmp);
+
+  if (_amGroupBy === 'none') {
+    gridHtml = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">${active.map(makeCard).join('') || `<div style="grid-column:1/-1;text-align:center;padding:40px;color:${textMut};font-size:13px;">No contacts match filters.</div>`}</div>`;
+  } else {
+    const groups = {};
+    active.forEach(p => { const k = _amGrpKey(p, _amGroupBy, reports, byId); (groups[k] = groups[k]||[]).push(p); });
+    const keys = Object.keys(groups).sort((a,b) => {
+      const na=a[0]==='—', nb=b[0]==='—';
+      if (na!==nb) return na ? 1 : -1;
+      return a.localeCompare(b);
+    });
+    if (!keys.length) {
+      gridHtml = `<div style="text-align:center;padding:40px;color:${textMut};font-size:13px;">No contacts match filters.</div>`;
+    } else {
+      gridHtml = keys.map(k => `
+        <div style="margin-bottom:22px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div style="width:3px;height:16px;border-radius:2px;background:${accentGreen};"></div>
+            <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${textHead};">${k}</span>
+            <span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:20px;background:${inputBg};color:${textMut};border:1px solid ${border};">${groups[k].length}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">${groups[k].map(makeCard).join('')}</div>
+        </div>`).join('');
+    }
+  }
+  if (left.length) {
+    gridHtml += `
+      <div style="margin-bottom:22px;margin-top:10px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:3px;height:16px;border-radius:2px;background:#6b7280;"></div>
+          <span style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${textMut};">🚪 Left Company</span>
+          <span style="font-size:11px;font-weight:600;padding:1px 7px;border-radius:20px;background:${inputBg};color:${textMut};border:1px solid ${border};">${left.length}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">${left.map(makeCard).join('')}</div>
+      </div>`;
+  }
+
+  const selStyle = `background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:7px 9px;border-radius:9px;font-size:12.5px;font-family:inherit;`;
+  const prioOnBg = _amPrioOnly ? accentGreen : (isLight ? '#fff' : '#1e293b');
+  const prioOnColor = _amPrioOnly ? '#fff' : textMut;
   host.innerHTML = `
     <div style="max-width:1100px;">
       ${_amHeader(isLight, 'am-matrix')}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
         <input type="search" id="am-search" placeholder="Search name, title, role, location, notes…" value="${_amSearch.replace(/"/g,'&quot;')}" style="flex:1;min-width:180px;background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:8px 12px;border-radius:9px;font-size:13.5px;font-family:inherit;outline:none;">
+        <select id="am-groupby" style="${selStyle}">
+          <option value="fn"   ${_amGroupBy==='fn'?'selected':''}>Group: Function</option>
+          <option value="loc"  ${_amGroupBy==='loc'?'selected':''}>Group: Location</option>
+          <option value="prio" ${_amGroupBy==='prio'?'selected':''}>Group: Relationship</option>
+          <option value="mgr"  ${_amGroupBy==='mgr'?'selected':''}>Group: Manager</option>
+          <option value="none" ${_amGroupBy==='none'?'selected':''}>Group: None</option>
+        </select>
+        <select id="am-sort" style="${selStyle}">
+          <option value="name"  ${_amSort==='name'?'selected':''}>Sort: Name</option>
+          <option value="pri"   ${_amSort==='pri'?'selected':''}>Sort: Priority</option>
+          <option value="loc"   ${_amSort==='loc'?'selected':''}>Sort: Location</option>
+          <option value="title" ${_amSort==='title'?'selected':''}>Sort: Title</option>
+        </select>
         <select id="am-stance-filter" style="${selStyle}">
           <option value="">All stances</option>
           ${['Champion','Decision Maker','Target','Influencer','Blocker'].map(s=>`<option value="${s}" ${_amStanceFilter===s?'selected':''}>${s}</option>`).join('')}
@@ -8818,19 +8961,25 @@ function renderAMMatrix() {
           <option value="">All levels</option>
           ${tierKeys.map(t=>`<option value="${t}" ${_amTierFilter===t?'selected':''}>${t}</option>`).join('')}
         </select>
+        <button id="am-prio-only" style="padding:7px 11px;border:1px solid ${inputBorder};border-radius:9px;background:${prioOnBg};color:${prioOnColor};font-size:12.5px;font-family:inherit;cursor:pointer;font-weight:600;white-space:nowrap;">⚑ Tagged only</button>
+        <button onclick="_amNewContact()" style="padding:7px 12px;border:none;border-radius:9px;background:${accentGreen};color:#fff;font-size:13px;font-family:inherit;cursor:pointer;font-weight:700;white-space:nowrap;">＋ Add contact</button>
         <span style="font-size:12px;color:${textMut};">${filtered.length} of ${allPeople.length}</span>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">
-        ${cardsHtml || `<div style="grid-column:1/-1;text-align:center;padding:40px;color:${textMut};font-size:13px;">No contacts match filters.</div>`}
-      </div>
+      ${gridHtml}
     </div>`;
   _wireAMReimport(host);
   const s = host.querySelector('#am-search');
   if (s) s.oninput = () => { _amSearch = s.value; renderAMMatrix(); };
+  const gbEl = host.querySelector('#am-groupby');
+  if (gbEl) gbEl.onchange = () => { _amGroupBy = gbEl.value; renderAMMatrix(); };
+  const sortEl = host.querySelector('#am-sort');
+  if (sortEl) sortEl.onchange = () => { _amSort = sortEl.value; renderAMMatrix(); };
   const sf = host.querySelector('#am-stance-filter');
   if (sf) sf.onchange = () => { _amStanceFilter = sf.value; renderAMMatrix(); };
   const tf = host.querySelector('#am-tier-filter');
   if (tf) tf.onchange = () => { _amTierFilter = tf.value; renderAMMatrix(); };
+  const pb = host.querySelector('#am-prio-only');
+  if (pb) pb.onclick = () => { _amPrioOnly = !_amPrioOnly; renderAMMatrix(); };
   // card click → detail panel
   host.querySelectorAll('[data-am-pid]').forEach(card => {
     card.onclick = () => _amOpenDetail(card.dataset.amPid);
@@ -8939,19 +9088,27 @@ function renderAMOrgChart() {
         </div>
       </div>
     </div>
-    <div id="am-org-toolbar" style="position:absolute;top:44px;left:0;right:0;height:42px;display:flex;gap:6px;align-items:center;padding:0 10px;border-bottom:1px solid ${border};background:${hdrBg};z-index:10;overflow:hidden;">
-      <input type="text" id="am-orgq" placeholder="🔍 Find…" style="background:${card};border:1px solid ${border};color:${textHead};padding:4px 8px;border-radius:7px;font-size:12.5px;width:150px;font-family:inherit;outline:none;">
-      <button id="am-orgqx" title="Clear search" style="padding:4px 7px;border:1px solid ${border};border-radius:7px;background:${card};color:${textMut};cursor:pointer;font-family:inherit;font-size:11.5px;">✕</button>
-      <span style="width:1px;height:18px;background:${border};"></span>
-      <button id="am-org-zin"  title="Zoom in"   style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-size:14px;font-weight:700;">＋</button>
-      <button id="am-org-zout" title="Zoom out"  style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-size:14px;font-weight:700;">－</button>
-      <button id="am-org-fit"  title="Fit all"   style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-family:inherit;font-size:12px;">Fit</button>
-      <button id="am-org-arrange" title="Re-layout" style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-family:inherit;font-size:12px;">⤵ Organize</button>
-      <select id="am-org-layout" style="background:${card};border:1px solid ${border};color:${textHead};padding:4px 7px;border-radius:7px;font-size:12px;font-family:inherit;">
+    <div id="am-org-toolbar" style="position:absolute;top:44px;left:0;right:0;height:42px;display:flex;gap:5px;align-items:center;padding:0 10px;border-bottom:1px solid ${border};background:${hdrBg};z-index:10;overflow-x:auto;overflow-y:hidden;">
+      <input type="text" id="am-orgq" placeholder="🔍 Find…" style="background:${card};border:1px solid ${border};color:${textHead};padding:4px 8px;border-radius:7px;font-size:12.5px;width:140px;font-family:inherit;outline:none;flex-shrink:0;">
+      <button id="am-orgqx" title="Clear search" style="padding:4px 7px;border:1px solid ${border};border-radius:7px;background:${card};color:${textMut};cursor:pointer;font-family:inherit;font-size:11.5px;flex-shrink:0;">✕</button>
+      <span style="width:1px;height:18px;background:${border};flex-shrink:0;"></span>
+      <button id="am-org-del" title="Delete selected card (select by clicking)" style="padding:4px 8px;border:1px solid ${border};border-radius:7px;background:${card};color:${textMut};cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0;">🗑 Delete</button>
+      <span style="width:1px;height:18px;background:${border};flex-shrink:0;"></span>
+      <button id="am-org-zin"  title="Zoom in"   style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-size:14px;font-weight:700;flex-shrink:0;">＋</button>
+      <button id="am-org-zout" title="Zoom out"  style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-size:14px;font-weight:700;flex-shrink:0;">－</button>
+      <button id="am-org-fit"  title="Fit all"   style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0;">Fit</button>
+      <button id="am-org-arrange" title="Re-layout" style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0;">⤵ Organize</button>
+      <button id="am-org-orient" title="Switch vertical/horizontal layout" style="padding:4px 9px;border:1px solid ${border};border-radius:7px;background:${card};color:${textHead};cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0;">⇅ Vertical</button>
+      <select id="am-org-layout" style="background:${card};border:1px solid ${border};color:${textHead};padding:4px 7px;border-radius:7px;font-size:12px;font-family:inherit;flex-shrink:0;">
         <option value="tierflow">🎂 Tiers + flow</option>
         <option value="tree">🌳 Reporting tree</option>
       </select>
-      <span style="font-size:11px;color:${textMut};margin-left:auto;white-space:nowrap;">Drag card onto another to reassign manager · scroll to zoom · drag background to pan</span>
+      <button id="am-org-photos" title="Toggle photo display" style="padding:4px 8px;border:1px solid ${border};border-radius:7px;background:${card};color:${textMut};cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0;">👤 Photos</button>
+      <button id="am-org-showleft" title="Show/hide departed contacts" style="padding:4px 8px;border:1px solid ${border};border-radius:7px;background:${card};color:${textMut};cursor:pointer;font-family:inherit;font-size:12px;flex-shrink:0;">🚪 Departed</button>
+      <span style="width:1px;height:18px;background:${border};flex-shrink:0;"></span>
+      <input type="text" id="am-org-addname" placeholder="New name…" style="background:${card};border:1px solid ${border};color:${textHead};padding:4px 8px;border-radius:7px;font-size:12px;width:120px;font-family:inherit;outline:none;flex-shrink:0;">
+      <button id="am-org-addbtn" style="padding:4px 9px;border:none;border-radius:7px;background:#0d9488;color:#fff;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;flex-shrink:0;">＋ Add</button>
+      <span id="am-org-hint" style="font-size:11px;color:${textMut};margin-left:auto;white-space:nowrap;flex-shrink:0;">Drag card onto another to set manager · hover card for ＋ · ▾ collapses downline · dbl-click name to rename</span>
     </div>
     <div id="am-org-viewport" style="position:absolute;top:86px;left:0;right:0;bottom:0;overflow:hidden;cursor:grab;background:${canvasBg};">
       <div id="am-org-world" style="position:absolute;top:0;left:0;transform-origin:0 0;">
@@ -8969,7 +9126,10 @@ function renderAMOrgChart() {
   const bandsEl    = document.getElementById('am-org-bands');
   const tierLabels = document.getElementById('am-org-tierlabels');
 
-  // Per-render state object
+  // Per-render state object — persist across re-renders using module-level vars
+  if (!window._amOrgPersist) window._amOrgPersist = { collapsed: new Set(), orient: 'v', showLeft: false, showPhotos: true, sel: null };
+  const PERSIST = window._amOrgPersist;
+
   const ST = {
     scale: 1, tx: 40, ty: 20,
     layout: 'tierflow',
@@ -8979,20 +9139,39 @@ function renderAMOrgChart() {
     pan: null,
     dropTarget: null,
     bandRects: [],
+    collapsed: PERSIST.collapsed,
+    orient: PERSIST.orient,
+    showLeft: PERSIST.showLeft,
+    showPhotos: PERSIST.showPhotos,
+    sel: PERSIST.sel,
   };
   _amOrgState = ST;
 
   // Load saved positions if available
   Object.assign(ST.pos, posMap);
 
+  function isOrgHidden(id) {
+    const p = byId[id]; if (!p) return true;
+    if (!ST.showLeft && p.left) return true;
+    let cur = reports[id], g = 0;
+    while (cur && g++ < 300) { if (ST.collapsed.has(cur)) return true; cur = reports[cur]; }
+    return false;
+  }
   function effMgr(id) {
-    const m = reports[id]; return (m && byId[m]) ? m : '';
+    let m = reports[id], g = 0;
+    while (m && byId[m] && (!ST.showLeft && byId[m].left) && g++ < 300) m = reports[m];
+    return (m && byId[m]) ? m : '';
   }
   function effChildrenOf(id) {
-    return people.filter(p => effMgr(p.id) === id && !p.left).map(p => p.id);
+    return people.filter(p => !isOrgHidden(p.id) && effMgr(p.id) === id).map(p => p.id);
   }
   function effRoots() {
-    return people.filter(p => !p.left && !effMgr(p.id)).map(p => p.id);
+    return people.filter(p => !isOrgHidden(p.id) && !effMgr(p.id)).map(p => p.id);
+  }
+  function totalBelow(id) {
+    let n = 0; const st = (am.reports ? Object.keys(am.reports).filter(k => am.reports[k] === id) : []).slice(), seen = new Set();
+    while (st.length) { const x = st.pop(); if (seen.has(x)) continue; seen.add(x); n++; Object.keys(am.reports||{}).filter(k => am.reports[k] === x).forEach(c => st.push(c)); }
+    return n;
   }
   function isDescendant(anc, node) {
     let cur = reports[node], g = 0;
@@ -9006,14 +9185,16 @@ function renderAMOrgChart() {
 
   // ─── LAYOUT algorithms ───────────────────────────────────────────────────
 
-  function place2(c, row) { return { x: c * (NW + HGAP), y: row * (NH + VGAP) }; }
+  function place2(c, row) {
+    return ST.orient === 'h' ? { x: row * (NW + HGAP), y: c * (NH + VGAP) } : { x: c * (NW + HGAP), y: row * (NH + VGAP) };
+  }
 
   function treeArrange() {
     let col = 0; const seen = new Set();
     function place(id, depth) {
       if (seen.has(id)) return col++;
       seen.add(id);
-      const ch = effChildrenOf(id).filter(c => !seen.has(c));
+      const ch = (ST.collapsed.has(id) ? [] : effChildrenOf(id)).filter(c => !seen.has(c));
       if (!ch.length) { ST.pos[id] = place2(col, depth); return col++; }
       const cols = ch.map(c => place(c, depth + 1));
       const c = (Math.min(...cols) + Math.max(...cols)) / 2;
@@ -9025,21 +9206,21 @@ function renderAMOrgChart() {
     const singles = roots.filter(id => !effChildrenOf(id).length);
     trees.forEach(r => { place(r, 0); col += 1; });
     const placed = [...seen].map(id => ST.pos[id]).filter(Boolean);
-    const baseY  = placed.length ? Math.max(...placed.map(p => p.y)) : 0;
-    const gcols  = 8, gy = baseY + NH + VGAP + 30;
-    singles.forEach((id, i) => { seen.add(id); ST.pos[id] = { x: (i % gcols) * (NW + HGAP), y: gy + Math.floor(i / gcols) * (NH + VGAP) }; });
-    people.forEach(p => { if (!ST.pos[p.id] && !p.left) ST.pos[p.id] = place2(col++, 0); });
+    const baseY  = placed.length ? Math.max(...placed.map(p => (ST.orient==='h'?p.x:p.y))) : 0;
+    const gcols  = 8, gy = baseY + (ST.orient==='h'?NW:NH) + VGAP + 30;
+    singles.forEach((id, i) => { seen.add(id); ST.pos[id] = ST.orient==='h' ? { x: gy + Math.floor(i / gcols) * (NW + HGAP), y: (i % gcols) * (NH + VGAP) } : { x: (i % gcols) * (NW + HGAP), y: gy + Math.floor(i / gcols) * (NH + VGAP) }; });
+    people.forEach(p => { if (!ST.pos[p.id] && !isOrgHidden(p.id)) ST.pos[p.id] = place2(col++, 0); });
   }
 
   function tierFlowArrange() {
-    const vis = people.filter(p => !p.left);
+    const vis = people.filter(p => !isOrgHidden(p.id));
     const present = AM_ORG_TIER_DEFS.filter(t => vis.some(p => _amOrgTierKey(p) === t.key));
     const rowOf = {}; present.forEach((t, i) => { rowOf[t.key] = i; });
     let col = 0; const xcol = {}, seen = new Set();
     function assign(id) {
       if (seen.has(id)) return xcol[id] || 0;
       seen.add(id);
-      const kids = effChildrenOf(id).filter(c => !seen.has(c));
+      const kids = (ST.collapsed.has(id) ? [] : effChildrenOf(id)).filter(c => !seen.has(c));
       if (!kids.length) { xcol[id] = col++; return xcol[id]; }
       const cs = kids.map(assign);
       xcol[id] = (Math.min(...cs) + Math.max(...cs)) / 2;
@@ -9053,14 +9234,18 @@ function renderAMOrgChart() {
     vis.forEach(p => { if (!seen.has(p.id)) { xcol[p.id] = col++; seen.add(p.id); } });
     vis.forEach(p => {
       const k = _amOrgTierKey(p), r = rowOf[k] || 0, c = xcol[p.id] || 0;
-      ST.pos[p.id] = { x: c * (NW + HGAP), y: r * (NH + VGAP) };
+      ST.pos[p.id] = ST.orient === 'h' ? { x: r * (NW + HGAP), y: c * (NH + VGAP) } : { x: c * (NW + HGAP), y: r * (NH + VGAP) };
     });
     // de-overlap within each tier
     present.forEach(t => {
       const ns = vis.filter(p => _amOrgTierKey(p) === t.key && ST.pos[p.id]);
-      ns.sort((a, b) => ST.pos[a.id].x - ST.pos[b.id].x);
-      let last = -1e9;
-      ns.forEach(p => { if (ST.pos[p.id].x < last + NW + HGAP) ST.pos[p.id].x = last + NW + HGAP; last = ST.pos[p.id].x; });
+      if (ST.orient === 'h') {
+        ns.sort((a, b) => ST.pos[a.id].y - ST.pos[b.id].y);
+        let last = -1e9; ns.forEach(p => { if (ST.pos[p.id].y < last + NH + VGAP) ST.pos[p.id].y = last + NH + VGAP; last = ST.pos[p.id].y; });
+      } else {
+        ns.sort((a, b) => ST.pos[a.id].x - ST.pos[b.id].x);
+        let last = -1e9; ns.forEach(p => { if (ST.pos[p.id].x < last + NW + HGAP) ST.pos[p.id].x = last + NW + HGAP; last = ST.pos[p.id].x; });
+      }
     });
   }
 
