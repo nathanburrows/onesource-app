@@ -17398,6 +17398,16 @@ function toggleTheme() {
     if (typeof rnRenderCalendar === 'function') rnRenderCalendar();
     if (typeof rnRenderMiniCalendar === 'function') rnRenderMiniCalendar();
   }
+  // Renewal timeline uses inline styles — re-render visible instances.
+  const tlHost = document.getElementById('client-renewal-timeline');
+  if (tlHost && tlHost.offsetParent !== null && STATE && STATE._clientScope) {
+    const { parent, customer } = STATE._clientScope;
+    if (typeof renderClientRenewalTimeline === 'function') renderClientRenewalTimeline(parent, customer);
+  }
+  const repTlHost = document.getElementById('rep-renewals-timeline-list');
+  if (repTlHost && repTlHost.offsetParent !== null && typeof renderRepRenewalsTimeline === 'function') {
+    renderRepRenewalsTimeline();
+  }
 }
 
 /* Sync button state on load (theme may already be light via boot script) */
@@ -18586,6 +18596,24 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
   const host = document.getElementById(hostId || 'client-renewal-timeline');
   if (!host) return;
   const PAL = ['#34d399','#a78bfa','#fbbf24','#60a5fa','#f472b6','#22d3ee','#fb923c','#c084fc','#4ade80','#f87171','#fb7185','#2dd4bf'];
+  const light = document.body.classList.contains('light');
+  const rtBgOdd     = light ? 'rgba(99,102,241,0.07)'          : 'rgba(99,102,241,0.16)';
+  const rtBgEven    = light ? 'rgba(168,85,247,0.04)'          : 'rgba(168,85,247,0.10)';
+  const rtLine      = light ? 'rgba(99,102,241,0.30)'          : 'rgba(165,180,252,0.55)';
+  const rtFyTxt     = light ? '#1e293b'                        : '#f1f5f9';
+  const rtFyLabelBg = light ? 'rgba(99,102,241,0.08)'          : 'rgba(99,102,241,0.18)';
+  const rtFyLabelBd = light ? 'rgba(99,102,241,0.25)'          : 'rgba(99,102,241,0.35)';
+  const rtFyTotal   = light ? '#059669'                        : '#34d399';
+  const rtQTxt      = light ? '#475569'                        : '#cbd5e1';
+  const rtRowBg     = light ? 'rgba(226,232,240,0.3)'          : 'rgba(15,23,42,0.5)';
+  const rtRowBd     = light ? 'rgba(148,163,184,0.3)'          : 'rgba(71,85,105,0.4)';
+  const rtHdrBg     = light ? '#f8fafc'                        : '#1e293b';
+  const rtHdrShadow = light ? '0 4px 8px -4px rgba(0,0,0,0.10)' : '0 4px 8px -4px rgba(0,0,0,0.4)';
+  const rtOverlay   = light ? 'rgba(241,245,249,0.7)'          : 'rgba(15,23,42,0.7)';
+  const rtShapeBd   = light ? 'rgba(241,245,249,0.90)'         : 'rgba(15,23,42,0.95)';
+  const rtLabelBg   = light ? '#f1f5f9'                        : '#1e293b';
+  const rtChipBg    = light ? '#f8fafc'                        : '#1e293b';
+  const rtFanBg     = light ? 'rgba(248,250,252,0.96)'         : 'rgba(15,23,42,0.96)';
 
   const events = clientAggRenewalEvents(parent, customer);
   if (!events.range || !Object.keys(events.byVendor).length) {
@@ -18647,8 +18675,8 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
     const width = ((e - s) / span) * 100;
     // Stronger alternating FY shade. FY boundary lines are drawn separately
     // as a body-wide overlay (fyBodyLines) so they're continuous across rows.
-    const fyShade = (b.fyStartYr % 2 === 0) ? 'rgba(99,102,241,0.16)' : 'rgba(168,85,247,0.10)';
-    const rightBorder = '1px dashed rgba(71,85,105,0.30)';
+    const fyShade = (b.fyStartYr % 2 === 0) ? rtBgOdd : rtBgEven;
+    const rightBorder = '1px dashed rgba(71,85,105,0.20)';
     return `<div style="position:absolute;left:${left.toFixed(2)}%;width:${width.toFixed(2)}%;top:0;bottom:0;background:${fyShade};border-right:${rightBorder};"></div>`;
   }).join('');
 
@@ -18658,7 +18686,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
     const e = Math.min(b.endMs, maxMs);
     if (e <= minMs) return '';
     const left = ((e - minMs) / span) * 100;
-    return `<div style="position:absolute;left:${left.toFixed(3)}%;top:0;bottom:0;width:1.5px;background:rgba(165,180,252,0.55);transform:translateX(-50%);pointer-events:none;"></div>`;
+    return `<div style="position:absolute;left:${left.toFixed(3)}%;top:0;bottom:0;width:1.5px;background:${rtLine};transform:translateX(-50%);pointer-events:none;"></div>`;
   }).join('');
 
   // FY label row — one label per FY (placed at the midpoint of each FY span).
@@ -18723,7 +18751,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
     if (e <= s) return '';
     const left = ((s - minMs) / span) * 100;
     const width = ((e - s) / span) * 100;
-    const color = 'rgba(165,180,252,0.55)';
+    const color = rtLine;
     return `<div style="position:absolute;left:${left.toFixed(3)}%;width:${width.toFixed(3)}%;top:0;height:10px;border-top:1.5px solid ${color};border-left:1.5px solid ${color};border-right:1.5px solid ${color};border-top-left-radius:4px;border-top-right-radius:4px;pointer-events:none;"></div>`;
   }).join('');
 
@@ -18737,8 +18765,8 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
     const fyTotal = fyTotalByKey.get(fyStartYr) || 0;
     const totalLbl = fyTotal > 0 ? clientFmtMoney(fyTotal) : '';
     return `<div style="position:absolute;left:${left.toFixed(2)}%;transform:translateX(-50%);text-align:center;line-height:1.15;">
-      <div style="display:inline-block;font-size:15px;color:#f1f5f9;font-weight:800;letter-spacing:0.10em;padding:2px 10px;border-radius:6px;background:rgba(99,102,241,0.18);border:1px solid rgba(99,102,241,0.35);">${f.fyKey}</div>
-      ${totalLbl ? `<div style="font-size:12px;color:#34d399;font-weight:800;font-variant-numeric:tabular-nums;margin-top:3px;text-shadow:0 0 6px rgba(52,211,153,0.25);display:flex;align-items:center;justify-content:center;gap:4px;">${totalLbl}<button class="calc-info-btn" data-calc-info="${escAttr('FY Renewal Total\nSum of annual renewal costs for all events in ' + f.fyKey + '\nEach renewal = ST Net Sell ÷ term years\n' + f.fyKey + ' total: ' + totalLbl)}" onclick="showCalcInfo(this,event)">ℹ</button></div>` : ''}
+      <div style="display:inline-block;font-size:15px;color:${rtFyTxt};font-weight:800;letter-spacing:0.10em;padding:2px 10px;border-radius:6px;background:${rtFyLabelBg};border:1px solid ${rtFyLabelBd};">${f.fyKey}</div>
+      ${totalLbl ? `<div style="font-size:12px;color:${rtFyTotal};font-weight:800;font-variant-numeric:tabular-nums;margin-top:3px;text-shadow:0 0 6px rgba(52,211,153,0.18);display:flex;align-items:center;justify-content:center;gap:4px;">${totalLbl}<button class="calc-info-btn" data-calc-info="${escAttr('FY Renewal Total\nSum of annual renewal costs for all events in ' + f.fyKey + '\nEach renewal = ST Net Sell ÷ term years\n' + f.fyKey + ' total: ' + totalLbl)}" onclick="showCalcInfo(this,event)">ℹ</button></div>` : ''}
     </div>`;
   }).join('');
 
@@ -18757,11 +18785,11 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
     // Tier the $ label so the eye reads scale: low/mid/high → muted/bright/glow.
     const ratio = qTotal / qMaxTotal;
     let tierStyle = 'color:#475569;';
-    if (qTotal > 0 && ratio < 0.20)      tierStyle = 'color:#10b981;opacity:0.75;';
-    else if (qTotal > 0 && ratio < 0.55) tierStyle = 'color:#34d399;';
-    else if (qTotal > 0)                 tierStyle = 'color:#6ee7b7;text-shadow:0 0 6px rgba(110,231,183,0.35);';
+    if (qTotal > 0 && ratio < 0.20)      tierStyle = light ? 'color:#059669;opacity:0.80;' : 'color:#10b981;opacity:0.75;';
+    else if (qTotal > 0 && ratio < 0.55) tierStyle = light ? 'color:#047857;'               : 'color:#34d399;';
+    else if (qTotal > 0)                 tierStyle = light ? 'color:#065f46;font-weight:900;' : 'color:#6ee7b7;text-shadow:0 0 6px rgba(110,231,183,0.35);';
     return `<div style="position:absolute;left:${left.toFixed(2)}%;transform:translateX(-50%);text-align:center;line-height:1.2;">
-      <div style="font-size:11.5px;color:#cbd5e1;font-weight:700;letter-spacing:0.04em;">Q${b.q}</div>
+      <div style="font-size:11.5px;color:${rtQTxt};font-weight:700;letter-spacing:0.04em;">Q${b.q}</div>
       ${totalLbl ? `<div style="font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:1px;${tierStyle}display:flex;align-items:center;justify-content:center;gap:3px;">${totalLbl}<button class="calc-info-btn" data-calc-info="${escAttr('Q' + b.q + ' Renewal Total\nSum of annual renewal costs for all events in Q' + b.q + '\nEach renewal = ST Net Sell ÷ term years\nQ' + b.q + ' total: ' + totalLbl)}" onclick="showCalcInfo(this,event)">ℹ</button></div>` : ''}
     </div>`;
   }).join('');
@@ -18774,7 +18802,9 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
     if (e <= minMs) return '';
     const left = ((e - minMs) / span) * 100;
     const isFY = b.q === 4;
-    const color = isFY ? 'rgba(148,163,184,0.70)' : 'rgba(99,102,241,0.32)';
+    const color = isFY
+      ? (light ? 'rgba(100,116,139,0.60)' : 'rgba(148,163,184,0.70)')
+      : (light ? 'rgba(99,102,241,0.25)'  : 'rgba(99,102,241,0.32)');
     const w = isFY ? '2px' : '1px';
     const top = isFY ? '0' : '4px';
     return `<div style="position:absolute;left:${left.toFixed(2)}%;top:${top};bottom:0;width:${w};background:${color};transform:translateX(-50%);"></div>`;
@@ -18808,7 +18838,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
         const labelCount = Math.max(1, Math.min(4, Math.floor(width / minLabelSpacingPct)));
         const labels = Array.from({ length: labelCount }, (_, j) => {
           const pct = ((j + 0.5) / labelCount) * 100;
-          return `<span style="position:absolute;left:${pct.toFixed(2)}%;top:-7px;transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:${c};letter-spacing:0.06em;text-transform:uppercase;background:#1e293b;padding:0 6px;line-height:1.1;white-space:nowrap;">${escHtml(rec.vendor)}</span>`;
+          return `<span style="position:absolute;left:${pct.toFixed(2)}%;top:-7px;transform:translate(-50%,-50%);font-size:10px;font-weight:700;color:${c};letter-spacing:0.06em;text-transform:uppercase;background:${rtLabelBg};padding:0 6px;line-height:1.1;white-space:nowrap;">${escHtml(rec.vendor)}</span>`;
         }).join('');
         return `<div style="position:absolute;left:${left.toFixed(2)}%;width:${width.toFixed(2)}%;top:30%;height:0;border-top:1.5px dashed ${c};opacity:0.85;z-index:1;pointer-events:none;">${labels}</div>`;
       }).join('');
@@ -18821,7 +18851,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
     const mkMarker = (ev, posStyle) => {
       const pastOpacity = ev.isPast ? 0.45 : 1;
       const moneyLbl = ev.netSell > 0
-        ? `<span style="font-size:10px;color:${c};font-weight:800;font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 0 4px rgba(15,23,42,0.9);">${clientFmtMoney(ev.netSell)}</span>`
+        ? `<span style="font-size:10px;color:${c};font-weight:800;font-variant-numeric:tabular-nums;line-height:1;text-shadow:${light ? 'none' : '0 0 4px rgba(15,23,42,0.9)'};">${clientFmtMoney(ev.netSell)}</span>`
         : '';
       const _confLabel = ev.confidence === 'renewal' ? 'Confirmed (warranty cycle)'
                        : ev.confidence === 'estimated' ? 'Estimated (billing dates)'
@@ -18862,15 +18892,15 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
                     (ev.poNumber ? ` · PO ${escAttr(ev.poNumber)}` : '') +
                     ' · click for line detail';
         const fillStyle = (isEst || isDerived)
-          ? `background:repeating-linear-gradient(45deg, ${c}, ${c} 3px, rgba(15,23,42,0.7) 3px, rgba(15,23,42,0.7) 5px);`
+          ? `background:repeating-linear-gradient(45deg, ${c}, ${c} 3px, ${rtOverlay} 3px, ${rtOverlay} 5px);`
           : `background:${c};`;
         const estBadge = isDerived
-          ? `<span style="font-size:8px;font-weight:800;letter-spacing:0.06em;background:rgba(245,158,11,0.18);color:#fcd34d;border:1px solid rgba(245,158,11,0.45);padding:1px 4px;border-radius:3px;line-height:1;">EST</span>`
+          ? `<span style="font-size:8px;font-weight:800;letter-spacing:0.06em;background:rgba(245,158,11,0.18);color:${light ? '#92400e' : '#fcd34d'};border:1px solid rgba(245,158,11,0.45);padding:1px 4px;border-radius:3px;line-height:1;">EST</span>`
           : '';
         return `
           <div ${evtAttr} ${onClick} ${hoverFx} title="${tip}" class="crt-marker" style="${baseStyle}z-index:3;">
             ${moneyLbl}${infoBtn}
-            <span class="crt-marker-shape" style="display:block;width:16px;height:16px;${fillStyle}border:1.5px solid rgba(15,23,42,0.95);transform:rotate(45deg);box-shadow:0 0 0 1px ${c};"></span>
+            <span class="crt-marker-shape" style="display:block;width:16px;height:16px;${fillStyle}border:1.5px solid ${rtShapeBd};transform:rotate(45deg);box-shadow:0 0 0 1px ${c};"></span>
             <span style="font-size:9px;color:${c};font-weight:800;text-transform:uppercase;letter-spacing:0.04em;line-height:1.15;text-align:center;">
               Renewal<br>${ev.monthDay}<br>${ev.fullYear}
             </span>
@@ -18886,7 +18916,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
         return `
           <div ${evtAttr} ${onClick} ${hoverFx} title="${tip}" class="crt-marker" style="${baseStyle}z-index:2;">
             ${moneyLbl}${infoBtn}
-            <span class="crt-marker-shape" style="display:block;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:12px solid ${c};filter:drop-shadow(0 0 1px rgba(15,23,42,0.95));"></span>
+            <span class="crt-marker-shape" style="display:block;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:12px solid ${c};filter:drop-shadow(0 0 1px ${rtShapeBd});"></span>
             <span style="font-size:8.5px;color:${c};opacity:0.9;font-weight:700;line-height:1.15;text-align:center;white-space:nowrap;text-transform:uppercase;letter-spacing:0.03em;">
               Start<br>${ev.monthDay} ${ev.fullYear}
             </span>
@@ -18901,7 +18931,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
       return `
         <div ${evtAttr} ${onClick} ${hoverFx} title="${tip}" class="crt-marker" style="${baseStyle}z-index:2;">
           ${moneyLbl}${infoBtn}
-          <span class="crt-marker-shape" style="display:block;width:11px;height:11px;border-radius:50%;background:${c};opacity:0.85;border:1.5px solid rgba(15,23,42,0.95);"></span>
+          <span class="crt-marker-shape" style="display:block;width:11px;height:11px;border-radius:50%;background:${c};opacity:0.85;border:1.5px solid ${rtShapeBd};"></span>
           <span style="font-size:8.5px;color:${c};opacity:0.9;font-weight:600;line-height:1.15;text-align:center;white-space:nowrap;">
             ${ev.monthDay} ${ev.fullYear}
           </span>
@@ -18939,8 +18969,8 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
       // the breakdown by kind is visible inside the fan.
       const hasRenewal = counts.renewal > 0;
       const primaryIcon = hasRenewal
-        ? `<span style="display:inline-block;width:9px;height:9px;background:${c};transform:rotate(45deg);vertical-align:middle;box-shadow:0 0 0 1px rgba(15,23,42,0.95);"></span>`
-        : `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};vertical-align:middle;border:1px solid rgba(15,23,42,0.95);"></span>`;
+        ? `<span style="display:inline-block;width:9px;height:9px;background:${c};transform:rotate(45deg);vertical-align:middle;box-shadow:0 0 0 1px ${rtShapeBd};"></span>`
+        : `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${c};vertical-align:middle;border:1px solid ${rtShapeBd};"></span>`;
       const totalLbl = clientFmtMoney(sumNet);
       const totalCount = group.length;
       // Date-ordered fan: events laid out left→right by ms, equal spacing.
@@ -18952,13 +18982,13 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
       }).join('');
       return `
         <div class="crt-cluster" style="position:absolute;left:${centroidPct.toFixed(2)}%;top:${markerTopPct}%;transform:translate(-50%,-50%);z-index:5;">
-          <div class="crt-cluster-chip" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#1e293b;color:${c};border:1.5px solid ${c};font-size:11px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;box-shadow:0 0 0 1px rgba(15,23,42,0.95);white-space:nowrap;transition:opacity 140ms ease, transform 140ms ease;">
+          <div class="crt-cluster-chip" style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:${rtChipBg};color:${c};border:1.5px solid ${c};font-size:11px;letter-spacing:0.04em;text-transform:uppercase;cursor:pointer;box-shadow:0 0 0 1px ${rtShapeBd};white-space:nowrap;transition:opacity 140ms ease, transform 140ms ease;">
             ${primaryIcon}
             <span style="font-variant-numeric:tabular-nums;font-weight:800;">${totalCount}</span>
             <span style="display:inline-block;width:1px;height:11px;background:${c};opacity:0.55;"></span>
             <span style="font-variant-numeric:tabular-nums;font-weight:800;">${totalLbl}</span>
           </div>
-          <div class="crt-cluster-fan" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:${fanWidth}px;height:80px;opacity:0;pointer-events:none;transition:opacity 160ms ease;background:rgba(15,23,42,0.96);border:1.5px solid ${c};border-radius:10px;box-shadow:0 12px 28px rgba(0,0,0,0.55);z-index:30;">
+          <div class="crt-cluster-fan" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:${fanWidth}px;height:80px;opacity:0;pointer-events:none;transition:opacity 160ms ease;background:${rtFanBg};border:1.5px solid ${c};border-radius:10px;box-shadow:0 12px 28px rgba(0,0,0,0.30);z-index:30;">
             ${fanInner}
           </div>
         </div>
@@ -18969,7 +18999,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
     const billCount    = rec.events.filter(e => e.kind === 'annualBill').length;
     return `
       <div>
-        <div style="position:relative;height:80px;background:rgba(15,23,42,0.5);border:1px solid rgba(71,85,105,0.4);border-top:${i === 0 ? '1px solid rgba(71,85,105,0.4)' : 'none'};overflow:visible;clip-path:inset(-200px 0 -200px 0);">
+        <div style="position:relative;height:80px;background:${rtRowBg};border:1px solid ${rtRowBd};border-top:${i === 0 ? `1px solid ${rtRowBd}` : 'none'};overflow:visible;clip-path:inset(-200px 0 -200px 0);">
           <div style="position:absolute;inset:0;overflow:hidden;border-radius:6px;">${bandsHtml}${curQHtml}</div>
           ${coverageHtml}
           ${diamondsHtml}
@@ -18995,7 +19025,7 @@ function renderClientRenewalTimeline(parent, customer, hostId) {
          position:sticky;top:0 sees the page as its scrolling ancestor.
          Horizontal scroll is mirrored from the main scroller via JS so the
          FY/Q labels stay aligned with the bands below. -->
-    <div data-rt-header style="position:sticky;top:0;z-index:9;background:#1e293b;padding:10px 0 4px;box-shadow:0 4px 8px -4px rgba(0,0,0,0.4);overflow:hidden;">
+    <div data-rt-header style="position:sticky;top:0;z-index:9;background:${rtHdrBg};padding:10px 0 4px;box-shadow:${rtHdrShadow};overflow:hidden;">
       <div data-rt-header-inner style="min-width:${innerWidthPct === 100 ? '0' : innerWidthPct + '%'};will-change:transform;">
         <div style="position:relative;height:30px;margin-bottom:4px;">${curQLabelTop}</div>
         <div style="position:relative;height:46px;margin-bottom:6px;">${fyBrackets}<div style="position:absolute;inset:0;padding-top:6px;">${fyTicks}</div></div>
