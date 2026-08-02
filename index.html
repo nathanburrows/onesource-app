@@ -6249,8 +6249,8 @@ const QUOTE_FIELD_PATTERNS = {
 const PLANNER_FIELD_PATTERNS = {
   taskId:         [/^task\s*id$/i],
   title:          [/^task\s*name$/i],
-  bucketName:     [/^bucket\s*name$/i],
-  progress:       [/^progress$/i],
+  bucketName:     [/^bucket\s*name$/i, /^bucket$/i],          // real export uses "Bucket"
+  progress:       [/^progress$/i, /^status$/i],               // real export uses "Status"
   priority:       [/^priority$/i],
   assignedTo:     [/^assigned\s*to$/i],
   createdBy:      [/^created\s*by$/i],
@@ -6263,7 +6263,7 @@ const PLANNER_FIELD_PATTERNS = {
   checklistDone:  [/^completed\s*checklist\s*items$/i],
   checklistTotal: [/^checklist\s*items$/i],
   labels:         [/^labels$/i],
-  description:    [/^description$/i],
+  description:    [/^description$/i, /^notes$/i],             // real export uses "Notes"
 };
 
 // AVANT_FIELD_PATTERNS — Non-AR cash detail (telecom residual commissions, etc.)
@@ -34935,7 +34935,7 @@ async function routeFiles(files) {
 
   if (rejected.length) {
     toast('error','Skipped unsupported files',
-      `${rejected.join(' · ')}. Couldn't recognize at least 2 columns matching NICE PortletExport (Transaction/Adjustment Type, Invoice Number, Split Margin), SalesTrak (Invoice No, Order No, Mfg, Net Profit, Rebill Flag), Avant (Provider, Sales Commission, Run Month), or OSIT Quote export (Quote #, Total Margin %, Sales Rep). ` +
+      `${rejected.join(' · ')}. Couldn't recognize at least 2 columns matching NICE PortletExport (Transaction/Adjustment Type, Invoice Number, Split Margin), SalesTrak (Invoice No, Order No, Mfg, Net Profit, Rebill Flag), Avant (Provider, Sales Commission, Run Month), OSIT Quote export (Quote #, Total Margin %, Sales Rep), or MS Planner export (Task Name, Bucket/Bucket Name, Status/Progress). ` +
       `Open the file and confirm the header row contains recognizable column names.`);
   }
 
