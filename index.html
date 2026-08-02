@@ -7936,7 +7936,7 @@ function renderPlannerPage() {
 /* ─────────────────────────────────────────────────────────────────────────
    ACCOUNT MAPPER INTEGRATION
    Five read-only tabs: Portfolio · Contacts · Org Chart · Intel · AM Sales
-   Data comes from an imported AccountMapper HTML file (parse <script id="STATE">)
+   Data comes from an imported AccountMapper HTML file (parse #STATE element)
    or JSON export. AM Sales filters the already-loaded STATE.stRaw by account name.
    ──────────────────────────────────────────────────────────────────────── */
 
@@ -7952,9 +7952,9 @@ function importAccountMapper(file) {
       } else {
         const parser = new DOMParser();
         const doc = parser.parseFromString(text, 'text/html');
-        const stEl = doc.querySelector('script#STATE');
-        if (!stEl) throw new Error('No <script id="STATE"> tag found — make sure this is a saved AccountMapper file.');
-        data = JSON.parse(stEl.textContent);
+        const stEl = doc.querySelector('script#STATE') || doc.querySelector('div#STATE') || doc.querySelector('#STATE');
+        if (!stEl) throw new Error('No STATE element found — make sure this is a saved AccountMapper file.');
+        data = JSON.parse(stEl.textContent || stEl.innerText);
       }
       if (!data || !Array.isArray(data.people)) throw new Error('Invalid AccountMapper file — missing people array.');
       STATE.accountMapper = data;
