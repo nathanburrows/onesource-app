@@ -8363,6 +8363,24 @@ function clearAccountMapper() {
   toast('info', 'Account cleared', 'Import a new AccountMapper file to load another account.');
 }
 
+function exportAccountMapper() {
+  if (!STATE.accountMapper) { try { toast('warn', 'No account loaded', 'Import an AccountMapper file first.'); } catch(_) {} return; }
+  const am = STATE.accountMapper;
+  const safe = (am.accountName || 'Account').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/, '') || 'Account';
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  const fn = `${safe}_RelationshipMap_${stamp}.json`;
+  const blob = new Blob([JSON.stringify(am, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = fn;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  try { toast('success', 'Exported', fn); } catch(_) {}
+}
+
 function _amEmptyState(host, isLight) {
   const textMut = isLight ? '#64748b' : '#94a3b8';
   const textPrimary = isLight ? '#1e293b' : '#e2e8f0';
@@ -8415,6 +8433,7 @@ function _amHeader(isLight, activeTab) {
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <input type="file" id="am-reimport-input" accept=".html,.htm,.json" style="display:none">
           <button onclick="document.getElementById('am-reimport-input').click()" style="padding:7px 14px;border:1px solid ${isLight?'#d1d5db':'#334155'};border-radius:8px;background:${isLight?'#fff':'#1e293b'};color:${isLight?'#374151':'#94a3b8'};font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;">⭱ Import / Update</button>
+          <button onclick="exportAccountMapper()" style="padding:7px 14px;border:1px solid ${isLight?'#d1d5db':'#334155'};border-radius:8px;background:${isLight?'#fff':'#1e293b'};color:${isLight?'#0d9488':'#2dd4bf'};font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;">⭳ Export</button>
           <button onclick="if(confirm('Clear AccountMapper data for this account?'))clearAccountMapper()" style="padding:7px 14px;border:1px solid ${isLight?'#fca5a5':'#7f1d1d'};border-radius:8px;background:transparent;color:${isLight?'#ef4444':'#fca5a5'};font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;">Clear</button>
         </div>
       </div>
@@ -8714,7 +8733,7 @@ function _amRenderDetail() {
     renderAMMatrix();
     if (typeof renderAMOrgChart === 'function' && document.getElementById('am-org-root') &&
         document.querySelector('[data-page="am-org"]') &&
-        !document.querySelector('[data-page="am-org"]').classList.contains('hidden')) {
+        document.querySelector('[data-page="am-org"]').classList.contains('active')) {
       renderAMOrgChart();
     }
   };
@@ -8865,8 +8884,11 @@ function renderAMOrgChart() {
     return;
   }
 
-  // Make host a position:relative overflow:hidden container (no padding for viewport)
-  host.style.cssText = 'height:100%;overflow:hidden;position:relative;';
+  // Measure available height explicitly (height:100% resolves to 0 when no ancestor
+  // has an explicit height set — common in the .dash-page layout).
+  const _hostTop = host.getBoundingClientRect().top;
+  const _availH  = Math.max(300, window.innerHeight - _hostTop);
+  host.style.cssText = `height:${_availH}px;overflow:hidden;position:relative;`;
 
   const am = STATE.accountMapper;
   const people = (am.people || []);
@@ -8912,6 +8934,7 @@ function renderAMOrgChart() {
         <div style="margin-left:auto;display:flex;gap:6px;">
           <input type="file" id="am-reimport-input" accept=".html,.htm,.json" style="display:none">
           <button onclick="document.getElementById('am-reimport-input').click()" style="padding:5px 10px;border:1px solid ${border};border-radius:7px;background:${card};color:${textMut};font-size:12px;cursor:pointer;font-family:inherit;">⭱ Import</button>
+          <button onclick="exportAccountMapper()" style="padding:5px 10px;border:1px solid ${border};border-radius:7px;background:${card};color:${isLight?'#0d9488':'#2dd4bf'};font-size:12px;cursor:pointer;font-family:inherit;">⭳ Export</button>
           <button onclick="if(confirm('Clear AccountMapper data?'))clearAccountMapper()" style="padding:5px 10px;border:1px solid ${isLight?'#fca5a5':'#7f1d1d'};border-radius:7px;background:transparent;color:${isLight?'#ef4444':'#fca5a5'};font-size:12px;cursor:pointer;font-family:inherit;">Clear</button>
         </div>
       </div>
@@ -9252,13 +9275,13 @@ function renderAMOrgChart() {
   // Clean up listeners when navigating away
   const cleanupObs = new MutationObserver(() => {
     const page = document.querySelector('[data-page="am-org"]');
-    if (!page || page.classList.contains('hidden') || (page.style.display === 'none')) {
+    if (!page || !page.classList.contains('active')) {
       window.removeEventListener('mousemove', _amOrgMouseMove);
       window.removeEventListener('mouseup',   _amOrgMouseUp);
       cleanupObs.disconnect();
     }
   });
-  cleanupObs.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class', 'style'] });
+  cleanupObs.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['class'] });
 
   // ─── TOOLBAR buttons ──────────────────────────────────────────────────────
   document.getElementById('am-org-zin').onclick  = () => { ST.scale = Math.min(2.5, ST.scale * 1.15); applyT(); };
@@ -9312,7 +9335,8 @@ function renderAMOrgChart() {
   } else {
     applyLayout();
   }
-  fitView();
+  // Defer fitView so the browser has painted and viewport clientWidth/Height are correct
+  requestAnimationFrame(fitView);
 }
 
 // ─── Intel ───────────────────────────────────────────────────────────────────
