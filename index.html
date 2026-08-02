@@ -1800,8 +1800,57 @@
      in-page header copy so only one is visible at a time. */
   body.with-sidebar #theme-toggle-header { display: none; }
 
+  /* ── Dynamic-component theme tokens ──────────────────────────────────────
+     These CSS variables back all JS render functions that use inline styles.
+     Dark values are the defaults (in :root); body.light below flips them.
+     Toggling body.light is then enough to recolour all var()-using elements
+     instantly, without waiting for a JS re-render.                          */
+  :root {
+    --th-card:   #1e293b;                /* card / panel surface              */
+    --th-col:    rgba(15,23,42,0.4);     /* planner column background         */
+    --th-bg:     rgba(30,41,59,0.6);     /* semi-transparent section bg        */
+    --th-bd:     rgba(71,85,105,0.5);    /* border (semi-transparent)          */
+    --th-border: #1e3a5f;                /* border (solid, AM components)      */
+    --th-hdr:    rgba(15,23,42,0.5);     /* toolbar / header bg               */
+    --th-hdr2:   #0c111b;                /* solid dark header surface          */
+    --th-nav:    #0f172a;                /* tab-nav surface                   */
+    --th-canvas: #0b0f1a;                /* org-chart canvas background        */
+    --th-tx:     #f1f5f9;                /* primary text                       */
+    --th-tx2:    #e2e8f0;                /* secondary text                     */
+    --th-mut:    #94a3b8;                /* muted / label text                 */
+    --th-inp:    rgba(15,23,42,0.8);     /* input background                   */
+    --th-inp2:   #0f172a;                /* input background (solid)           */
+    --th-inpbd:  rgba(71,85,105,0.6);    /* input border (semi)                */
+    --th-inpbd2: #334155;                /* input border (solid)               */
+    --th-rowhov: rgba(51,65,85,0.5);     /* table-row hover                    */
+    --th-llbg:   rgba(9,13,22,0.82);     /* org-chart tier-label bg            */
+    --th-llbd:   rgba(255,255,255,0.14); /* org-chart tier-label border        */
+  }
+
   /* body */
   body.light { background: #f1f5f9 !important; color: #334155 !important; }
+  /* Light-mode overrides for the dynamic-component tokens above */
+  body.light {
+    --th-card:   #ffffff;
+    --th-col:    #f1f5f9;
+    --th-bg:     #ffffff;
+    --th-bd:     #e2e8f0;
+    --th-border: #e2e8f0;
+    --th-hdr:    #f8fafc;
+    --th-hdr2:   #f1f5f9;
+    --th-nav:    #f1f5f9;
+    --th-canvas: #e8edf5;
+    --th-tx:     #1e293b;
+    --th-tx2:    #0f172a;
+    --th-mut:    #64748b;
+    --th-inp:    #f8fafc;
+    --th-inp2:   #f8fafc;
+    --th-inpbd:  #cbd5e1;
+    --th-inpbd2: #d1d5db;
+    --th-rowhov: #f1f5f9;
+    --th-llbg:   rgba(241,245,249,0.88);
+    --th-llbd:   rgba(0,0,0,0.12);
+  }
   body.light ::-webkit-scrollbar-track { background: #e2e8f0; }
   body.light ::-webkit-scrollbar-thumb { background: #94a3b8; }
   body.light .theme-toggle-btn { border-color: #e2e8f0; color: #64748b; }
@@ -7740,13 +7789,13 @@ function renderPlannerPage() {
   if (!host) return;
   const isLight = document.body.classList.contains('light');
 
-  const bg     = isLight ? '#ffffff'              : 'rgba(30,41,59,0.6)';
-  const bd     = isLight ? '#e2e8f0'              : 'rgba(71,85,105,0.5)';
-  const hdrBg  = isLight ? '#f8fafc'              : 'rgba(15,23,42,0.5)';
-  const txMut  = isLight ? '#64748b'              : '#94a3b8';
-  const txMain = isLight ? '#1e293b'              : '#f1f5f9';
-  const inpBg  = isLight ? '#f8fafc'              : 'rgba(15,23,42,0.8)';
-  const inpBd  = isLight ? '#cbd5e1'              : 'rgba(71,85,105,0.6)';
+  const bg     = 'var(--th-bg)';
+  const bd     = 'var(--th-bd)';
+  const hdrBg  = 'var(--th-hdr)';
+  const txMut  = 'var(--th-mut)';
+  const txMain = 'var(--th-tx)';
+  const inpBg  = 'var(--th-inp)';
+  const inpBd  = 'var(--th-inpbd)';
 
   if (!STATE.planner || !STATE.planner.tasks || !STATE.planner.tasks.length) {
     host.innerHTML = `
@@ -7813,8 +7862,8 @@ function renderPlannerPage() {
     <span style="font-size:11px;color:${txMut}">${total} task${total===1?'':'s'} total</span>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <div style="display:flex;border:1px solid ${bd};border-radius:8px;overflow:hidden">
-        <button id="pl-view-board" style="padding:5px 14px;font-size:11.5px;font-weight:700;cursor:pointer;border:none;outline:none;background:${_plannerView==='board'?(isLight?'#e0e7ff':'rgba(99,102,241,.3)'):(isLight?'#f8fafc':'rgba(15,23,42,0.4)')};color:${_plannerView==='board'?(isLight?'#4f46e5':'#818cf8'):txMut}">Board</button>
-        <button id="pl-view-list" style="padding:5px 14px;font-size:11.5px;font-weight:700;cursor:pointer;border:none;outline:none;background:${_plannerView==='list'?(isLight?'#e0e7ff':'rgba(99,102,241,.3)'):(isLight?'#f8fafc':'rgba(15,23,42,0.4)')};color:${_plannerView==='list'?(isLight?'#4f46e5':'#818cf8'):txMut}">List</button>
+        <button id="pl-view-board" style="padding:5px 14px;font-size:11.5px;font-weight:700;cursor:pointer;border:none;outline:none;background:${_plannerView==='board'?(isLight?'#e0e7ff':'rgba(99,102,241,.3)'):'var(--th-inp)'};color:${_plannerView==='board'?(isLight?'#4f46e5':'#818cf8'):txMut}">Board</button>
+        <button id="pl-view-list" style="padding:5px 14px;font-size:11.5px;font-weight:700;cursor:pointer;border:none;outline:none;background:${_plannerView==='list'?(isLight?'#e0e7ff':'rgba(99,102,241,.3)'):'var(--th-inp)'};color:${_plannerView==='list'?(isLight?'#4f46e5':'#818cf8'):txMut}">List</button>
       </div>
       <button onclick="document.getElementById('pl-import-input').click()" style="padding:6px 13px;background:${isLight?'rgba(96,165,250,.1)':'rgba(96,165,250,.12)'};border:1px solid rgba(96,165,250,.35);border-radius:8px;font-size:11.5px;font-weight:700;color:#60a5fa;cursor:pointer">⭱ Import / Update</button>
     </div>
@@ -7884,8 +7933,8 @@ function renderPlannerPage() {
 }
 
 function renderPlannerBoard(host, filtered, allBuckets, isLight, bg, bd, hdrBg, txMut, txMain, inpBg, inpBd) {
-  const colBg  = isLight ? '#f1f5f9'          : 'rgba(15,23,42,0.4)';
-  const cardBg = isLight ? '#ffffff'           : 'rgba(30,41,59,0.7)';
+  const colBg  = 'var(--th-col)';
+  const cardBg = 'var(--th-card)';
 
   // Merge bucket order from state with any bucket names only on tasks
   const taskBuckets = [...new Set(STATE.planner.tasks.map(t=>t.bucketName||'').filter(Boolean))];
@@ -8104,7 +8153,7 @@ function renderPlannerBoard(host, filtered, allBuckets, isLight, bg, bd, hdrBg, 
 }
 
 function renderPlannerList(host, filtered, isLight, bg, bd, hdrBg, txMut, txMain, inpBg, inpBd) {
-  const rowHov = isLight ? '#f1f5f9' : 'rgba(51,65,85,0.5)';
+  const rowHov = 'var(--th-rowhov)';
   const fmtD = s => { if(!s) return '—'; const d=new Date(s); return isNaN(d)?s:d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'}); };
 
   const progressBadge = p => {
@@ -8189,12 +8238,12 @@ function openPlannerModal(taskId) {
   if (!task) return;
 
   const isLight = document.body.classList.contains('light');
-  const bg    = isLight ? '#ffffff'          : '#1a2640';
-  const bd    = isLight ? '#e2e8f0'          : 'rgba(71,85,105,0.6)';
-  const txMut = isLight ? '#64748b'          : '#94a3b8';
-  const txMain= isLight ? '#1e293b'          : '#f1f5f9';
-  const inpBg = isLight ? '#f8fafc'          : 'rgba(15,23,42,0.8)';
-  const inpBd = isLight ? '#cbd5e1'          : 'rgba(71,85,105,0.6)';
+  const bg    = 'var(--th-card)';
+  const bd    = 'var(--th-bd)';
+  const txMut = 'var(--th-mut)';
+  const txMain= 'var(--th-tx)';
+  const inpBg = 'var(--th-inp)';
+  const inpBd = 'var(--th-inpbd)';
 
   const existing = document.getElementById('pl-modal-overlay');
   if (existing) existing.remove();
@@ -8382,8 +8431,8 @@ function exportAccountMapper() {
 }
 
 function _amEmptyState(host, isLight) {
-  const textMut = isLight ? '#64748b' : '#94a3b8';
-  const textPrimary = isLight ? '#1e293b' : '#e2e8f0';
+  const textMut = 'var(--th-mut)';
+  const textPrimary = 'var(--th-tx)';
   host.innerHTML = `
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:70vh;text-align:center;gap:16px;">
       <div style="width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#0d9488,#14b8a6);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(20,184,166,0.3);">
@@ -8407,10 +8456,10 @@ function _amHeader(isLight, activeTab) {
   const name = (am && am.accountName) ? am.accountName : 'Account';
   const sub  = (am && am.accountSub)  ? am.accountSub  : '';
   const count = am && am.people ? am.people.length : 0;
-  const border = isLight ? '#e2e8f0' : '#1e3a5f';
-  const textMut = isLight ? '#64748b' : '#94a3b8';
-  const textHead = isLight ? '#0f172a' : '#f1f5f9';
-  const tabNavBg = isLight ? '#f1f5f9' : '#0f172a';
+  const border = 'var(--th-border)';
+  const textMut = 'var(--th-mut)';
+  const textHead = 'var(--th-tx)';
+  const tabNavBg = 'var(--th-nav)';
   const tabs = [
     { id: 'am-portfolio', label: 'Portfolio' },
     { id: 'am-matrix',   label: 'Contacts' },
@@ -8432,8 +8481,8 @@ function _amHeader(isLight, activeTab) {
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <input type="file" id="am-reimport-input" accept=".html,.htm,.json" style="display:none">
-          <button onclick="document.getElementById('am-reimport-input').click()" style="padding:7px 14px;border:1px solid ${isLight?'#d1d5db':'#334155'};border-radius:8px;background:${isLight?'#fff':'#1e293b'};color:${isLight?'#374151':'#94a3b8'};font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;">⭱ Import / Update</button>
-          <button onclick="exportAccountMapper()" style="padding:7px 14px;border:1px solid ${isLight?'#d1d5db':'#334155'};border-radius:8px;background:${isLight?'#fff':'#1e293b'};color:${isLight?'#0d9488':'#2dd4bf'};font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;">⭳ Export</button>
+          <button onclick="document.getElementById('am-reimport-input').click()" style="padding:7px 14px;border:1px solid var(--th-inpbd2);border-radius:8px;background:var(--th-card);color:${textMut};font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;">⭱ Import / Update</button>
+          <button onclick="exportAccountMapper()" style="padding:7px 14px;border:1px solid var(--th-inpbd2);border-radius:8px;background:var(--th-card);color:${isLight?'#0d9488':'#2dd4bf'};font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;">⭳ Export</button>
           <button onclick="if(confirm('Clear AccountMapper data for this account?'))clearAccountMapper()" style="padding:7px 14px;border:1px solid ${isLight?'#fca5a5':'#7f1d1d'};border-radius:8px;background:transparent;color:${isLight?'#ef4444':'#fca5a5'};font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;">Clear</button>
         </div>
       </div>
@@ -8490,10 +8539,10 @@ function renderAMPortfolio() {
   const host = document.getElementById('am-portfolio-root');
   if (!host) return;
   const isLight = document.body.classList.contains('light');
-  const card = isLight ? '#ffffff' : '#1e293b';
-  const border = isLight ? '#e2e8f0' : '#1e3a5f';
-  const textMut = isLight ? '#64748b' : '#94a3b8';
-  const textHead = isLight ? '#0f172a' : '#f1f5f9';
+  const card = 'var(--th-card)';
+  const border = 'var(--th-border)';
+  const textMut = 'var(--th-mut)';
+  const textHead = 'var(--th-tx)';
   if (!STATE.accountMapper) { _amEmptyState(host, isLight); return; }
   const am = STATE.accountMapper;
   const people = (am.people || []).filter(p => !p.left);
@@ -8604,12 +8653,12 @@ function _amRenderDetail() {
   const p = (am.people||[]).find(x => x.id === id);
   if (!p) return;
   const isLight = document.body.classList.contains('light');
-  const card = isLight ? '#ffffff' : '#1e293b';
-  const border = isLight ? '#e2e8f0' : '#1e3a5f';
-  const textMut = isLight ? '#64748b' : '#94a3b8';
-  const textHead = isLight ? '#0f172a' : '#f1f5f9';
-  const inputBg = isLight ? '#f8fafc' : '#0f172a';
-  const inputBorder = isLight ? '#d1d5db' : '#334155';
+  const card = 'var(--th-card)';
+  const border = 'var(--th-border)';
+  const textMut = 'var(--th-mut)';
+  const textHead = 'var(--th-tx)';
+  const inputBg = 'var(--th-inp2)';
+  const inputBorder = 'var(--th-inpbd2)';
   const inSt = `width:100%;background:${inputBg};border:1px solid ${inputBorder};color:${textHead};border-radius:8px;padding:7px 9px;font:inherit;font-size:13px;box-sizing:border-box;`;
 
   // find or create panel
@@ -8818,12 +8867,12 @@ function renderAMMatrix() {
   const host = document.getElementById('am-matrix-root');
   if (!host) return;
   const isLight = document.body.classList.contains('light');
-  const card = isLight ? '#ffffff' : '#1e293b';
-  const border = isLight ? '#e2e8f0' : '#1e3a5f';
-  const textMut = isLight ? '#64748b' : '#94a3b8';
-  const textHead = isLight ? '#0f172a' : '#f1f5f9';
-  const inputBg = isLight ? '#f8fafc' : '#0f172a';
-  const inputBorder = isLight ? '#d1d5db' : '#334155';
+  const card = 'var(--th-card)';
+  const border = 'var(--th-border)';
+  const textMut = 'var(--th-mut)';
+  const textHead = 'var(--th-tx)';
+  const inputBg = 'var(--th-inp2)';
+  const inputBorder = 'var(--th-inpbd2)';
   const accentGreen = isLight ? '#0d9488' : '#2dd4bf';
   if (!STATE.accountMapper) { _amEmptyState(host, isLight); return; }
   const am = STATE.accountMapper;
@@ -8933,7 +8982,7 @@ function renderAMMatrix() {
   }
 
   const selStyle = `background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:7px 9px;border-radius:9px;font-size:12.5px;font-family:inherit;`;
-  const prioOnBg = _amPrioOnly ? accentGreen : (isLight ? '#fff' : '#1e293b');
+  const prioOnBg = _amPrioOnly ? accentGreen : 'var(--th-card)';
   const prioOnColor = _amPrioOnly ? '#fff' : textMut;
   host.innerHTML = `
     <div style="max-width:1100px;">
@@ -9047,22 +9096,22 @@ function renderAMOrgChart() {
   const byId = {};
   people.forEach(p => { byId[p.id] = p; });
 
-  // Theme colors
-  const card       = isLight ? '#ffffff'  : '#1e293b';
-  const border     = isLight ? '#e2e8f0'  : '#1e3a5f';
-  const textMut    = isLight ? '#64748b'  : '#94a3b8';
-  const textHead   = isLight ? '#0f172a'  : '#f1f5f9';
-  const canvasBg   = isLight ? '#e8edf5'  : '#0b0f1a';
-  const hdrBg      = isLight ? '#f1f5f9'  : '#0c111b';
-  const labelBg    = isLight ? 'rgba(241,245,249,.88)' : 'rgba(9,13,22,.82)';
-  const labelBord  = isLight ? 'rgba(0,0,0,.12)'      : 'rgba(255,255,255,.14)';
+  // Theme colors — resolved via CSS custom properties so they flip with body.light
+  const card       = 'var(--th-card)';
+  const border     = 'var(--th-border)';
+  const textMut    = 'var(--th-mut)';
+  const textHead   = 'var(--th-tx)';
+  const canvasBg   = 'var(--th-canvas)';
+  const hdrBg      = 'var(--th-hdr2)';
+  const labelBg    = 'var(--th-llbg)';
+  const labelBord  = 'var(--th-llbd)';
   const connColor  = '#3a8dff';
 
   const NW = 212, NH = 110, HGAP = 34, VGAP = 60;
 
   // Build a compact top-header (account name + tab buttons + import) + toolbar row + viewport
   const amName   = (am.accountName || 'Account');
-  const tabNavBg = isLight ? '#f1f5f9' : '#0f172a';
+  const tabNavBg = 'var(--th-nav)';
   const amTabs   = [
     { id: 'am-portfolio', label: 'Portfolio' },
     { id: 'am-matrix',   label: 'Contacts' },
@@ -9258,7 +9307,7 @@ function renderAMOrgChart() {
   function drawBands() {
     ST.bandRects = [];
     if (ST.layout !== 'tierflow') { bandsEl.innerHTML = ''; updateTierLabels(); return; }
-    const vis = people.filter(p => !p.left && ST.pos[p.id]);
+    const vis = people.filter(p => !isOrgHidden(p.id) && ST.pos[p.id]);
     if (!vis.length) { bandsEl.innerHTML = ''; return; }
     const allXY = vis.map(p => ST.pos[p.id]);
     const minX = Math.min(...allXY.map(q => q.x)) - 48;
@@ -9269,13 +9318,19 @@ function renderAMOrgChart() {
     let html = '';
     present.forEach((t, i) => {
       const ns = vis.filter(p => _amOrgTierKey(p) === t.key);
-      const ys  = ns.map(p => ST.pos[p.id].y);
-      const y0  = Math.min(...ys) - 18;
-      const y1  = Math.max(...ys) + NH + 18;
-      const py0 = i === 0 ? y0 - NH : y0;
-      const py1 = i === present.length - 1 ? y1 + NH : y1;
-      ST.bandRects.push({ key: t.key, label: t.label, text: t.text, x0: minX, x1: maxX, y0: py0, y1: py1 });
-      html += `<div style="position:absolute;left:${minX}px;top:${py0}px;width:${maxX - minX}px;height:${py1 - py0}px;background:${t.color};border-left:6px solid ${t.text};border-radius:14px;border:1px solid rgba(255,255,255,.06);box-sizing:border-box;"></div>`;
+      if (ST.orient === 'h') {
+        const xs = ns.map(p => ST.pos[p.id].x);
+        const x0 = Math.min(...xs) - 18, x1 = Math.max(...xs) + NW + 18;
+        const px0 = i === 0 ? x0 - NW : x0, px1 = i === present.length - 1 ? x1 + NW : x1;
+        ST.bandRects.push({ key: t.key, label: t.label, text: t.text, x0: px0, x1: px1, y0: minY, y1: maxY, horiz: true });
+        html += `<div style="position:absolute;left:${px0}px;top:${minY}px;width:${px1-px0}px;height:${maxY-minY}px;background:${t.color};border-top:6px solid ${t.text};border-radius:14px;border:1px solid rgba(255,255,255,.06);box-sizing:border-box;"></div>`;
+      } else {
+        const ys  = ns.map(p => ST.pos[p.id].y);
+        const y0  = Math.min(...ys) - 18, y1 = Math.max(...ys) + NH + 18;
+        const py0 = i === 0 ? y0 - NH : y0, py1 = i === present.length - 1 ? y1 + NH : y1;
+        ST.bandRects.push({ key: t.key, label: t.label, text: t.text, x0: minX, x1: maxX, y0: py0, y1: py1 });
+        html += `<div style="position:absolute;left:${minX}px;top:${py0}px;width:${maxX - minX}px;height:${py1 - py0}px;background:${t.color};border-left:6px solid ${t.text};border-radius:14px;border:1px solid rgba(255,255,255,.06);box-sizing:border-box;"></div>`;
+      }
     });
     bandsEl.innerHTML = html;
     updateTierLabels();
@@ -9284,12 +9339,18 @@ function renderAMOrgChart() {
   function updateTierLabels() {
     if (!tierLabels) return;
     if (!ST.bandRects.length) { tierLabels.innerHTML = ''; return; }
-    const vh = viewport.clientHeight;
+    const vw = viewport.clientWidth, vh = viewport.clientHeight;
     let html = '';
     ST.bandRects.forEach(r => {
-      let y = ((r.y0 + r.y1) / 2) * ST.scale + ST.ty;
-      y = Math.min(Math.max(y, 18), vh - 18);
-      html += `<div style="position:absolute;left:10px;top:${y}px;color:${r.text};transform:translateY(-50%);font-size:12.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;background:${labelBg};border:1px solid ${labelBord};padding:5px 11px;border-radius:8px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.3);">${r.label}</div>`;
+      if (r.horiz) {
+        let x = ((r.x0 + r.x1) / 2) * ST.scale + ST.tx;
+        x = Math.min(Math.max(x, 60), vw - 60);
+        html += `<div style="position:absolute;left:${x}px;top:8px;color:${r.text};transform:translateX(-50%);font-size:12.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;background:${labelBg};border:1px solid ${labelBord};padding:5px 11px;border-radius:8px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.3);">${r.label}</div>`;
+      } else {
+        let y = ((r.y0 + r.y1) / 2) * ST.scale + ST.ty;
+        y = Math.min(Math.max(y, 18), vh - 18);
+        html += `<div style="position:absolute;left:10px;top:${y}px;color:${r.text};transform:translateY(-50%);font-size:12.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;background:${labelBg};border:1px solid ${labelBord};padding:5px 11px;border-radius:8px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.3);">${r.label}</div>`;
+      }
     });
     tierLabels.innerHTML = html;
   }
@@ -9298,29 +9359,58 @@ function renderAMOrgChart() {
   function drawConns() {
     let s = '';
     people.forEach(p => {
-      if (p.left) return;
+      if (isOrgHidden(p.id)) return;
       const m = effMgr(p.id);
-      if (!m || !ST.pos[m] || !ST.pos[p.id]) return;
+      if (!m || isOrgHidden(m) || !ST.pos[m] || !ST.pos[p.id]) return;
       const a = ST.pos[m], b = ST.pos[p.id];
-      const x1 = a.x + NW / 2, y1 = a.y + NH;
-      const x2 = b.x + NW / 2, y2 = b.y;
-      const my = y2 - Math.min(30, (y2 - y1) / 2);
-      s += `<path d="M${x1} ${y1} V${my} H${x2} V${y2}" fill="none" stroke="${connColor}" stroke-width="2" opacity=".7"/>`;
+      if (ST.orient === 'h') {
+        const x1 = a.x + NW, y1 = a.y + NH/2, x2 = b.x, y2 = b.y + NH/2;
+        const mx = x2 - Math.min(30, (x2 - x1) / 2);
+        s += `<path d="M${x1} ${y1} H${mx} V${y2} H${x2}" fill="none" stroke="${connColor}" stroke-width="2" opacity=".7"/>`;
+      } else {
+        const x1 = a.x + NW / 2, y1 = a.y + NH;
+        const x2 = b.x + NW / 2, y2 = b.y;
+        const my = y2 - Math.min(30, (y2 - y1) / 2);
+        s += `<path d="M${x1} ${y1} V${my} H${x2} V${y2}" fill="none" stroke="${connColor}" stroke-width="2" opacity=".7"/>`;
+      }
     });
     connEl.innerHTML = s;
   }
 
   // ─── LAYOUT (place nodes) ─────────────────────────────────────────────────
+  function updateCollapseBtn(id) {
+    const el = ST.nodeEls[id]; if (!el) return;
+    const colBtn = el.querySelector('.am-org-col'); if (!colBtn) return;
+    const kids = people.filter(p => (am.reports||{})[p.id] === id);
+    if (!kids.length) { colBtn.style.display = 'none'; return; }
+    colBtn.style.display = 'flex';
+    const tot = totalBelow(id);
+    colBtn.textContent = ST.collapsed.has(id) ? ('▸ ' + tot) : ('▾ ' + tot);
+    colBtn.title = ST.collapsed.has(id) ? ('Show ' + tot + ' hidden report(s)') : ('Hide downline (' + tot + ')');
+    colBtn.style.background = ST.collapsed.has(id) ? textMut : '#3a8dff';
+  }
+
   function layout() {
     people.forEach(p => {
       const el = ST.nodeEls[p.id]; if (!el) return;
-      if (p.left) { el.style.display = 'none'; return; }
-      el.style.display = '';
-      if (ST.pos[p.id]) { el.style.left = ST.pos[p.id].x + 'px'; el.style.top = ST.pos[p.id].y + 'px'; }
+      const hidden = isOrgHidden(p.id);
+      el.style.display = hidden ? 'none' : '';
+      if (!hidden && ST.pos[p.id]) { el.style.left = ST.pos[p.id].x + 'px'; el.style.top = ST.pos[p.id].y + 'px'; }
       // update tier bar color
       const tb = el.querySelector('.am-org-tbar');
       const td = AM_ORG_TIER_DEFS.find(t => t.key === _amOrgTierKey(p));
       if (tb) tb.style.background = td ? td.text : 'transparent';
+      // gone flag
+      const gone = el.querySelector('.am-org-gone'); if (gone) gone.style.display = p.left ? 'block' : 'none';
+      // update avatar visibility based on showPhotos
+      const photoImg = el.querySelector('.am-org-photo-img');
+      if (photoImg) photoImg.style.display = ST.showPhotos ? '' : 'none';
+      updateCollapseBtn(p.id);
+    });
+    // update sel highlight
+    people.forEach(p => {
+      const el = ST.nodeEls[p.id]; if (!el) return;
+      el.style.outline = (ST.sel === p.id) ? '2px solid #3a8dff' : '';
     });
     drawConns();
     drawBands();
@@ -9341,6 +9431,12 @@ function renderAMOrgChart() {
   }
 
   // ─── CREATE NODE ELEMENTS ────────────────────────────────────────────────
+  function optionsHTML(selId) {
+    let o = '<option value="">— no manager —</option>';
+    people.forEach(q => { o += `<option value="${q.id}" ${q.id===selId?'selected':''}>${q.name||'?'}</option>`; });
+    return o;
+  }
+
   function makeNode(p) {
     const s    = AM_STANCES[p.stance];
     const td   = AM_ORG_TIER_DEFS.find(t => t.key === _amOrgTierKey(p));
@@ -9348,30 +9444,133 @@ function renderAMOrgChart() {
     const el = document.createElement('div');
     el.dataset.id = p.id;
     el.style.cssText = `position:absolute;width:${NW}px;background:${card};border:1px solid ${border};${glow}border-radius:12px;padding:13px 9px 9px;cursor:grab;user-select:none;z-index:2;`;
+    const ini = ((p.name||'?').replace(/[()]/g,'').split(/\s+/).filter(w=>/[A-Za-z]/.test((w||'')[0])).slice(0,2).map(w=>w[0]).join('').toUpperCase())||'?';
     const avHtml = p.photo
-      ? `<img src="${p.photo}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid ${border};">`
-      : `<div style="width:42px;height:42px;border-radius:50%;background:${s?s.bg:'rgba(20,184,166,0.15)'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${s?s.color:'#14b8a6'};flex-shrink:0;">${((p.name||'?').replace(/[()]/g,'').split(/\s+/).filter(w=>/[A-Za-z]/.test(w[0])).slice(0,2).map(w=>w[0]).join('').toUpperCase())||'?'}</div>`;
+      ? `<img class="am-org-photo-img" src="${p.photo}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid ${border};${ST.showPhotos?'':'display:none;'}">`
+      : `<div style="width:42px;height:42px;border-radius:50%;background:${s?s.bg:'rgba(20,184,166,0.15)'};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:${s?s.color:'#14b8a6'};flex-shrink:0;">${ini}</div>`;
     el.innerHTML = `
       <div class="am-org-tbar" style="position:absolute;top:0;left:0;right:0;height:10px;border-radius:11px 11px 0 0;background:${td?td.text:'transparent'};"></div>
+      <div class="am-org-gone" style="display:${p.left?'block':'none'};position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#7a869c;color:#fff;font-size:9px;font-weight:800;padding:1px 7px;border-radius:6px;letter-spacing:.6px;">LEFT</div>
+      <div class="am-org-col" style="display:none;position:absolute;top:-11px;left:-10px;min-width:24px;height:22px;padding:0 5px;border-radius:11px;background:#3a8dff;color:#fff;border:2px solid ${canvasBg};align-items:center;justify-content:center;font-size:10px;font-weight:800;cursor:pointer;z-index:5;"></div>
       <div style="display:flex;gap:8px;align-items:center;">
         ${avHtml}
         <div style="flex:1;min-width:0;overflow:hidden;">
-          <div style="font-size:13px;font-weight:650;color:${textHead};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name||'?'}</div>
+          <div class="am-org-nm" style="font-size:13px;font-weight:650;color:${textHead};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name||'?'}</div>
           <div style="font-size:11px;color:${textMut};margin-top:1px;line-height:1.2;max-height:26px;overflow:hidden;">${p.title||''}</div>
           ${p.loc ? `<div style="font-size:10.5px;color:${textMut};opacity:.7;margin-top:2px;">${p.loc}</div>` : ''}
         </div>
       </div>
       ${s ? `<div style="margin-top:5px;padding-top:5px;border-top:1px solid ${border};"><span style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:20px;background:${s.bg};color:${s.color};border:1px solid ${s.border};">${s.emoji} ${p.stance}</span></div>` : ''}
-      ${p.left ? '<div style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#7a869c;color:#fff;font-size:9px;font-weight:800;padding:1px 7px;border-radius:6px;letter-spacing:.6px;">LEFT</div>' : ''}`;
+      <div style="margin-top:6px;padding-top:5px;border-top:1px solid ${border};display:flex;align-items:center;gap:4px;">
+        <span style="font-size:10px;color:${textMut};">↳</span>
+        <select class="am-org-mgr-sel" data-for="${p.id}" style="flex:1;background:${inputBg||card};border:1px solid ${border};color:${textHead};font-size:10.5px;border-radius:6px;padding:2px 4px;font-family:inherit;">${optionsHTML(reports[p.id]||'')}</select>
+        ${p.li ? `<a href="${p.li}" target="_blank" style="color:#60a5fa;font-size:11px;text-decoration:none;flex-shrink:0;" onclick="event.stopPropagation()">in</a>` : ''}
+      </div>
+      <div class="am-org-plus" style="position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;background:#3a8dff;color:#fff;border:2px solid ${canvasBg};display:none;align-items:center;justify-content:center;font-size:16px;line-height:1;cursor:pointer;z-index:4;" title="Add a direct report">+</div>`;
 
     world.insertBefore(el, connEl);
     ST.nodeEls[p.id] = el;
 
-    // drag
-    el.addEventListener('mousedown', ev => { if (ev.button !== 0) return; ev.stopPropagation(); startNodeDrag(ev, p.id); });
-    // double-click → detail
-    el.addEventListener('dblclick', ev => { ev.stopPropagation(); _amOpenDetail(p.id); });
+    // collapse toggle
+    const colBtn = el.querySelector('.am-org-col');
+    if (colBtn) {
+      colBtn.addEventListener('mousedown', ev => ev.stopPropagation());
+      colBtn.addEventListener('click', ev => {
+        ev.stopPropagation();
+        if (ST.collapsed.has(p.id)) ST.collapsed.delete(p.id); else ST.collapsed.add(p.id);
+        PERSIST.collapsed = ST.collapsed;
+        ST.pos = {}; applyLayout(); fitView();
+      });
+    }
+
+    // manager dropdown
+    const mgrSel = el.querySelector('.am-org-mgr-sel');
+    if (mgrSel) {
+      mgrSel.addEventListener('mousedown', ev => ev.stopPropagation());
+      mgrSel.addEventListener('change', ev => {
+        const v = ev.target.value;
+        if (v && isDescendant(p.id, v)) { ev.target.value = reports[p.id]||''; return; }
+        reports[p.id] = v;
+        if (am.reports) am.reports[p.id] = v;
+        applyLayout();
+      });
+    }
+
+    // + button (add direct report)
+    const plusBtn = el.querySelector('.am-org-plus');
+    if (plusBtn) {
+      plusBtn.addEventListener('mousedown', ev => ev.stopPropagation());
+      plusBtn.addEventListener('click', ev => { ev.stopPropagation(); addOrgChild(p.id); });
+    }
+
+    // hover show/hide + button
+    el.addEventListener('mouseenter', () => { if (plusBtn) plusBtn.style.display = 'flex'; });
+    el.addEventListener('mouseleave', () => { if (plusBtn) plusBtn.style.display = 'none'; });
+
+    // inline rename on dblclick of name span
+    const nmEl = el.querySelector('.am-org-nm');
+    if (nmEl) {
+      nmEl.addEventListener('dblclick', ev => {
+        ev.stopPropagation();
+        nmEl.contentEditable = 'true';
+        nmEl.style.background = inputBg || card;
+        nmEl.style.borderRadius = '4px';
+        nmEl.style.padding = '0 3px';
+        nmEl.focus();
+        const range = document.createRange(); range.selectNodeContents(nmEl); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        function finRename() {
+          nmEl.contentEditable = 'false';
+          nmEl.style.background = ''; nmEl.style.borderRadius = ''; nmEl.style.padding = '';
+          const v = nmEl.textContent.trim() || p.name;
+          p.name = v; nmEl.textContent = v;
+          // update mgr selects
+          document.querySelectorAll('.am-org-mgr-sel').forEach(s => { const cur = s.value; s.innerHTML = optionsHTML(reports[s.dataset.for]||''); s.value = cur; });
+          nmEl.removeEventListener('blur', finRename);
+        }
+        nmEl.addEventListener('blur', finRename);
+        nmEl.addEventListener('keydown', ev2 => { if (ev2.key === 'Enter') { ev2.preventDefault(); nmEl.blur(); } });
+      });
+      nmEl.addEventListener('mousedown', ev => { if (nmEl.isContentEditable) ev.stopPropagation(); });
+    }
+
+    // click to select
+    el.addEventListener('mousedown', ev => {
+      if (ev.button !== 0) return;
+      ev.stopPropagation();
+      startNodeDrag(ev, p.id);
+    });
+    // double-click body → detail (not on name or select)
+    el.addEventListener('dblclick', ev => {
+      if (ev.target.closest('.am-org-nm') || ev.target.closest('select') || ev.target.closest('a') || ev.target.closest('.am-org-plus') || ev.target.closest('.am-org-col')) return;
+      ev.stopPropagation();
+      _amOpenDetail(p.id);
+    });
+
+    updateCollapseBtn(p.id);
     return el;
+  }
+
+  function addOrgChild(parentId, name) {
+    if (!am.people) am.people = [];
+    if (!am.reports) am.reports = {};
+    const id = 'x' + Date.now();
+    const p2 = { id, name: name || 'New role', title: '', role: '', loc: '', email: '', li: '', fit: '', notes: '', photo: '', priority: 3, stance: '', left: false, updated: new Date().toISOString().slice(0,10) };
+    am.people.push(p2);
+    people.push(p2);
+    byId[id] = p2;
+    reports[id] = parentId;
+    am.reports[id] = parentId;
+    const par = ST.pos[parentId] || { x: 0, y: 0 };
+    ST.pos[id] = { x: par.x + (people.filter(q => (am.reports||{})[q.id] === parentId).length - 1) * 90, y: par.y + NH + VGAP };
+    makeNode(p2);
+    // refresh mgr selects in existing nodes
+    document.querySelectorAll('.am-org-mgr-sel').forEach(s => { const cur = s.value; s.innerHTML = optionsHTML(reports[s.dataset.for]||''); s.value = cur; });
+    layout();
+    // inline rename (only if no explicit name was provided)
+    if (!name) {
+      const newEl = ST.nodeEls[id];
+      if (newEl) { const nm = newEl.querySelector('.am-org-nm'); if (nm) setTimeout(() => nm.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })), 30); }
+    }
   }
 
   // ─── NODE DRAG ────────────────────────────────────────────────────────────
@@ -9451,6 +9650,22 @@ function renderAMOrgChart() {
       if (!am.pos) am.pos = {};
       am.pos[id] = { ...ST.pos[id] };
       drawConns(); drawBands();
+    } else {
+      // Non-moved click = select this node
+      const prevSel = ST.sel;
+      ST.sel = (prevSel === id) ? null : id;
+      PERSIST.sel = ST.sel;
+      // Refresh selection highlight on old and new
+      if (prevSel && ST.nodeEls[prevSel]) {
+        const el = ST.nodeEls[prevSel];
+        el.style.boxShadow = '';
+        el.style.zIndex = '2';
+      }
+      if (ST.sel && ST.nodeEls[ST.sel]) {
+        const el = ST.nodeEls[ST.sel];
+        el.style.boxShadow = '0 0 0 3px #25c2a0';
+        el.style.zIndex = '10';
+      }
     }
     ST.drag = null;
   }
@@ -9480,6 +9695,83 @@ function renderAMOrgChart() {
   document.getElementById('am-org-layout').onchange = e => {
     ST.layout = e.target.value; ST.pos = {}; applyLayout(); fitView();
   };
+
+  // Delete selected node
+  document.getElementById('am-org-del').onclick = () => {
+    const selId = ST.sel;
+    if (!selId) { alert('Click a card to select it, then press Delete.'); return; }
+    const person = people.find(p => p.id === selId);
+    const name = person ? person.name : selId;
+    if (!confirm(`Delete "${name}" from this account?`)) return;
+    // Remove from people array
+    am.people = (am.people || []).filter(p => p.id !== selId);
+    // Remove from reports (as child and as manager)
+    if (am.reports) {
+      delete am.reports[selId];
+      Object.keys(am.reports).forEach(k => { if (am.reports[k] === selId) delete am.reports[k]; });
+    }
+    // Remove saved position
+    if (am.pos) delete am.pos[selId];
+    PERSIST.sel = null;
+    renderAMOrgChart();
+  };
+
+  // Orient toggle (vertical / horizontal)
+  const orientBtn = document.getElementById('am-org-orient');
+  orientBtn.textContent = PERSIST.orient === 'h' ? '⇄ Horizontal' : '⇅ Vertical';
+  orientBtn.onclick = () => {
+    PERSIST.orient = PERSIST.orient === 'h' ? 'v' : 'h';
+    ST.orient = PERSIST.orient;
+    orientBtn.textContent = ST.orient === 'h' ? '⇄ Horizontal' : '⇅ Vertical';
+    ST.pos = {};
+    if (am.pos) Object.keys(am.pos).forEach(k => delete am.pos[k]);
+    applyLayout(); fitView();
+  };
+
+  // Photos toggle
+  const photosBtn = document.getElementById('am-org-photos');
+  photosBtn.style.opacity = PERSIST.showPhotos ? '1' : '0.5';
+  photosBtn.onclick = () => {
+    PERSIST.showPhotos = !PERSIST.showPhotos;
+    ST.showPhotos = PERSIST.showPhotos;
+    photosBtn.style.opacity = ST.showPhotos ? '1' : '0.5';
+    document.querySelectorAll('.am-org-photo-img').forEach(img => {
+      img.style.display = ST.showPhotos ? 'block' : 'none';
+    });
+    layout();
+  };
+
+  // Departed toggle
+  const leftBtn = document.getElementById('am-org-showleft');
+  leftBtn.style.opacity = PERSIST.showLeft ? '1' : '0.5';
+  leftBtn.onclick = () => {
+    PERSIST.showLeft = !PERSIST.showLeft;
+    ST.showLeft = PERSIST.showLeft;
+    leftBtn.style.opacity = ST.showLeft ? '1' : '0.5';
+    // Departed nodes may appear/disappear — full re-layout
+    ST.pos = {};
+    if (am.pos) Object.keys(am.pos).forEach(k => delete am.pos[k]);
+    applyLayout(); fitView();
+  };
+
+  // Add contact by name field
+  document.getElementById('am-org-addbtn').onclick = () => {
+    const inp = document.getElementById('am-org-addname');
+    const rawName = (inp ? inp.value : '').trim();
+    addOrgChild(ST.sel, rawName || null);
+    if (inp) inp.value = '';
+  };
+  const addInp = document.getElementById('am-org-addname');
+  if (addInp) {
+    addInp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const rawName = addInp.value.trim();
+        addOrgChild(ST.sel, rawName || null);
+        addInp.value = '';
+      }
+    });
+  }
 
   // ─── SEARCH ──────────────────────────────────────────────────────────────
   const orgq = document.getElementById('am-orgq');
@@ -9532,12 +9824,12 @@ function renderAMIntel() {
   const host = document.getElementById('am-intel-root');
   if (!host) return;
   const isLight = document.body.classList.contains('light');
-  const card = isLight ? '#ffffff' : '#1e293b';
-  const border = isLight ? '#e2e8f0' : '#1e3a5f';
-  const textMut = isLight ? '#64748b' : '#94a3b8';
-  const textHead = isLight ? '#0f172a' : '#f1f5f9';
-  const inputBg = isLight ? '#f8fafc' : '#0f172a';
-  const inputBorder = isLight ? '#d1d5db' : '#334155';
+  const card = 'var(--th-card)';
+  const border = 'var(--th-border)';
+  const textMut = 'var(--th-mut)';
+  const textHead = 'var(--th-tx)';
+  const inputBg = 'var(--th-inp2)';
+  const inputBorder = 'var(--th-inpbd2)';
   if (!STATE.accountMapper) { _amEmptyState(host, isLight); return; }
   const am = STATE.accountMapper;
   let intel = am.intel || [];
@@ -9580,12 +9872,12 @@ function renderAMSales() {
   const host = document.getElementById('am-sales-root');
   if (!host) return;
   const isLight = document.body.classList.contains('light');
-  const card = isLight ? '#ffffff' : '#1e293b';
-  const border = isLight ? '#e2e8f0' : '#1e3a5f';
-  const textMut = isLight ? '#64748b' : '#94a3b8';
-  const textHead = isLight ? '#0f172a' : '#f1f5f9';
-  const inputBg = isLight ? '#f8fafc' : '#0f172a';
-  const inputBorder = isLight ? '#d1d5db' : '#334155';
+  const card = 'var(--th-card)';
+  const border = 'var(--th-border)';
+  const textMut = 'var(--th-mut)';
+  const textHead = 'var(--th-tx)';
+  const inputBg = 'var(--th-inp2)';
+  const inputBorder = 'var(--th-inpbd2)';
 
   // Account name: explicit override → accountMapper → blank
   const acctName = _amSalesAccount || (STATE.accountMapper?.accountName) || '';
