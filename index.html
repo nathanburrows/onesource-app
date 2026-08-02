@@ -8342,6 +8342,7 @@ function renderAMIntel() {
 // ─── Sales (filtered from SalesTrak STATE.stRaw by account name) ─────────────
 
 let _amSalesSearch = '', _amSalesSort = { col: 'invoiceDate', dir: 'desc' };
+let _amSalesAccount = '';  // overrides accountMapper.accountName when set
 
 function renderAMSales() {
   const host = document.getElementById('am-sales-root');
@@ -8353,19 +8354,27 @@ function renderAMSales() {
   const textHead = isLight ? '#0f172a' : '#f1f5f9';
   const inputBg = isLight ? '#f8fafc' : '#0f172a';
   const inputBorder = isLight ? '#d1d5db' : '#334155';
-  if (!STATE.accountMapper) { _amEmptyState(host, isLight); return; }
-  const am = STATE.accountMapper;
-  const acctName = am.accountName || '';
-  const normAcct = normalizeCustomer(acctName);
+
+  // Account name: explicit override → accountMapper → blank
+  const acctName = _amSalesAccount || (STATE.accountMapper?.accountName) || '';
 
   const stRows = STATE.stRaw || [];
-  let rows = stRows.filter(r => {
+  const noST = !stRows.length;
+
+  // Deduplicated sorted customer list for picker
+  const allCustomers = [...new Set(
+    stRows.flatMap(r => [r.customer, r.custParent].filter(Boolean))
+  )].sort((a, b) => a.localeCompare(b));
+
+  // Filter rows by selected account (empty acctName → no rows)
+  const normAcct = normalizeCustomer(acctName);
+  let rows = acctName ? stRows.filter(r => {
     const nc = normalizeCustomer(r.customer || '');
     const np = normalizeCustomer(r.custParent || '');
     if (nc === normAcct || np === normAcct) return true;
     if (normAcct.length > 4) return nc.includes(normAcct) || normAcct.includes(nc) || np.includes(normAcct);
     return false;
-  });
+  }) : [];
 
   if (_amSalesSearch) {
     const q = _amSalesSearch.toLowerCase();
@@ -8418,15 +8427,33 @@ function renderAMSales() {
     <td style="${tds}">${r.invoiceDate||'—'}</td>
   </tr>`).join('');
 
-  const noST    = !stRows.length;
-  const noMatch = stRows.length > 0 && rows.length === 0;
+  const noMatch = !noST && acctName && rows.length === 0 && !_amSalesSearch;
+
+  // Account picker
+  const pickerHtml = `
+    <div style="background:${card};border:1px solid ${border};border-radius:12px;padding:14px 18px;margin-bottom:18px;">
+      ${!STATE.accountMapper && !acctName ? `<div style="font-size:13px;font-weight:600;color:${textHead};margin-bottom:10px;">Select an account to view sales history</div>` : ''}
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:11px;font-weight:700;color:${textMut};text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">Account</span>
+        <div style="position:relative;flex:1;max-width:420px;">
+          <input type="text" id="am-sales-acct-input" placeholder="Search accounts…"
+            value="${acctName.replace(/"/g,'&quot;')}"
+            ${noST ? 'disabled' : ''}
+            style="width:100%;background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:8px ${acctName ? '32px' : '12px'} 8px 12px;border-radius:9px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;${noST ? 'opacity:0.5;cursor:not-allowed;' : ''}">
+          ${acctName ? `<button id="am-sales-acct-clear" title="Clear" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:${textMut};font-size:17px;line-height:1;cursor:pointer;padding:2px 4px;">×</button>` : ''}
+          <div id="am-sales-acct-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:${card};border:1px solid ${border};border-radius:9px;max-height:200px;overflow-y:auto;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,0.18);"></div>
+        </div>
+      </div>
+    </div>`;
 
   host.innerHTML = `
     <div style="max-width:1100px;">
       ${_amHeader(isLight, 'am-sales')}
       ${noST ? `<div style="background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.35);border-radius:10px;padding:10px 14px;font-size:12.5px;color:#fbbf24;margin-bottom:16px;">No SalesTrak data loaded — import an ST file from Data Sources first, then return here.</div>` : ''}
+      ${pickerHtml}
       ${noMatch ? `<div style="background:${inputBg};border:1px solid ${border};border-radius:10px;padding:10px 14px;font-size:12.5px;color:${textMut};margin-bottom:16px;">No SalesTrak orders found matching "<b>${acctName}</b>". Verify the account name matches your ST customer/parent column.</div>` : ''}
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">${kpiHtml}</div>
+      ${acctName ? `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">${kpiHtml}</div>` : ''}
+      ${acctName ? `
       <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
         <input type="search" id="am-sales-search" placeholder="Search orders…" value="${_amSalesSearch.replace(/"/g,'&quot;')}" style="flex:1;max-width:300px;background:${inputBg};border:1px solid ${inputBorder};color:${textHead};padding:8px 12px;border-radius:9px;font-size:13px;font-family:inherit;outline:none;">
         <span style="font-size:12px;color:${textMut};">${rows.length} order${rows.length===1?'':'s'} matched</span>
@@ -8444,11 +8471,50 @@ function renderAMSales() {
           </tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table>
-      </div>
+      </div>` : ''}
     </div>`;
+
   _wireAMReimport(host);
+
+  // Wire order search
   const ss = host.querySelector('#am-sales-search');
   if (ss) ss.oninput = () => { _amSalesSearch = ss.value; renderAMSales(); };
+
+  // Wire account picker
+  const acctInput = host.querySelector('#am-sales-acct-input');
+  const acctDropdown = host.querySelector('#am-sales-acct-dropdown');
+  const acctClear = host.querySelector('#am-sales-acct-clear');
+
+  if (acctInput && acctDropdown) {
+    const showDropdown = query => {
+      const q = query.toLowerCase();
+      const matches = q ? allCustomers.filter(c => c.toLowerCase().includes(q)) : allCustomers;
+      if (!matches.length) { acctDropdown.style.display = 'none'; return; }
+      acctDropdown.innerHTML = matches.slice(0, 50).map(c =>
+        `<div data-val="${c.replace(/"/g,'&quot;')}" style="padding:8px 12px;font-size:13px;color:${textHead};cursor:pointer;" onmouseover="this.style.background='${inputBg}'" onmouseout="this.style.background=''">${c}</div>`
+      ).join('');
+      acctDropdown.style.display = 'block';
+      acctDropdown.querySelectorAll('div').forEach(opt => {
+        opt.onmousedown = e => {
+          e.preventDefault();
+          _amSalesAccount = opt.dataset.val;
+          acctDropdown.style.display = 'none';
+          renderAMSales();
+        };
+      });
+    };
+    acctInput.oninput = () => showDropdown(acctInput.value);
+    acctInput.onfocus = () => { if (!acctInput.value) showDropdown(''); };
+    acctInput.onblur = () => setTimeout(() => { acctDropdown.style.display = 'none'; }, 150);
+  }
+
+  if (acctClear) {
+    acctClear.onclick = () => {
+      _amSalesAccount = '';
+      renderAMSales();
+    };
+  }
+
   window.__amSalCol = col => {
     if (_amSalesSort.col === col) _amSalesSort.dir = _amSalesSort.dir === 'asc' ? 'desc' : 'asc';
     else { _amSalesSort.col = col; _amSalesSort.dir = 'desc'; }
