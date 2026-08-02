@@ -14749,42 +14749,52 @@ function importQuotes(list) {
 
 // Parse a Planner "Export plan to Excel" file and push tasks to the proxy.
 // Full-plan snapshot → replace:true (stable Task IDs mean stale tasks are
-// safely removed). Mirrors importQuotes' parse+POST shape.
+// safely removed). Iterates all sheets so the task sheet doesn't need to
+// be the first tab (Planner exports often have a cover/metadata sheet first).
 async function importPlanner(list) {
   const allTasks = [];
   let planName = null;
-  for (const { file, headerRow, mapping } of list) {
+  for (const { file } of list) {
     try {
       const buf = await file.arrayBuffer();
       const wb  = XLSX.read(new Uint8Array(buf), { type:'array', cellDates:false });
-      const ws  = wb.Sheets[wb.SheetNames[0]];
-      const aoa = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false, blankrows:false });
-      const headers = (aoa[headerRow] || []).map(v => String(v || '').trim());
-      const colIndex = {};
-      for (const [field, header] of Object.entries(mapping)) colIndex[field] = headers.indexOf(header);
-      planName = planName || (wb.SheetNames[0] && !/^sheet\d+$/i.test(wb.SheetNames[0]) ? wb.SheetNames[0] : null);
-      for (let r = headerRow + 1; r < aoa.length; r++) {
-        const row = aoa[r] || [];
-        const g = f => (colIndex[f] != null && colIndex[f] >= 0) ? String(row[colIndex[f]] ?? '').trim() : '';
-        const title = g('title');
-        if (!title) continue;
-        allTasks.push({
-          id: g('taskId'), title,
-          bucketName: g('bucketName'), progress: g('progress'),
-          priority: g('priority'), assignedTo: g('assignedTo'),
-          startDate: g('startDate'), dueDate: g('dueDate'), late: g('late'),
-          completedDate: g('completedDate'), createdBy: g('createdBy'),
-          createdDate: g('createdDate'), checklistDone: g('checklistDone'),
-          checklistTotal: g('checklistTotal'), labels: g('labels'),
-          description: g('description'),
-        });
+      for (const sheetName of (wb.SheetNames || [])) {
+        const ws = wb.Sheets[sheetName];
+        if (!ws) continue;
+        const aoa = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false, blankrows:false });
+        if (!aoa.length) continue;
+        const hRow = detectSheetHeaderRow(aoa, PLANNER_FIELD_PATTERNS);
+        const rawHdrs = (aoa[hRow] || []).map(v => String(v || '').trim());
+        const filteredHdrs = rawHdrs.filter(Boolean);
+        if (filteredHdrs.length < 3) continue;
+        const mapping = resolveFieldMap(filteredHdrs, PLANNER_FIELD_PATTERNS);
+        if (!mapping.title) continue; // no Task Name column on this sheet — skip it
+        const colIndex = {};
+        for (const [field, header] of Object.entries(mapping)) colIndex[field] = rawHdrs.indexOf(header);
+        planName = planName || (sheetName && !/^sheet\d+$/i.test(sheetName) ? sheetName : null);
+        for (let r = hRow + 1; r < aoa.length; r++) {
+          const row = aoa[r] || [];
+          const g = f => (colIndex[f] != null && colIndex[f] >= 0) ? String(row[colIndex[f]] ?? '').trim() : '';
+          const title = g('title');
+          if (!title) continue;
+          allTasks.push({
+            id: g('taskId'), title,
+            bucketName: g('bucketName'), progress: g('progress'),
+            priority: g('priority'), assignedTo: g('assignedTo'),
+            startDate: g('startDate'), dueDate: g('dueDate'), late: g('late'),
+            completedDate: g('completedDate'), createdBy: g('createdBy'),
+            createdDate: g('createdDate'), checklistDone: g('checklistDone'),
+            checklistTotal: g('checklistTotal'), labels: g('labels'),
+            description: g('description'),
+          });
+        }
       }
     } catch (e) {
       try { toast('error', 'Planner import failed', String(e.message || e)); } catch (_) {}
     }
   }
   if (!allTasks.length) {
-    try { toast('warn', 'No Planner tasks found', 'Check the export has a Task Name column.'); } catch (_) {}
+    try { toast('warn', 'No Planner tasks found', 'The file was detected as a Planner export but no tasks with a "Task Name" were found. Confirm the export contains a Task Name column.'); } catch (_) {}
     return;
   }
   try {
