@@ -14797,26 +14797,34 @@ async function importPlanner(list) {
     try { toast('warn', 'No Planner tasks found', 'The file was detected as a Planner export but no tasks with a "Task Name" were found. Confirm the export contains a Task Name column.'); } catch (_) {}
     return;
   }
+
+  // Populate STATE.planner immediately so the UI works even if proxy write fails.
+  const buckets = [...new Set(allTasks.map(t => t.bucketName).filter(Boolean))];
+  const labels  = [...new Set(allTasks.flatMap(t => (t.labels || '').split(',').map(l => l.trim())).filter(Boolean))];
+  STATE.planner = { savedAt: new Date().toISOString(), planId: null, planName, buckets, labels, tasks: allTasks };
+  try { toast('info', 'Planner imported', `${allTasks.length} task${allTasks.length === 1 ? '' : 's'}${planName ? ' · ' + planName : ''}`); } catch (_) {}
+  try { window.populateDataSourceCards?.(); } catch (_) {}
+  try { if (typeof renderPlannerPage === 'function') renderPlannerPage(); } catch (_) {}
+
+  // Background proxy write — non-fatal; lets proxy persist for next boot-time hydration.
   try {
     const base = (typeof proxyBase === 'function') ? proxyBase() : 'https://127.0.0.1:8787';
     const r = await fetch(base + '/planner/bulk-ingest', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        syncedAt: new Date().toISOString(),
+        syncedAt: STATE.planner.savedAt,
         sourceUrl: 'excel:' + (list[0]?.file?.name || 'planner-export.xlsx'),
         planName, tasks: allTasks, replace: true,
       }),
     });
     const j = await r.json();
-    if (!r.ok || !j.ok) throw new Error(j.error || ('HTTP ' + r.status));
-    try { toast('info', 'Planner synced', `${j.stored||0} new · ${j.updated||0} updated · ${j.taskCount||allTasks.length} total`); } catch (_) {}
-    await hydratePlannerFromProxy({ silent: true });
-    try { window.populateDataSourceCards?.(); } catch (_) {}
-    try { if (typeof renderPlannerPage === 'function') renderPlannerPage(); } catch (_) {}
-  } catch (e) {
-    try { toast('error', 'Planner proxy write failed', String(e.message || e)); } catch (_) {}
-  }
+    if (r.ok && j.ok) {
+      // Merge proxy's canonical savedAt/planId into local state if available.
+      if (j.savedAt) STATE.planner.savedAt = j.savedAt;
+      if (j.planId)  STATE.planner.planId  = j.planId;
+    }
+  } catch (_) { /* proxy write optional — UI already live */ }
 }
 
 // Status bucket map (QUOTE-06) — covers all 6 raw OSIT statuses.
