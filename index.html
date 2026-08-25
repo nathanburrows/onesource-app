@@ -8369,6 +8369,28 @@ function openPlannerModal(taskId) {
    or JSON export. AM Sales filters the already-loaded STATE.stRaw by account name.
    ──────────────────────────────────────────────────────────────────────── */
 
+const AM_LS_KEY = 'osc_accountMapper_v1';
+let _amAutosaveTimer = null;
+
+function _amSaveToStorage() {
+  if (!STATE.accountMapper) return;
+  try { localStorage.setItem(AM_LS_KEY, JSON.stringify(STATE.accountMapper)); } catch(_) {}
+}
+
+function _amScheduleAutosave() {
+  if (_amAutosaveTimer) clearTimeout(_amAutosaveTimer);
+  _amAutosaveTimer = setTimeout(_amSaveToStorage, 1500);
+}
+
+function _amRestoreFromStorage() {
+  try {
+    const raw = localStorage.getItem(AM_LS_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data && Array.isArray(data.people)) STATE.accountMapper = data;
+  } catch(_) {}
+}
+
 function importAccountMapper(file) {
   if (!file) return;
   const reader = new FileReader();
@@ -8387,6 +8409,7 @@ function importAccountMapper(file) {
       }
       if (!data || !Array.isArray(data.people)) throw new Error('Invalid AccountMapper file — missing people array.');
       STATE.accountMapper = data;
+      try { localStorage.setItem(AM_LS_KEY, JSON.stringify(data)); } catch(_) {}
       const page = STATE.activePage;
       if (page === 'am-portfolio') renderAMPortfolio();
       else if (page === 'am-matrix') renderAMMatrix();
@@ -8403,6 +8426,7 @@ function importAccountMapper(file) {
 
 function clearAccountMapper() {
   STATE.accountMapper = null;
+  try { localStorage.removeItem(AM_LS_KEY); } catch(_) {}
   const page = STATE.activePage;
   if (page === 'am-portfolio') renderAMPortfolio();
   else if (page === 'am-matrix') renderAMMatrix();
@@ -8836,6 +8860,7 @@ function _amRenderDetail() {
     const newMgr = panel.querySelector('#am-de-mgr').value;
     if (am.reports) am.reports[p.id] = newMgr;
     p.updated = new Date().toISOString().slice(0,10);
+    _amScheduleAutosave();
     _amOpenDetail(id);  // re-render detail with saved values
     renderAMMatrix();
     if (typeof renderAMOrgChart === 'function' && document.getElementById('am-org-root') &&
@@ -8847,7 +8872,7 @@ function _amRenderDetail() {
 
   // left-company toggle
   const leftBtn = panel.querySelector('#am-de-left');
-  if (leftBtn) leftBtn.onclick = () => { p.left = !p.left; p.updated = new Date().toISOString().slice(0,10); _amOpenDetail(id); renderAMMatrix(); };
+  if (leftBtn) leftBtn.onclick = () => { p.left = !p.left; p.updated = new Date().toISOString().slice(0,10); _amScheduleAutosave(); _amOpenDetail(id); renderAMMatrix(); };
 
   // delete
   const delBtn = panel.querySelector('#am-de-delete');
@@ -8855,6 +8880,7 @@ function _amRenderDetail() {
     if (!confirm('Delete "' + (p.name||'this contact') + '"? This cannot be undone.')) return;
     if (am.people) am.people = am.people.filter(q => q.id !== id);
     if (am.reports) { delete am.reports[id]; Object.keys(am.reports).forEach(k => { if (am.reports[k] === id) am.reports[k] = ''; }); }
+    _amScheduleAutosave();
     _amCloseDetail();
     renderAMMatrix();
   };
@@ -9644,11 +9670,13 @@ function renderAMOrgChart() {
       if (am.reports) am.reports[id] = ST.dropTarget;
       if (ST.nodeEls[ST.dropTarget]) ST.nodeEls[ST.dropTarget].style.outline = '';
       ST.dropTarget = null;
+      _amScheduleAutosave();
       applyLayout();
     } else if (moved) {
       // save position
       if (!am.pos) am.pos = {};
       am.pos[id] = { ...ST.pos[id] };
+      _amScheduleAutosave();
       drawConns(); drawBands();
     } else {
       // Non-moved click = select this node
@@ -37390,6 +37418,9 @@ try { _ensureBootOverlay(); } catch (_) {}
     const lsRep = localStorage.getItem('recon.activeRep');
     if (lsRep && lsRep.trim()) STATE.activeRep = lsRep.trim();
   } catch (_) {}
+
+  // Restore AccountMapper from localStorage so iPad/mobile users don't lose data between sessions
+  _amRestoreFromStorage();
 
   // local proxy hydrate — proxy is the only source of truth for NICE post-02-03.
   // The calc-only popout used to inherit from IDB, but 02-03 removed IDB so
