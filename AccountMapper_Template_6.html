@@ -1,0 +1,1150 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Investment Account Planning App · Template 6</title>
+<style>
+:root{--bg:#0d1220;--card:#161d2e;--card2:#1c2436;--line:#28324a;--tx:#eaf0fb;--mut:#93a1bd;--acc:#3a8dff;--acc2:#25c2a0;--hot:#ff5a7a;--hdr:#0c111b;--canvas:#0b0f1a;--head:#bcd4ff;--link:#6db3ff}
+body.light{--bg:#eef1f7;--card:#ffffff;--card2:#f1f4fa;--line:#d7deea;--tx:#16203a;--mut:#5c6a85;--acc:#2563eb;--acc2:#0e9e86;--hot:#e11d48;--hdr:#ffffff;--canvas:#e6eaf3;--head:#2158c9;--link:#2563eb}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--tx);overflow:hidden}
+header{padding:14px 22px 0;border-bottom:1px solid var(--line);background:var(--hdr)}
+h1{margin:0 0 3px;font-size:18px}.sub{color:var(--mut);font-size:12px;margin-bottom:10px}
+.tabs{display:flex;gap:6px}
+.tab{padding:9px 18px;border:1px solid var(--line);border-bottom:none;border-radius:9px 9px 0 0;background:var(--card);color:var(--mut);cursor:pointer;font-size:13.5px;font-weight:600}
+.tab.on{background:var(--bg);color:var(--tx);border-color:var(--acc);box-shadow:inset 0 2px 0 var(--acc)}
+#matrix,#org{position:absolute;top:120px;left:0;right:0;bottom:0}
+#matrix{overflow:auto;padding:16px 22px 60px}
+.hide{display:none!important}
+/* intel */
+#intel{position:absolute;top:120px;left:0;right:0;bottom:0;overflow:auto;padding:18px 22px 70px}
+.iwrap{max-width:1000px;margin:0 auto}
+.ihead{display:flex;gap:9px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.ihead h2{margin:0;font-size:18px;color:var(--head)}
+.isub{color:var(--mut);font-size:12.5px;max-width:1000px;margin:0 auto 16px}
+.iq{flex:1;min-width:180px;background:var(--card);border:1px solid var(--line);color:var(--tx);padding:9px 11px;border-radius:9px;font-size:14px}
+.icard{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:16px 18px;margin-bottom:13px}
+.icard h3{margin:0 0 9px;font-size:15.5px;color:var(--head);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.icard .ibody{font-size:13.5px;line-height:1.62;white-space:pre-wrap;color:var(--tx)}
+.icard .imeta{font-size:11px;color:var(--mut);margin-top:11px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.itag{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:2px 8px;border-radius:20px;background:var(--card2);color:var(--acc);border:1px solid var(--line)}
+.iact{margin-left:auto;display:flex;gap:6px}
+.iact .btn{padding:5px 9px;font-size:12px}
+.iedit{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 10px;font-size:13.5px;font-family:inherit;box-sizing:border-box}
+.iempty{color:var(--mut);text-align:center;padding:46px 20px;font-size:14px;line-height:1.6}
+/* sales */
+#sales{position:absolute;top:120px;left:0;right:0;bottom:0;overflow:auto;padding:18px 22px 70px}
+.swrap{max-width:1180px;margin:0 auto}
+.shead{display:flex;gap:9px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.shead h2{margin:0;font-size:18px;color:var(--head)}
+.ssub{color:var(--mut);font-size:12.5px;max-width:1180px;margin:0 auto 14px}
+.skpis{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.skpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 16px;min-width:130px;flex:1}
+.skpi .n{font-size:22px;font-weight:800;letter-spacing:-.3px}
+.skpi .l{font-size:11px;color:var(--mut);margin-top:2px;text-transform:uppercase;letter-spacing:.4px}
+.scard{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:15px 17px;margin-bottom:14px}
+.scard h3{margin:0 0 11px;font-size:14.5px;color:var(--head);display:flex;align-items:center;gap:8px}
+.stable{width:100%;border-collapse:collapse;font-size:12.5px}
+.stable th,.stable td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+.stable th{color:var(--mut);font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0;background:var(--card);cursor:pointer;user-select:none}
+.stable td.r,.stable th.r{text-align:right;font-variant-numeric:tabular-nums}
+.stable tr:hover td{background:var(--card2)}
+.stable td.wrap{white-space:normal;max-width:320px}
+.sbadge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px}
+.sbadge.hard{background:rgba(37,194,160,.16);color:var(--acc2);border:1px solid rgba(37,194,160,.4)}
+.sbadge.estimated{background:rgba(255,193,64,.16);color:#ffc140;border:1px solid rgba(255,193,64,.4)}
+.sbadge.billing{background:rgba(168,130,255,.16);color:#a882ff;border:1px solid rgba(168,130,255,.4)}
+.sbar{height:9px;border-radius:6px;background:linear-gradient(90deg,var(--acc),var(--acc2));min-width:2px}
+.sbartrack{background:var(--card2);border-radius:6px;overflow:hidden;flex:1;min-width:60px}
+.smini{display:flex;align-items:center;gap:9px}
+.spill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--card2);color:var(--acc);border:1px solid var(--line)}
+.sq{background:var(--card);border:1px solid var(--line);color:var(--tx);padding:8px 11px;border-radius:9px;font-size:13px;min-width:180px}
+.sfoot{font-size:11px;color:var(--mut);margin-top:6px}
+.sempty{color:var(--mut);text-align:center;padding:46px 20px;font-size:14px;line-height:1.6}
+/* matrix */
+.controls{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+input#q{flex:1;min-width:200px;background:var(--card);border:1px solid var(--line);color:var(--tx);padding:9px 11px;border-radius:9px;font-size:14px}
+select,button.btn{background:var(--card);border:1px solid var(--line);color:var(--tx);padding:8px 11px;border-radius:9px;font-size:13px;cursor:pointer}
+button.btn.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:13px}
+.mcard{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.mcard.hot{border-left:4px solid var(--hot)}
+.mtop{display:flex;gap:11px;align-items:center}
+.av{width:52px;height:52px;border-radius:50%;flex:0 0 52px;object-fit:cover;background:var(--card2);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;border:1px solid var(--line)}
+.nm{font-size:15px;font-weight:650;line-height:1.2}.tt{font-size:12px;color:var(--mut);margin-top:2px}
+.chip{font-size:11px;padding:3px 8px;border-radius:20px;background:var(--card2);border:1px solid var(--line);color:var(--head)}
+.stg{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:.2px;white-space:nowrap}
+.mcard.gone{opacity:.62;filter:grayscale(.5)}
+.leftb{font-size:9px;font-weight:800;padding:1px 6px;border-radius:6px;background:#7a869c;color:#fff;letter-spacing:.5px;vertical-align:middle}
+.leftsec h3{border-left-color:#7a869c!important;color:#aeb9d0!important}
+.fit{font-size:12px;background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:7px 9px;line-height:1.35}
+.fit.k{border-color:#3a6b5f}.fit.k b{color:var(--acc2)}
+a.lk{color:var(--link);text-decoration:none;font-size:12px}
+/* org */
+#orgbar{position:absolute;top:120px;left:0;right:0;height:46px;display:flex;gap:8px;align-items:center;padding:0 14px;border-bottom:1px solid var(--line);background:var(--hdr);z-index:6;flex-wrap:wrap}
+#org{top:166px}
+#orgbar .btn{padding:6px 10px;font-size:12.5px}
+#orgbar input[type=text]{background:var(--card);border:1px solid var(--line);color:var(--tx);padding:6px 9px;border-radius:8px;font-size:12.5px;width:150px}
+#orgbar input#orgq{width:230px}
+#orgbar input#orgq:focus{outline:none;border-color:var(--acc)}
+.hint{color:var(--mut);font-size:12px;margin-left:auto}
+#viewport{position:absolute;top:166px;left:0;right:0;bottom:0;overflow:hidden;cursor:grab;background-color:var(--canvas)}
+#viewport.grabbing{cursor:grabbing}
+#world{position:absolute;top:0;left:0;transform-origin:0 0}
+#bands{position:absolute;top:0;left:0;pointer-events:none;z-index:0}
+.band{position:absolute;border-radius:14px;border:1px solid rgba(255,255,255,.06)}
+#tierlabels{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.tlab{position:absolute;font-size:12.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;background:rgba(9,13,22,.82);border:1px solid rgba(255,255,255,.14);padding:5px 11px;border-radius:8px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.4)}
+#conn{position:absolute;top:0;left:0;overflow:visible;pointer-events:none;z-index:1}
+.node{position:absolute;width:212px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 9px 9px;cursor:grab;user-select:none;box-shadow:0 4px 14px rgba(0,0,0,.35);z-index:2}
+.node .tbar{position:absolute;top:0;left:0;right:0;height:11px;border-radius:11px 11px 0 0}
+.node.hot{border-color:var(--hot)}
+.node.sel{outline:2px solid var(--acc)}
+.node.link1{outline:2px dashed var(--acc2)}
+.nhead{display:flex;gap:9px;align-items:center}
+.nav{width:46px;height:46px;border-radius:50%;flex:0 0 46px;object-fit:cover;background:var(--card2);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px;border:1px solid var(--line)}
+.nnm{font-size:13.5px;font-weight:650;line-height:1.15}
+.ntt{font-size:11px;color:var(--mut);line-height:1.2;margin-top:2px;max-height:28px;overflow:hidden}
+.nloc{font-size:10.5px;color:#7d8aa5;margin-top:3px}
+.nfoot{display:flex;align-items:center;gap:5px;margin-top:7px;border-top:1px solid var(--line);padding-top:6px}
+.nfoot select{flex:1;background:var(--card2);border:1px solid var(--line);color:var(--tx);font-size:10.5px;border-radius:6px;padding:3px}
+.nfoot a{color:var(--link);text-decoration:none;font-size:12px}
+.badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(255,90,122,.15);color:var(--hot);border:1px solid rgba(255,90,122,.4)}
+.node.dim{opacity:.28}
+.node.gone{opacity:.55;filter:grayscale(.6)}
+.goneflag{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#7a869c;color:#fff;font-size:9px;font-weight:800;padding:1px 7px;border-radius:6px;letter-spacing:.6px;display:none;z-index:5}
+.node.gone .goneflag{display:block}
+.node .plus{position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;background:var(--acc);color:#fff;border:2px solid var(--canvas);display:none;align-items:center;justify-content:center;font-size:16px;line-height:1;cursor:pointer;z-index:4}
+.node:hover .plus{display:flex}
+.node .plus:hover{background:#5aa0ff}
+.node.droptarget{outline:3px solid var(--acc2);box-shadow:0 0 0 5px rgba(37,194,160,.25)}
+.node.find{outline:3px solid var(--acc2);box-shadow:0 0 0 6px rgba(37,194,160,.3);z-index:5}
+.nnm[contenteditable]:focus{outline:none;background:var(--card2);border-radius:4px;padding:0 3px}
+.mcard{cursor:pointer;transition:box-shadow .15s}
+.mcard:hover{border-color:var(--acc)}
+.mcard.flash{outline:2px solid var(--acc);box-shadow:0 0 0 5px rgba(58,141,255,.3)}
+#detail{position:absolute;top:120px;right:0;bottom:0;width:400px;max-width:94vw;background:var(--card);border-left:1px solid var(--line);transform:translateX(107%);transition:transform .22s;z-index:40;overflow:auto;padding:18px}
+#detail.on{transform:none}
+#detail h4{margin:16px 0 4px;font-size:11px;letter-spacing:.4px;color:var(--head);text-transform:uppercase}
+.dlink{color:var(--link);cursor:pointer;text-decoration:none;font-weight:600}
+.dlink:hover{text-decoration:underline}
+.drow{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--line)}
+.dav{width:34px;height:34px;border-radius:50%;flex:0 0 34px;object-fit:cover;background:var(--card2);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:1px solid var(--line);color:#fff}
+.dsub{font-size:11px;color:var(--mut)}
+.node .col{position:absolute;top:-11px;left:-10px;min-width:24px;height:24px;padding:0 6px;border-radius:12px;background:var(--acc);color:#fff;border:2px solid var(--canvas);display:none;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;cursor:pointer;z-index:5}
+.node .col.cin{background:var(--mut)}
+.node .col:hover{filter:brightness(1.12)}
+.node .info{position:absolute;top:-10px;right:-9px;width:22px;height:22px;border-radius:50%;background:var(--card2);border:1px solid var(--line);color:var(--head);display:none;align-items:center;justify-content:center;font-size:12px;cursor:pointer;z-index:4}
+.node:hover .info{display:flex}
+.node .ndot{position:absolute;top:7px;right:9px;font-size:11px}
+textarea:focus{outline:none;border-color:var(--acc)}
+.gsec{margin-bottom:20px}
+.gsec h3{font-size:12.5px;letter-spacing:.3px;color:var(--head);text-transform:uppercase;margin:4px 0 11px;border-left:3px solid var(--acc);padding-left:10px;display:flex;align-items:center;gap:8px}
+.gsec h3 span{color:var(--mut);font-size:11px;background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:1px 8px;font-weight:600}
+button.btn.add{background:var(--acc2);border-color:var(--acc2);color:#04231c;font-weight:700}
+#meinit{width:56px;background:var(--card);border:1px solid var(--line);color:var(--tx);padding:8px 8px;border-radius:9px;font-size:13px;text-align:center;text-transform:uppercase}
+#meinit:focus{outline:none;border-color:var(--acc)}
+#hdrlogo{height:32px;max-width:140px;object-fit:contain;border-radius:6px;border:1px solid var(--line);background:#fff;padding:2px 4px;display:none;cursor:pointer}
+#logobtn{padding:6px 9px}
+#merge{position:fixed;inset:0;background:rgba(4,8,16,.62);display:none;align-items:center;justify-content:center;z-index:60}
+#merge.on{display:flex}
+#merge .box{background:var(--card);border:1px solid var(--line);border-radius:14px;max-width:660px;width:92vw;max-height:86vh;overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#merge .box b{font-size:15px}
+.cfrow{border:1px solid var(--line);border-radius:10px;padding:11px;margin:10px 0;background:var(--card2)}
+.cfrow .opt{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.cfrow .opt button{flex:1;min-width:180px;text-align:left;background:var(--card);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 10px;cursor:pointer;font-size:12.5px;line-height:1.3}
+.cfrow .opt button.pick{border-color:var(--acc2);box-shadow:0 0 0 2px rgba(37,194,160,.35)}
+.cfrow .opt button .who{display:block;font-size:10.5px;color:var(--mut);margin-bottom:2px;text-transform:uppercase;letter-spacing:.3px}
+.mstat{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-align:center;min-width:96px}
+.mnum{font-size:26px;font-weight:800;color:var(--acc2)}
+#toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{pointer-events:auto;min-width:260px;max-width:92vw;padding:12px 15px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:0 12px 34px rgba(0,0,0,.45);border:1px solid var(--line);background:var(--card);color:var(--tx);display:flex;gap:10px;align-items:flex-start;animation:tin .2s ease}
+.toast .ic{font-size:16px;line-height:1.2}
+.toast.ok{border-left:4px solid var(--acc2)}
+.toast.err{border-left:4px solid var(--hot)}
+.toast.info{border-left:4px solid var(--acc)}
+@keyframes tin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+#portfolio{position:absolute;top:120px;left:0;right:0;bottom:0;overflow:auto;padding:18px 22px 60px}.ptable{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}.ptable th,.ptable td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line)}.ptable th{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.4px}.ptable tr.arow{cursor:pointer}.ptable tr.arow:hover td{background:var(--card2)}.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}.pill.ok{background:rgba(37,194,160,.16);color:var(--acc2)}.pill.no{background:rgba(147,161,189,.14);color:var(--mut)}.pill.risk{background:rgba(255,90,122,.16);color:var(--hot)}.pcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}.pkpi{display:flex;gap:26px;flex-wrap:wrap}.pkpi .n{font-size:24px;font-weight:800}.pkpi .l{font-size:11px;color:var(--mut)}#acctsel{max-width:230px;font-weight:600}
+</style></head><body>
+<div id="STATE" style="display:none"></div>
+<header>
+<div style="display:flex;align-items:center;gap:9px;margin-bottom:2px;overflow:hidden">
+ <select id="acctsel" title="Switch account"></select>
+ <button class="btn" id="acctrename" title="Rename this account" style="padding:6px 9px">✎</button>
+ <button class="btn" id="acctdel" title="Delete this account from this browser" style="padding:6px 9px">🗑</button>
+ <h1 id="acctname" style="margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Account</h1>
+ <span style="font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:var(--mut);font-weight:700;white-space:nowrap">· Investment Account Planning App</span>
+</div>
+<div class="sub" id="acctsub">—</div>
+<div class="tabs"><div class="tab on" data-t="matrix">▤ Matrix</div><div class="tab" data-t="org">🗂 Org Chart</div><div class="tab" data-t="portfolio">📊 Portfolio</div><div class="tab" data-t="intel">📁 Intel</div><div class="tab" data-t="sales">💰 Sales</div>
+ <div style="margin-left:auto;display:flex;gap:6px;align-items:center;padding-bottom:7px">
+  <img id="hdrlogo" alt="logo" title="Company logo · double-click to remove"><button class="btn" id="logobtn" title="Upload a company logo for the header">🖼 Logo</button><input type="file" id="logof" accept="image/*" class="hide">
+  <input id="meinit" placeholder="You" maxlength="4" title="Your initials — stamped onto any contact you edit, so merges can show who changed what">
+  <button class="btn" id="theme" title="Switch between dark and light theme">🌙 Dark</button>
+  <button class="btn add" id="save" title="Save a self-contained copy that opens with your changes on ANY browser — Ctrl+S">💾 Save &amp; Share</button>
+  <button class="btn" id="undo" title="Undo (Ctrl+Z)">↶</button><button class="btn" id="redo" title="Redo (Ctrl+Shift+Z)">↷</button>
+  <button class="btn" id="expo" title="Export a data-only JSON backup of your edits">⭳ Export</button>
+  <button class="btn" id="impo" title="Import your edits from a saved app HTML file OR a JSON backup — brings your data into THIS (newest) version">⭱ Import edits</button><input type="file" id="impf" accept=".json,.html,.htm,application/json,text/html" class="hide">
+  <button class="btn add" id="newacct" title="Create a new account">＋ New</button><button class="btn" id="clearacct" title="Clear this account’s contacts">🧹 Clear</button>
+ </div></div>
+</header>
+
+<div id="matrix">
+ <div class="controls">
+  <input id="q" placeholder="Search name, title, role, location, notes…">
+  <select id="groupby"><option value="fn">Group: Function</option><option value="loc">Group: Location</option><option value="prio">Group: Relationship</option><option value="mgr">Group: Manager</option><option value="none">Group: None</option></select>
+  <select id="sort"><option value="name">Sort: Name</option><option value="pri">Sort: Priority</option><option value="loc">Sort: Location</option><option value="title">Sort: Title</option></select>
+  <button class="btn" id="prio">⚑ Tagged only</button>
+  <button class="btn add" id="addc">＋ Add contact</button>
+ </div>
+ <div class="grid" id="mgrid"></div>
+</div>
+<div id="portfolio" class="hide"></div>
+
+<div id="detail"></div>
+<div id="intel" class="hide"></div>
+<div id="sales" class="hide"></div>
+<div id="orgbar" class="hide">
+ <input type="text" id="orgq" placeholder="🔍 Find a contact…" title="Type a name, title, role or location — the chart dims everything else and jumps to the match">
+ <button class="btn" id="orgqx" title="Clear search">✕</button>
+ <span style="width:1px;height:22px;background:var(--line)"></span>
+ <button class="btn" id="zin">＋</button><button class="btn" id="zout">－</button>
+ <button class="btn" id="org-del" title="Delete selected card (Del)">🗑 Delete</button>
+ <button class="btn" id="fit">Fit</button>
+ <button class="btn" id="arrange" title="Redistribute the whole tree and tidy unattached cards">⤵ Organize</button>
+ <button class="btn" id="linkbtn">🔗 Link</button>
+ <select id="layout" title="Choose how the org chart is arranged"><option value="tierflow">🎂 Tiers + reporting flow</option><option value="tiergroup">🎂 Tier layers (grouped)</option><option value="tree">🌳 Reporting tree</option></select>
+ <button class="btn" id="orient" title="Switch between top-down and left-right layout">⇅ Vertical</button>
+ <button class="btn" id="org-photos">👤 Photos</button>
+ <button class="btn" id="org-showleft" title="Show/hide people marked as having left the company">🚪 Departed</button>
+ <input type="text" id="org-addname" placeholder="New name…" style="width:120px"><button class="btn" id="org-addbtn">＋ Add</button>
+ <span class="hint" id="hint">Drag onto another card to set manager · ▾ collapses downline · dbl-click name to rename · hover for +</span>
+</div>
+<div id="viewport" class="hide"><div id="world"><div id="bands"></div><svg id="conn"></svg></div><div id="tierlabels"></div></div>
+<div id="merge"><div class="box"></div></div>
+<div id="toast"></div>
+
+<script>
+const PEOPLE = [{"id": "n0", "name": "Dana Whitfield", "title": "Chief Information Officer", "role": "Executive Sponsors", "loc": "Chicago, IL", "email": "", "li": "", "fit": "", "photo": "", "priority": 1, "stance": "Decision Maker", "left": false, "notes": "Owns the IT budget \u2014 final sign-off.", "updated": "2026-07-31"}, {"id": "n1", "name": "Marcus Reilly", "title": "VP, Infrastructure & Operations", "role": "Infrastructure & Data Center", "loc": "Chicago, IL", "email": "", "li": "", "fit": "", "photo": "", "priority": 1, "stance": "Champion", "left": false, "notes": "Strong advocate \u2014 introduced us across the org.", "updated": "2026-07-31"}, {"id": "n2", "name": "Priya Nair", "title": "Chief Information Security Officer", "role": "Information Security", "loc": "Boston, MA", "email": "", "li": "", "fit": "", "photo": "", "priority": 1, "stance": "Target", "left": false, "notes": "Building the relationship \u2014 clear cyber fit.", "updated": "2026-07-31"}, {"id": "n3", "name": "Frank Delgado", "title": "Director, IT Procurement", "role": "Finance & Procurement", "loc": "Chicago, IL", "email": "", "li": "", "fit": "", "photo": "", "priority": 1, "stance": "Blocker", "left": false, "notes": "Prefers the incumbent vendor; guards the budget.", "updated": "2026-07-31"}, {"id": "n4", "name": "Tom Alvarez", "title": "Senior Director, Network & Telecom", "role": "Network, Telecom & Citrix", "loc": "Dallas, TX", "email": "", "li": "", "fit": "", "photo": "", "priority": 3, "stance": "", "left": false, "notes": "", "updated": "2026-07-31"}, {"id": "n5", "name": "Grace Liu", "title": "Director, Data Center & Cloud", "role": "Infrastructure & Data Center", "loc": "Seattle, WA", "email": "", "li": "", "fit": "", "photo": "", "priority": 2, "stance": "Influencer", "left": false, "notes": "Technical influence over infra decisions.", "updated": "2026-07-31"}, {"id": "n6", "name": "Ben Carter", "title": "Director, End-User Services", "role": "End-User & Service Delivery", "loc": "Chicago, IL", "email": "", "li": "", "fit": "", "photo": "", "priority": 3, "stance": "", "left": false, "notes": "", "updated": "2026-07-31"}, {"id": "n7", "name": "Nina Patel", "title": "Director, Data & Analytics", "role": "Data, AI & Architecture", "loc": "Austin, TX", "email": "", "li": "", "fit": "", "photo": "", "priority": 3, "stance": "", "left": false, "notes": "", "updated": "2026-07-31"}, {"id": "n8", "name": "Susan Yoo", "title": "Director, Finance Systems", "role": "Finance & Procurement", "loc": "Chicago, IL", "email": "", "li": "", "fit": "", "photo": "", "priority": 3, "stance": "", "left": false, "notes": "", "updated": "2026-07-31"}, {"id": "n9", "name": "Carlos Mendez", "title": "Director, PMO", "role": "Program Management", "loc": "Denver, CO", "email": "", "li": "", "fit": "", "photo": "", "priority": 3, "stance": "", "left": false, "notes": "", "updated": "2026-07-31"}, {"id": "n10", "name": "Omar Haddad", "title": "Security Operations Manager", "role": "Information Security", "loc": "Boston, MA", "email": "", "li": "", "fit": "", "photo": "", "priority": 1, "stance": "Target", "left": false, "notes": "Day-to-day security ops \u2014 good working contact.", "updated": "2026-07-31"}, {"id": "n11", "name": "Rachel Kim", "title": "Associate Director, Service Desk", "role": "End-User & Service Delivery", "loc": "Chicago, IL", "email": "", "li": "", "fit": "", "photo": "", "priority": 3, "stance": "", "left": false, "notes": "", "updated": "2026-07-31"}, {"id": "n12", "name": "Jake Foster", "title": "Systems Engineer", "role": "Infrastructure & Data Center", "loc": "Seattle, WA", "email": "", "li": "", "fit": "", "photo": "", "priority": 3, "stance": "", "left": false, "notes": "", "updated": "2026-07-31"}, {"id": "n13", "name": "Aisha Bello", "title": "Cloud Engineer", "role": "Infrastructure & Data Center", "loc": "Seattle, WA", "email": "", "li": "", "fit": "", "photo": "", "priority": 3, "stance": "", "left": false, "notes": "", "updated": "2026-07-31"}, {"id": "n14", "name": "Ellen Ross", "title": "Network Administrator", "role": "Network, Telecom & Citrix", "loc": "Dallas, TX", "email": "", "li": "", "fit": "", "photo": "", "priority": 3, "stance": "", "left": true, "notes": "Left the company Jun 2026 \u2014 kept for history.", "updated": "2026-07-31"}];
+const SEED_INTEL = [{"id": "sample_intel_1", "title": "Sample intel \u2014 how this tab works", "tag": "Sample", "updated": "2026-07-31", "by": "", "body": "This is the Intel tab \u2014 freeform notes on the account: briefings, sales plays, competitive intel, anything worth keeping.\n\n\u2022 Click \uff0b Add intel to write a card.\n\u2022 Click \ud83d\udccb Paste to add to drop in a block of text \u2014 the first line becomes the title.\n\u2022 Everything here saves & shares with the account, just like contacts.\n\nDelete this sample card once you get the idea."}];
+const SEED_SALES = null;
+const byName = {}; PEOPLE.forEach(p=>byName[p.name]=p);
+const FUNCTIONS=['Executive Sponsors','Infrastructure & Data Center','Network, Telecom & Citrix','Data, AI & Architecture','End-User & Service Delivery','Information Security','Finance & Procurement','Program Management','Applications & Development','HR / Talent','Other / To confirm'];
+function initials(n){var a=n.replace(/[()]/g,'').split(/\s+/).filter(w=>/[A-Za-z]/.test(w[0]));return ((a[0]||'')[0]||'')+((a[1]||'')[0]||'').toUpperCase();}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+let showPhotos=true; /* v6: photos toggle — declared early so av() can reference it before org chart section */
+function av(p,cls){return (p.photo&&showPhotos)?`<img class="${cls}" src="${p.photo}">`:`<div class="${cls}">${esc(initials(p.name))}</div>`;}
+function isKey(p){return p.priority===1;}
+/* ---- stakeholder map (relationship / priority) ---- */
+const STANCE_DEFS=[
+ {key:'Champion',      label:'Champion',        emoji:'⭐', color:'#25c2a0', glow:'bold'},
+ {key:'Decision Maker',label:'Decision Maker',  emoji:'💰', color:'#ffc140', glow:'bold'},
+ {key:'Target',        label:'Target – Develop',emoji:'🎯', color:'#22d3ee', glow:'bold'},
+ {key:'Influencer',    label:'Influencer',      emoji:'🔗', color:'#a882ff', glow:'med'},
+ {key:'Blocker',       label:'Blocker',         emoji:'⛔', color:'#ff5a7a', glow:'bold'},
+ {key:'Neutral',       label:'Neutral / Unknown',emoji:'○', color:'#93a1bd', glow:'none'}
+];
+const STANCE_KEYS=new Set(STANCE_DEFS.map(s=>s.key));
+function stDef(p){const k=p&&p.stance;if(!k||k==='Neutral')return null;return STANCE_DEFS.find(s=>s.key===k)||null;}
+function glowCss(def){if(!def||def.glow==='none')return '';const c=def.color;return def.glow==='bold'?`box-shadow:0 0 0 3px ${c}, 0 0 24px 2px ${c}99;border-color:${c}`:`box-shadow:0 0 0 2px ${c}, 0 0 12px ${c}77;border-color:${c}`;}
+function stChip(def){if(!def)return '';return `<span class="stg" style="background:${def.color}22;color:${def.color};border:1px solid ${def.color}66">${def.emoji} ${esc(def.label)}</span>`;}
+
+/* ---------- TABS ---------- */
+const tabs=document.querySelectorAll('.tab');
+function activateTab(name){
+  tabs.forEach(x=>x.classList.toggle('on',x.dataset.t===name));
+  const org=name==='org', intelT=name==='intel', salesT=name==='sales', port=name==='portfolio';
+  if(!port&&viewAll){viewAll=false;refreshAcctPicker();updateHeader();}
+  document.getElementById('matrix').classList.toggle('hide',org||intelT||salesT||port);
+  document.getElementById('orgbar').classList.toggle('hide',!org);
+  document.getElementById('viewport').classList.toggle('hide',!org);
+  document.getElementById('intel').classList.toggle('hide',!intelT);
+  document.getElementById('sales').classList.toggle('hide',!salesT);
+  document.getElementById('portfolio').classList.toggle('hide',!port);
+  if(org){if(!orgReady){buildOrg();fitView();orgReady=true;}}
+  else if(intelT){renderIntel();}
+  else if(salesT){renderSales();}
+  else if(port){saveCurrentAccount();renderPortfolio();}
+  else{renderMatrix();}
+}
+tabs.forEach(t=>t.onclick=()=>{closeDetail();activateTab(t.dataset.t);});
+
+/* ---------- MATRIX ---------- */
+let prioOnly=false;
+function mcard(p){const d=stDef(p);const note=p.notes?' 📝':'';
+ return `<div class="mcard ${p.left?'gone':''}" data-id="${p.id}" style="${p.left?'':glowCss(d)}"><div class="mtop">${av(p,'av')}<div><div class="nm">${esc(p.name)}${p.left?' <span class="leftb">LEFT</span>':''}${note}</div><div class="tt">${esc(p.title||'— profile pending —')}</div></div></div>
+ ${d&&!p.left?`<div>${stChip(d)}</div>`:''}
+ <div style="display:flex;gap:6px;flex-wrap:wrap">${p.role?`<span class="chip">${esc(p.role)}</span>`:''}${p.loc?`<span class="chip" style="color:var(--mut)">${esc(p.loc)}</span>`:''}</div>
+ ${p.fit?`<div class="fit ${d?'k':''}">${d?'<b>▲ </b>':''}${esc(p.fit)}</div>`:''}
+ ${p.notes?`<div class="dsub" style="border-left:2px solid var(--acc);padding-left:8px">${esc(p.notes).slice(0,140)}</div>`:''}
+ <div style="display:flex;justify-content:space-between">${p.li?`<a class="lk" href="${p.li}" target="_blank">LinkedIn ▶</a>`:'<span class="dsub">No LinkedIn</span>'}${p.email?`<a class="lk" href="mailto:${p.email}">${esc(p.email)}</a>`:''}</div>
+ <div class="dsub" style="margin-top:3px">🕒 Updated ${fmtDate(p.updated)}${p.by?' · by '+esc(p.by):''}</div></div>`;}
+function bucketOf(p){const r=((p.role||'')+' '+(p.title||'')).toLowerCase();
+ if(/vice president|\bvp\b|\bsvp\b|chief|\bcio\b|\bcto\b/.test(r))return 'Executive Sponsors';
+ if(/security|infosec|\biam\b/.test(r))return 'Information Security';
+ if(/financ|procure|sourcing|purchas/.test(r))return 'Finance & Procurement';
+ if(/program management|\bpmo\b/.test(r))return 'Program Management';
+ if(/network|telecom|citrix/.test(r))return 'Network, Telecom & Citrix';
+ if(/end.?user|workplace|service desk|desktop|service delivery|contact cent|telephony|help ?desk/.test(r))return 'End-User & Service Delivery';
+ if(/infrastructur|data ?cent|storage|backup|vmware|linux|windows|unix|private cloud|\bcloud\b|systems|server|hpc|hadoop|\bdba\b|\bsre\b/.test(r))return 'Infrastructure & Data Center';
+ if(/\bdata\b|analytics|\bai\b|architect|machine learning/.test(r))return 'Data, AI & Architecture';
+ return 'Other / To confirm';}
+function grpKey(p){const g=document.getElementById('groupby').value;
+ if(g==='fn')return FUNCTIONS.includes(p.role)?p.role:bucketOf(p);
+ if(g==='loc')return (p.loc||'').split(',')[0].trim()||'— No location —';
+ if(g==='prio'){const d=stDef(p);return d?(d.emoji+' '+d.label):'○ Unmapped';}
+ if(g==='mgr'){const m=reports[p.id];return (m&&byId[m])?('Reports to '+byId[m].name):'— No manager set —';}
+ return 'All contacts';}
+function mSort(s){return (a,b)=> s==='name'?a.name.localeCompare(b.name): s==='loc'?(a.loc||'~').localeCompare(b.loc||'~'): s==='title'?(a.title||'~').localeCompare(b.title||'~'): ((a.priority-b.priority)||a.name.localeCompare(b.name));}
+function renderMatrix(){
+ const q=document.getElementById('q').value.toLowerCase().trim();
+ const s=document.getElementById('sort').value, g=document.getElementById('groupby').value;
+ let l=PEOPLE.filter(p=>{if(prioOnly&&!stDef(p))return false;if(!q)return true;return [p.name,p.title,p.role,p.loc,p.fit,p.email,p.notes,p.stance].join(' ').toLowerCase().includes(q);});
+ const cmp=mSort(s);
+ const left=l.filter(p=>p.left), active=l.filter(p=>!p.left);
+ let html='';
+ if(g==='none'){html=`<div class="grid">${active.sort(cmp).map(mcard).join('')}</div>`;}
+ else{
+   const groups={};active.forEach(p=>{const k=grpKey(p);(groups[k]=groups[k]||[]).push(p);});
+   const keys=Object.keys(groups).sort((a,b)=>{const na=a[0]==='—',nb=b[0]==='—';if(na!==nb)return na?1:-1;const sa=a[0]==='★',sb=b[0]==='★';if(sa!==sb)return sa?-1:1;return a.localeCompare(b);});
+   html=keys.map(k=>`<div class="gsec"><h3>${esc(k)} <span>${groups[k].length}</span></h3><div class="grid">${groups[k].sort(cmp).map(mcard).join('')}</div></div>`).join('');
+ }
+ if(left.length){html+=`<div class="gsec leftsec"><h3>🚪 Left Company <span>${left.length}</span></h3><div class="grid">${left.sort(cmp).map(mcard).join('')}</div></div>`;}
+ document.getElementById('mgrid').innerHTML=html||'<div class="tt">No contacts match.</div>';
+}
+function newContact(name){const id='x'+Date.now();const p={id,name:name||'New contact',title:'',role:'',loc:'',email:'',li:'',fit:'',notes:'',photo:'',priority:3,updated:today(),by:meInit||''};pushUndo();PEOPLE.push(p);byId[id]=p;reports[id]='';if(orgReady){makeNode(p);pos[id]={x:(-tx+viewport.clientWidth/2)/scale,y:(-ty+150)/scale};refreshSelects();layout();}renderMatrix();openDetail(id,true);return id;}
+document.getElementById('q').oninput=renderMatrix;
+document.getElementById('groupby').onchange=renderMatrix;
+document.getElementById('sort').onchange=renderMatrix;
+document.getElementById('prio').onclick=e=>{prioOnly=!prioOnly;e.target.classList.toggle('on',prioOnly);renderMatrix();};
+document.getElementById('addc').onclick=()=>newContact('New contact');
+document.getElementById('mgrid').addEventListener('click',e=>{if(e.target.closest('a'))return;const c=e.target.closest('.mcard');if(c)openDetail(c.dataset.id);});
+renderMatrix();
+
+/* ---------- INTEL ---------- */
+let intelQ='', intelEditId=null;
+function iid(){return 'i'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function intelMatch(it){if(!intelQ)return true;const q=intelQ.toLowerCase();return [(it.title||''),(it.body||''),(it.tag||'')].join(' ').toLowerCase().includes(q);}
+function ilink(s){return s.replace(/(https?:\/\/[^\s<]+)/g,'<a class="lk" href="$1" target="_blank" rel="noopener">$1</a>');}
+function intelViewCard(it){return `<div class="icard" data-iid="${esc(it.id)}">
+  <h3>${esc(it.title||'Untitled')}${it.tag?` <span class="itag">${esc(it.tag)}</span>`:''}
+   <span class="iact"><button class="btn" data-iedit="${esc(it.id)}">✎ Edit</button><button class="btn" data-idel="${esc(it.id)}" title="Delete">🗑</button></span></h3>
+  <div class="ibody">${ilink(esc(it.body||'')) || '<span style="color:var(--mut)">— no details —</span>'}</div>
+  <div class="imeta">🕒 ${it.updated?fmtDate(it.updated):'—'}${it.by?' · by '+esc(it.by):''}</div></div>`;}
+function intelEditCard(it){const isNew=it.id==='__new__';return `<div class="icard" data-iid="${esc(it.id)}">
+  <input class="iedit" id="ie_title" placeholder="Title (e.g. Company Overview, Zoom Sales Play)" value="${esc(it.title||'')}" style="font-weight:700;font-size:15px;margin-bottom:8px">
+  <input class="iedit" id="ie_tag" placeholder="Tag (optional — e.g. Briefing, Competitive, Sales Play)" value="${esc(it.tag||'')}" style="margin-bottom:8px">
+  <textarea class="iedit" id="ie_body" rows="9" placeholder="Details… paste freely — links become clickable.">${esc(it.body||'')}</textarea>
+  <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn" data-icancel="1">Cancel</button><button class="btn add" data-isave="${esc(it.id)}">${isNew?'Add intel':'Save'}</button></div></div>`;}
+function renderIntel(){const host=document.getElementById('intel');
+ host.innerHTML='<div class="iwrap"><div class="ihead"><h2>📁 Account Intel</h2>'+
+  '<input class="iq" id="intelq" placeholder="Search intel…">'+
+  '<button class="btn add" id="iadd">＋ Add intel</button>'+
+  '<button class="btn" id="ipaste" title="Paste any block of text — first line becomes the title">📋 Paste to add</button></div>'+
+  '<div class="isub">Freeform intel on this account — briefings, sales plays, competitive notes, anything worth capturing. Add a card or paste a block of text (first line becomes the title). Everything here saves &amp; shares with the account.</div>'+
+  '<div id="intelcards"></div></div>';
+ const q=document.getElementById('intelq');q.value=intelQ;q.oninput=()=>{intelQ=q.value;renderIntelCards();};
+ document.getElementById('iadd').onclick=()=>{intelEditId='__new__';renderIntelCards();setTimeout(()=>{const t=document.getElementById('ie_title');if(t)t.focus();},20);};
+ document.getElementById('ipaste').onclick=pasteIntel;
+ renderIntelCards();}
+function renderIntelCards(){const host=document.getElementById('intelcards');if(!host)return;
+ const items=intel.filter(intelMatch);let h='';
+ if(intelEditId==='__new__')h+=intelEditCard({id:'__new__',title:'',body:'',tag:''});
+ if(!items.length&&intelEditId!=='__new__')h+=`<div class="iempty">${intel.length?'No intel matches your search.':'No intel yet.<br>Click <b>＋ Add intel</b> or <b>📋 Paste to add</b> to capture your first briefing.'}</div>`;
+ items.forEach(it=>{h+=(intelEditId===it.id)?intelEditCard(it):intelViewCard(it);});
+ host.innerHTML=h;wireIntelCards(host);}
+function wireIntelCards(host){host=host||document.getElementById('intelcards');if(!host)return;
+ host.querySelectorAll('[data-iedit]').forEach(b=>b.onclick=()=>{intelEditId=b.dataset.iedit;renderIntelCards();});
+ host.querySelectorAll('[data-icancel]').forEach(b=>b.onclick=()=>{intelEditId=null;renderIntelCards();});
+ host.querySelectorAll('[data-idel]').forEach(b=>b.onclick=()=>{const id=b.dataset.idel;const it=intel.find(x=>x.id===id);confirmBox('Delete this intel card'+(it&&it.title?' “'+it.title+'”':'')+'? This can be undone.',()=>{pushUndo();intel=intel.filter(x=>x.id!==id);if(intelEditId===id)intelEditId=null;scheduleAutosave();renderIntelCards();setHint('Intel deleted. (Undo to restore.)');},'Delete');});
+ host.querySelectorAll('[data-isave]').forEach(b=>b.onclick=()=>{const id=b.dataset.isave;const T=host.querySelector('#ie_title'),TG=host.querySelector('#ie_tag'),B=host.querySelector('#ie_body');if(!T||!B)return;const t=T.value.trim(),tag=(TG?TG.value:'').trim(),body=B.value;
+   if(!t&&!body.trim()){T.focus();return;}pushUndo();
+   if(id==='__new__'){intel.unshift({id:iid(),title:t||'Untitled',tag:tag,body:body,updated:today(),by:meInit||''});}
+   else{const it=intel.find(x=>x.id===id);if(it){it.title=t||'Untitled';it.tag=tag;it.body=body;it.updated=today();it.by=meInit||'';}}
+   intelEditId=null;scheduleAutosave();renderIntelCards();setHint('Intel saved.');});}
+function pasteIntel(){const m=document.getElementById('merge');const box=m.querySelector('.box');const st="width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 10px;font-size:13.5px;font-family:inherit;box-sizing:border-box";
+ box.innerHTML=`<b>Paste intel</b><div class="dsub" style="margin:8px 0 10px">Paste any block of text — the <b>first line</b> becomes the title, the rest becomes the body. Ideal for dropping in a briefing, an email, or raw notes.</div>
+  <textarea id="pi_body" rows="12" placeholder="Paste here…" style="${st}"></textarea>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" id="pi_cancel">Cancel</button><button class="btn add" id="pi_ok">Add intel</button></div>`;
+ m.classList.add('on');const ta=box.querySelector('#pi_body');setTimeout(()=>ta.focus(),40);
+ box.querySelector('#pi_cancel').onclick=closeMerge;
+ box.querySelector('#pi_ok').onclick=()=>{const raw=ta.value.replace(/\r/g,'').trim();if(!raw){ta.focus();return;}const nl=raw.indexOf('\n');const title=(nl<0?raw:raw.slice(0,nl)).trim().slice(0,120);const body=(nl<0?'':raw.slice(nl+1)).trim();pushUndo();intel.unshift({id:iid(),title:title||'Pasted intel',tag:'',body:body,updated:today(),by:meInit||''});scheduleAutosave();closeMerge();if(!document.getElementById('intel').classList.contains('hide'))renderIntelCards();setHint('Added pasted intel.');toast('Intel added — open it to add a tag or tidy the title.','ok',4200);};}
+
+/* ---------- SALES & RENEWALS ---------- */
+let salesQ='', salesSort={col:'_renewalDate',dir:'asc'};
+function usd(n){n=Number(n)||0;const neg=n<0;n=Math.abs(n);let s;if(n>=1e6)s='$'+(n/1e6).toFixed(n>=1e7?1:2)+'M';else if(n>=1e3)s='$'+(n/1e3).toFixed(0)+'K';else s='$'+Math.round(n);return neg?'-'+s:s;}
+function usdFull(n){n=Number(n)||0;return (n<0?'-$':'$')+Math.abs(Math.round(n)).toLocaleString();}
+function salesChains(){const rows=(salesData&&salesData.rows)||[];const m=new Map();
+ rows.forEach(r=>{const k=r._chainKey||('|'+r.id);let c=m.get(k);if(!c){c={key:k,date:r._renewalDate||null,type:r._renewalType||null,term:r._termYears||null,mixed:!!r._isMixedTerm,vendor:r.mfg||'—',customer:r.customer||'',desc:r.desc||'',sell:0,margin:0,lines:0,confidence:r._confidence||null};m.set(k,c);}
+  c.sell+=Number(r.netSell)||0;c.margin+=Number(r.netProfit)||0;c.lines++;
+  if(r._renewalDate&&(!c.date||r._renewalType))c.date=r._renewalDate;
+  if(r._renewalType)c.type=r._renewalType;if(r._termYears)c.term=r._termYears;if(r._isMixedTerm)c.mixed=true;
+  if((Number(r.netSell)||0)>0&&(r.desc||'').length>(c.desc||'').length)c.desc=r.desc;});
+ return [...m.values()];}
+function sBadge(t){if(!t)return '';const lab=t==='hard'?'Warranty':t==='estimated'?'Estimated':t==='billing'?'Annual bill':t;return `<span class="sbadge ${t}">${lab}</span>`;}
+function renderSales(){const host=document.getElementById('sales');
+ if(!salesData||!salesData.rows||!salesData.rows.length){host.innerHTML='<div class="swrap"><div class="sempty">No sales data loaded for this account.<br>The IQVIA account ships with ePlus / OneSource sales history; other accounts can have their own added later.</div></div>';return;}
+ const rows=salesData.rows, sum=salesData.summary||{};
+ const totalSell=sum.netSell||rows.reduce((a,r)=>a+(Number(r.netSell)||0),0);
+ const totalMargin=sum.netProfit||rows.reduce((a,r)=>a+(Number(r.netProfit)||0),0);
+ const marginPct=sum.marginPct||(totalSell?Math.round(totalMargin/totalSell*1000)/10:0);
+ const chains=salesChains();
+ const T=today();
+ const upcoming=chains.filter(c=>c.date&&c.date>=T&&(c.type==='hard'||c.type==='estimated'||c.type==='billing')).sort((a,b)=>a.date<b.date?-1:1);
+ const upVal=upcoming.reduce((a,c)=>a+c.sell,0);
+ // vendor spend
+ const vend={};rows.forEach(r=>{const m=r.mfg||'—';(vend[m]=vend[m]||{sell:0,margin:0,n:0});vend[m].sell+=Number(r.netSell)||0;vend[m].margin+=Number(r.netProfit)||0;vend[m].n++;});
+ const vendArr=Object.entries(vend).map(([k,v])=>Object.assign({name:k},v)).sort((a,b)=>b.sell-a.sell);
+ const vmax=vendArr.length?vendArr[0].sell:1;
+ // product type
+ const seg={};rows.forEach(r=>{const t=r.productType||'—';(seg[t]=seg[t]||{sell:0,n:0});seg[t].sell+=Number(r.netSell)||0;seg[t].n++;});
+ const segArr=Object.entries(seg).map(([k,v])=>Object.assign({name:k},v)).sort((a,b)=>b.sell-a.sell);
+ let h='<div class="swrap">';
+ h+='<div class="shead"><h2>💰 Sales & Renewals</h2><span class="spill">'+esc(salesData.account||accountLabel())+'</span></div>';
+ h+='<div class="ssub">'+esc(salesData.source||'ePlus sales history')+'. Renewal dates derived by the OneSource Command engine: <b>Warranty</b> = warranty-backed (high confidence), <b>Estimated</b> = inferred from invoice date (confirm with the customer).</div>';
+ h+='<div class="skpis">'
+  +`<div class="skpi"><div class="n">${usd(totalSell)}</div><div class="l">Total sell</div></div>`
+  +`<div class="skpi"><div class="n" style="color:var(--acc2)">${usd(totalMargin)}</div><div class="l">Total margin</div></div>`
+  +`<div class="skpi"><div class="n">${marginPct}%</div><div class="l">Margin %</div></div>`
+  +`<div class="skpi"><div class="n">${rows.length}</div><div class="l">Line items</div></div>`
+  +`<div class="skpi"><div class="n" style="color:#ffc140">${upcoming.length}</div><div class="l">Upcoming renewals</div></div>`
+  +`<div class="skpi"><div class="n" style="color:#ffc140">${usd(upVal)}</div><div class="l">Renewal value</div></div>`
+  +'</div>';
+ // upcoming renewals
+ h+='<div class="scard"><h3>🔔 Upcoming renewals <span class="spill">as of '+fmtDate(T)+'</span></h3>';
+ if(!upcoming.length)h+='<div class="sfoot">No renewals dated on or after today. Check the full line items below for history.</div>';
+ else{h+='<table class="stable"><thead><tr><th>Renewal date</th><th>Vendor</th><th>What</th><th class="r">Term</th><th>Basis</th><th class="r">Sell</th><th class="r">Margin</th></tr></thead><tbody>';
+  upcoming.forEach(c=>{h+=`<tr><td><b class="" style="color:var(--head)">${fmtDate(c.date)}</b></td><td>${esc(c.vendor)}</td><td class="wrap">${esc((c.desc||'').slice(0,80))}${c.mixed?' <span class="sbadge estimated" title="Chain mixes 1-year and multi-year terms">mixed term</span>':''}</td><td class="r">${c.term?c.term+'y':'—'}</td><td>${sBadge(c.type)}</td><td class="r">${usdFull(c.sell)}</td><td class="r" style="color:var(--acc2)">${usdFull(c.margin)}</td></tr>`;});
+  h+='</tbody></table><div class="sfoot">Grouped into renewal chains (master + rebills = one relationship). '+upcoming.length+' chain(s) shown.</div>';}
+ h+='</div>';
+ // vendor + segment side by side
+ h+='<div style="display:flex;gap:14px;flex-wrap:wrap">';
+ h+='<div class="scard" style="flex:1;min-width:320px"><h3>🏷 Spend by vendor</h3><table class="stable"><thead><tr><th>Vendor</th><th style="width:34%"></th><th class="r">Sell</th><th class="r">Margin</th><th class="r">Lines</th></tr></thead><tbody>';
+ vendArr.forEach(v=>{const w=Math.max(2,Math.round(v.sell/vmax*100));h+=`<tr><td>${esc(v.name)}</td><td><div class="smini"><div class="sbartrack"><div class="sbar" style="width:${w}%"></div></div></div></td><td class="r">${usdFull(v.sell)}</td><td class="r" style="color:var(--acc2)">${usdFull(v.margin)}</td><td class="r">${v.n}</td></tr>`;});
+ h+='</tbody></table></div>';
+ h+='<div class="scard" style="flex:1;min-width:260px"><h3>📦 By segment</h3><table class="stable"><thead><tr><th>Product type</th><th class="r">Sell</th><th class="r">Lines</th></tr></thead><tbody>';
+ segArr.forEach(sg=>{h+=`<tr><td>${esc(sg.name)}</td><td class="r">${usdFull(sg.sell)}</td><td class="r">${sg.n}</td></tr>`;});
+ h+='</tbody></table><div class="sfoot">Renewal basis mix: '+Object.entries(sum.renewalTypes||{}).map(([k,v])=>esc(k)+' '+v).join(' · ')+'</div></div>';
+ h+='</div>';
+ // full line items (searchable)
+ h+='<div class="scard"><h3>📄 All line items <span class="spill">'+rows.length+'</span><input class="sq" id="salesq" placeholder="Filter by vendor, description, order, PO…" style="margin-left:auto"></h3><div id="salesrows"></div></div>';
+ h+='</div>';
+ host.innerHTML=h;
+ const q=document.getElementById('salesq');if(q){q.value=salesQ;q.oninput=()=>{salesQ=q.value;renderSalesRows();};}
+ renderSalesRows();}
+function renderSalesRows(){const host=document.getElementById('salesrows');if(!host)return;const rows=(salesData&&salesData.rows)||[];
+ const q=salesQ.toLowerCase().trim();
+ let list=rows.filter(r=>!q||[r.mfg,r.desc,r.orderNumber,r.poNumber,r.quoteNo,r.customer,r.productType].join(' ').toLowerCase().includes(q));
+ const dir=salesSort.dir==='asc'?1:-1, col=salesSort.col;
+ list=list.slice().sort((a,b)=>{let x=a[col],y=b[col];if(typeof x==='number'||typeof y==='number'){return ((Number(x)||0)-(Number(y)||0))*dir;}x=(x||'').toString();y=(y||'').toString();return x<y?-dir:x>y?dir:0;});
+ let h='<table class="stable"><thead><tr>'
+  +'<th data-c="ordDate">Order date</th><th data-c="mfg">Vendor</th><th data-c="desc">Description</th>'
+  +'<th data-c="orderNumber">Order #</th><th class="r" data-c="qty">Qty</th><th class="r" data-c="netSell">Sell</th>'
+  +'<th class="r" data-c="netProfit">Margin</th><th class="r" data-c="marginPct">GM%</th>'
+  +'<th data-c="_renewalDate">Renewal</th><th data-c="_renewalType">Basis</th></tr></thead><tbody>';
+ list.slice(0,400).forEach(r=>{h+=`<tr><td>${r.ordDate?fmtDate(r.ordDate):'—'}</td><td>${esc(r.mfg||'—')}</td><td class="wrap">${esc((r.desc||'').slice(0,70))}</td><td>${esc(r.orderNumber||'—')}</td><td class="r">${r.qty||''}</td><td class="r">${usdFull(r.netSell)}</td><td class="r" style="color:var(--acc2)">${usdFull(r.netProfit)}</td><td class="r">${r.marginPct?Math.round(r.marginPct*100)+'%':'—'}</td><td>${r._renewalDate?fmtDate(r._renewalDate):'—'}</td><td>${sBadge(r._renewalType)}</td></tr>`;});
+ h+='</tbody></table>';
+ if(list.length>400)h+='<div class="sfoot">Showing first 400 of '+list.length+' rows — narrow with the filter.</div>';
+ else h+='<div class="sfoot">'+list.length+' row(s).</div>';
+ host.innerHTML=h;
+ host.querySelectorAll('th[data-c]').forEach(th=>th.onclick=()=>{const c=th.dataset.c;if(salesSort.col===c)salesSort.dir=(salesSort.dir==='asc'?'desc':'asc');else{salesSort.col=c;salesSort.dir=(c==='netSell'||c==='netProfit'||c==='qty'||c==='marginPct')?'desc':'asc';}renderSalesRows();});}
+function accountLabel(){return 'IQVIA';}
+
+/* ---------- ORG CHART ---------- */
+const NW=212, NH=118, HGAP=34, VGAP=66;
+let scale=1, tx=40, ty=20, orgReady=false, orient='v', theme='dark', tiersOn=true, orgLayout='tierflow', showLeft=false;
+/* showPhotos declared earlier (before av()) so matrix tab can use it on first render */
+/* seniority tiers (display order = top→bottom of the cake) */
+const TIER_DEFS=[
+ {key:'C-Level',           label:'C-Level',            color:'rgba(255,193,64,.42)', text:'#ffcf6b'},
+ {key:'VP',                label:'VP',                 color:'rgba(58,141,255,.40)', text:'#7db4ff'},
+ {key:'Senior Director',   label:'Senior Director',    color:'rgba(37,194,160,.38)', text:'#4fd6bb'},
+ {key:'Director',          label:'Director',           color:'rgba(120,205,120,.36)',text:'#8fe08f'},
+ {key:'Associate Director',label:'Associate Director', color:'rgba(168,130,255,.38)',text:'#c3a8ff'},
+ {key:'Team',              label:'Team / Reports',     color:'rgba(147,161,189,.32)',text:'#aeb9d0'}
+];
+const TIER_KEYS=new Set(TIER_DEFS.map(t=>t.key));
+function tierKey(p){if(p&&p.tier&&TIER_KEYS.has(p.tier))return p.tier;const t=((p&&p.title)||'').toLowerCase();
+ if(!t)return 'Team';
+ if(/chief|\bceo\b|\bcio\b|\bcto\b|\bcfo\b|\bcoo\b|\bcdo\b|\bciso\b|\bcmo\b|\bcso\b|c-level|c level/.test(t))return 'C-Level';
+ const hasDir=/\bdirector\b|\bdir\b/.test(t);
+ const hasAssoc=/\bassociate\b|\bassoc\.?\b/.test(t);
+ const hasSenior=/\bsenior\b|\bsr\.?\b|\bsnr\.?\b/.test(t);
+ if(hasDir&&hasAssoc)return 'Associate Director';
+ if(hasDir&&hasSenior)return 'Senior Director';
+ if(/\bvice president\b|\bvp\b|\bsvp\b|\bevp\b|\bavp\b/.test(t))return 'VP';
+ if(hasDir||/\bhead of\b/.test(t))return 'Director';
+ return 'Team';}
+const byId={}; PEOPLE.forEach(p=>byId[p.id]=p);
+const nameToId={}; PEOPLE.forEach(p=>{if(!(p.name in nameToId))nameToId[p.name]=p.id;});
+let pos={};       // id -> {x,y}
+let reports={};   // id -> managerId
+let collapsed=new Set();   // ids whose downlines are hidden
+PEOPLE.forEach(p=>{reports[p.id]=p.reports?(nameToId[p.reports]||''):'';});
+const LSKEY='iqvia_org_v1';
+const USERKEY='iqvia_user_v1';
+const ORIG=JSON.stringify({people:PEOPLE.map(p=>Object.assign({},p)),reports:Object.assign({},reports),pos:{}});
+/* editor identity + merge baseline (common ancestor for 3-way smart merge) */
+let meInit='', loadedBase=null, logo='';
+let intel=SEED_INTEL.map(x=>Object.assign({},x));   // general intel cards (per account in template)
+let salesData=(SEED_SALES&&SEED_SALES.rows)?SEED_SALES:null;   // sales & renewals dataset (per account)
+function deepPeopleMap(arr){const m={};arr.forEach(p=>{const q=Object.assign({},p);delete q.photo;m[p.id]=q;});return m;}
+let base={people:{},reports:{}};
+function setBaseFrom(arr,rep){base={people:deepPeopleMap(arr),reports:Object.assign({},rep||{})};}
+let loadedSaved=false;
+/* ===================== MULTI-ACCOUNT SHELL ===================== */
+const IDXKEY='acctmap_index_v1', ACPFX='acctmap_v1_';
+let ACCOUNTS=[], curAcct=null, accountName='Account', accountSub='', viewAll=false;
+const SAMPLE_ACCOUNTS = {"sample_northwind": {"name": "Northwind Manufacturing", "state": "{\"people\": [{\"id\": \"n0\", \"name\": \"Dana Whitfield\", \"title\": \"Chief Information Officer\", \"role\": \"Executive Sponsors\", \"loc\": \"Chicago, IL\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 1, \"stance\": \"Decision Maker\", \"left\": false, \"notes\": \"Owns the IT budget \\u2014 final sign-off.\", \"updated\": \"2026-07-31\"}, {\"id\": \"n1\", \"name\": \"Marcus Reilly\", \"title\": \"VP, Infrastructure & Operations\", \"role\": \"Infrastructure & Data Center\", \"loc\": \"Chicago, IL\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 1, \"stance\": \"Champion\", \"left\": false, \"notes\": \"Strong advocate \\u2014 introduced us across the org.\", \"updated\": \"2026-07-31\"}, {\"id\": \"n2\", \"name\": \"Priya Nair\", \"title\": \"Chief Information Security Officer\", \"role\": \"Information Security\", \"loc\": \"Boston, MA\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 1, \"stance\": \"Target\", \"left\": false, \"notes\": \"Building the relationship \\u2014 clear cyber fit.\", \"updated\": \"2026-07-31\"}, {\"id\": \"n3\", \"name\": \"Frank Delgado\", \"title\": \"Director, IT Procurement\", \"role\": \"Finance & Procurement\", \"loc\": \"Chicago, IL\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 1, \"stance\": \"Blocker\", \"left\": false, \"notes\": \"Prefers the incumbent vendor; guards the budget.\", \"updated\": \"2026-07-31\"}, {\"id\": \"n4\", \"name\": \"Tom Alvarez\", \"title\": \"Senior Director, Network & Telecom\", \"role\": \"Network, Telecom & Citrix\", \"loc\": \"Dallas, TX\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n5\", \"name\": \"Grace Liu\", \"title\": \"Director, Data Center & Cloud\", \"role\": \"Infrastructure & Data Center\", \"loc\": \"Seattle, WA\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 2, \"stance\": \"Influencer\", \"left\": false, \"notes\": \"Technical influence over infra decisions.\", \"updated\": \"2026-07-31\"}, {\"id\": \"n6\", \"name\": \"Ben Carter\", \"title\": \"Director, End-User Services\", \"role\": \"End-User & Service Delivery\", \"loc\": \"Chicago, IL\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n7\", \"name\": \"Nina Patel\", \"title\": \"Director, Data & Analytics\", \"role\": \"Data, AI & Architecture\", \"loc\": \"Austin, TX\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n8\", \"name\": \"Susan Yoo\", \"title\": \"Director, Finance Systems\", \"role\": \"Finance & Procurement\", \"loc\": \"Chicago, IL\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n9\", \"name\": \"Carlos Mendez\", \"title\": \"Director, PMO\", \"role\": \"Program Management\", \"loc\": \"Denver, CO\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n10\", \"name\": \"Omar Haddad\", \"title\": \"Security Operations Manager\", \"role\": \"Information Security\", \"loc\": \"Boston, MA\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 1, \"stance\": \"Target\", \"left\": false, \"notes\": \"Day-to-day security ops \\u2014 good working contact.\", \"updated\": \"2026-07-31\"}, {\"id\": \"n11\", \"name\": \"Rachel Kim\", \"title\": \"Associate Director, Service Desk\", \"role\": \"End-User & Service Delivery\", \"loc\": \"Chicago, IL\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n12\", \"name\": \"Jake Foster\", \"title\": \"Systems Engineer\", \"role\": \"Infrastructure & Data Center\", \"loc\": \"Seattle, WA\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n13\", \"name\": \"Aisha Bello\", \"title\": \"Cloud Engineer\", \"role\": \"Infrastructure & Data Center\", \"loc\": \"Seattle, WA\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n14\", \"name\": \"Ellen Ross\", \"title\": \"Network Administrator\", \"role\": \"Network, Telecom & Citrix\", \"loc\": \"Dallas, TX\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": true, \"notes\": \"Left the company Jun 2026 \\u2014 kept for history.\", \"updated\": \"2026-07-31\"}], \"pos\": {}, \"reports\": {\"n0\": \"\", \"n1\": \"n0\", \"n2\": \"n0\", \"n3\": \"n0\", \"n4\": \"n1\", \"n5\": \"n1\", \"n6\": \"n1\", \"n7\": \"n1\", \"n8\": \"n0\", \"n9\": \"n0\", \"n10\": \"n2\", \"n11\": \"n6\", \"n12\": \"n5\", \"n13\": \"n5\", \"n14\": \"n4\"}, \"orient\": \"v\", \"theme\": \"dark\", \"tiers\": true, \"layout\": \"tierflow\", \"showLeft\": false, \"collapsed\": [], \"base\": {\"people\": {}, \"reports\": {}}, \"intel\": [{\"id\": \"sample_intel_1\", \"title\": \"Sample intel \\u2014 how this tab works\", \"tag\": \"Sample\", \"updated\": \"2026-07-31\", \"by\": \"\", \"body\": \"This is the Intel tab \\u2014 freeform notes on the account: briefings, sales plays, competitive intel, anything worth keeping.\\n\\n\\u2022 Click \\uff0b Add intel to write a card.\\n\\u2022 Click \\ud83d\\udccb Paste to add to drop in a block of text \\u2014 the first line becomes the title.\\n\\u2022 Everything here saves & shares with the account, just like contacts.\\n\\nDelete this sample card once you get the idea.\"}], \"accountName\": \"Northwind Manufacturing\", \"accountSub\": \"Sample account \\u00b7 replace with your own\", \"accountId\": \"sample_northwind\"}"}, "sample_acme": {"name": "Acme Logistics", "state": "{\"people\": [{\"id\": \"n0\", \"name\": \"Victor Cho\", \"title\": \"SVP & Chief Information Officer\", \"role\": \"Executive Sponsors\", \"loc\": \"Atlanta, GA\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 1, \"stance\": \"Target\", \"left\": false, \"notes\": \"Top of IT \\u2014 courting; not yet a committed buyer.\", \"updated\": \"2026-07-31\"}, {\"id\": \"n1\", \"name\": \"Laura Simmons\", \"title\": \"VP, Applications\", \"role\": \"Applications & Development\", \"loc\": \"Atlanta, GA\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 2, \"stance\": \"Influencer\", \"left\": false, \"notes\": \"Shapes app + platform decisions.\", \"updated\": \"2026-07-31\"}, {\"id\": \"n2\", \"name\": \"Monica Alvarez\", \"title\": \"Chief Information Security Officer\", \"role\": \"Information Security\", \"loc\": \"Charlotte, NC\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 1, \"stance\": \"Target\", \"left\": false, \"notes\": \"Security leader \\u2014 active cyber conversation.\", \"updated\": \"2026-07-31\"}, {\"id\": \"n3\", \"name\": \"Greg Tanaka\", \"title\": \"Director, Vendor Management\", \"role\": \"Finance & Procurement\", \"loc\": \"Atlanta, GA\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 1, \"stance\": \"Blocker\", \"left\": false, \"notes\": \"Standardizing on a competitor \\u2014 neutralize/route around.\", \"updated\": \"2026-07-31\"}, {\"id\": \"n4\", \"name\": \"Derek Vaughn\", \"title\": \"Director, Infrastructure\", \"role\": \"Infrastructure & Data Center\", \"loc\": \"Memphis, TN\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n5\", \"name\": \"Paula Reyes\", \"title\": \"Senior Director, Logistics Technology\", \"role\": \"Applications & Development\", \"loc\": \"Atlanta, GA\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n6\", \"name\": \"Sam Okafor\", \"title\": \"Director, Network\", \"role\": \"Network, Telecom & Citrix\", \"loc\": \"Memphis, TN\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n7\", \"name\": \"Robert Hale\", \"title\": \"Director, Security Engineering\", \"role\": \"Information Security\", \"loc\": \"Charlotte, NC\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 1, \"stance\": \"Target\", \"left\": false, \"notes\": \"Technical security buyer \\u2014 strong fit.\", \"updated\": \"2026-07-31\"}, {\"id\": \"n8\", \"name\": \"Tina Brooks\", \"title\": \"Associate Director, Service Desk\", \"role\": \"End-User & Service Delivery\", \"loc\": \"Atlanta, GA\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n9\", \"name\": \"Ivan Petrov\", \"title\": \"DevOps Engineer\", \"role\": \"Applications & Development\", \"loc\": \"Remote\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n10\", \"name\": \"Mia Chen\", \"title\": \"Data Analyst\", \"role\": \"Data, AI & Architecture\", \"loc\": \"Atlanta, GA\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}, {\"id\": \"n11\", \"name\": \"Nadia Farouk\", \"title\": \"Cloud Architect\", \"role\": \"Data, AI & Architecture\", \"loc\": \"Memphis, TN\", \"email\": \"\", \"li\": \"\", \"fit\": \"\", \"photo\": \"\", \"priority\": 3, \"stance\": \"\", \"left\": false, \"notes\": \"\", \"updated\": \"2026-07-31\"}], \"pos\": {}, \"reports\": {\"n0\": \"\", \"n1\": \"n0\", \"n2\": \"n0\", \"n3\": \"n0\", \"n4\": \"n0\", \"n5\": \"n0\", \"n6\": \"n4\", \"n7\": \"n2\", \"n8\": \"n6\", \"n9\": \"n1\", \"n10\": \"n5\", \"n11\": \"n4\"}, \"orient\": \"v\", \"theme\": \"dark\", \"tiers\": true, \"layout\": \"tierflow\", \"showLeft\": false, \"collapsed\": [], \"base\": {\"people\": {}, \"reports\": {}}, \"intel\": [{\"id\": \"sample_intel_1\", \"title\": \"Sample intel \\u2014 how this tab works\", \"tag\": \"Sample\", \"updated\": \"2026-07-31\", \"by\": \"\", \"body\": \"This is the Intel tab \\u2014 freeform notes on the account: briefings, sales plays, competitive intel, anything worth keeping.\\n\\n\\u2022 Click \\uff0b Add intel to write a card.\\n\\u2022 Click \\ud83d\\udccb Paste to add to drop in a block of text \\u2014 the first line becomes the title.\\n\\u2022 Everything here saves & shares with the account, just like contacts.\\n\\nDelete this sample card once you get the idea.\"}], \"accountName\": \"Acme Logistics\", \"accountSub\": \"Sample account \\u00b7 replace with your own\", \"accountId\": \"sample_acme\"}"}};
+function acctKey(id){return ACPFX+id;}
+function readIndex(){try{return JSON.parse(localStorage.getItem(IDXKEY));}catch(e){return null;}}
+function writeIndex(){try{localStorage.setItem(IDXKEY,JSON.stringify({accounts:ACCOUNTS,current:curAcct}));}catch(e){}}
+function readAcct(id){try{return localStorage.getItem(acctKey(id));}catch(e){return null;}}
+function storeAcct(id,str){try{localStorage.setItem(acctKey(id),str);}catch(e){}}
+function genAcctId(){return 'ac'+Date.now().toString(36);}
+function cleanAcctName(fn){let s=(fn||'').replace(/\.(html?|json)$/i,'');
+ s=s.replace(/_?(RelationshipMap|Relationship[_ ]?Map|EBC[_ ]?App|_App|orgchart|org[_ ]?chart|_data|_export|_backup)_?/ig,' ');
+ s=s.replace(/[_-]?\d{4}-\d{2}-\d{2}([_-]\d{2,4})?/g,' ');
+ s=s.replace(/[_]+/g,' ').replace(/\s+/g,' ').trim();
+ return s||'Imported account';}
+function acctStateStr(){const j=JSON.parse(snap());j.accountName=accountName;j.accountSub=accountSub;j.accountId=curAcct;return JSON.stringify(j);}
+function hydrate(str){const j=JSON.parse(str);
+ PEOPLE.length=0;Object.keys(byId).forEach(k=>delete byId[k]);(j.people||[]).forEach(p=>{PEOPLE.push(p);byId[p.id]=p;});
+ reports={};Object.assign(reports,j.reports||{});pos={};Object.assign(pos,j.pos||{});
+ orient=j.orient||'v';orgLayout=j.layout||(('tiers' in j)?(j.tiers?'tiergroup':'tree'):'tierflow');tiersOn=(orgLayout!=='tree');
+ showLeft=('showLeft' in j)?!!j.showLeft:false;showPhotos=('showPhotos' in j)?!!j.showPhotos:true;collapsed=new Set(j.collapsed||[]);if(j.theme)theme=j.theme;logo=j.logo||'';intel=j.intel||[];salesData=j.sales||null;
+ base=(j.base&&j.base.people)?j.base:{people:{},reports:{}};
+ accountName=j.accountName||'Account';accountSub=j.accountSub||'';
+ loadedSaved=!!(j.pos&&Object.keys(j.pos).length);}
+function updateHeader(){const n=document.getElementById('acctname');if(n)n.textContent=(accountName||'Account');
+ const s=document.getElementById('acctsub');const c=PEOPLE.length;if(s)s.textContent=c+' contact'+(c===1?'':'s')+(accountSub?(' · '+accountSub):'');
+ try{document.title=(accountName||'Account')+' · Investment Account Planning App';}catch(e){}renderLogo();}
+function refreshAcctPicker(){const sel=document.getElementById('acctsel');if(!sel)return;
+ sel.innerHTML='<option value="__all__" '+(viewAll?'selected':'')+'>📊 All Accounts (rollup)</option>'+ACCOUNTS.map(a=>`<option value="${esc(a.id)}" ${(!viewAll&&a.id===curAcct)?'selected':''}>${esc(a.name)}</option>`).join('')+'<option value="__new__">＋ New account…</option>';}
+function saveCurrentAccount(){if(curAcct)storeAcct(curAcct,acctStateStr());}
+function loadAccountData(id){const s=readAcct(id);if(!s)return false;curAcct=id;hydrate(s);return true;}
+function switchAccount(id){if(id===curAcct)return;saveCurrentAccount();closeDetail();if(!loadAccountData(id))return;
+ applyTheme();syncOrientBtn();syncTiersBtn();updateHeader();refreshAcctPicker();
+ world.querySelectorAll('.node').forEach(n=>n.remove());nodeEls={};orgReady=false;undoStack=[];redoStack=[];sel=null;
+ renderMatrix();const onOrg=!document.getElementById('viewport').classList.contains('hide');if(onOrg){buildOrg();fitView();orgReady=true;}
+ writeIndex();updHist();}
+function blankAccountState(name){return JSON.stringify({people:[],pos:{},reports:{},orient:'v',theme:theme,tiers:true,layout:'tierflow',showLeft:false,collapsed:[],base:{people:{},reports:{}},accountName:name,accountSub:''});}
+function createAccount(name,stateStr){const id=genAcctId();ACCOUNTS.push({id,name});storeAcct(id,stateStr);writeIndex();return id;}
+function newAccountFlow(){promptAccountName('New account',(nm)=>{saveCurrentAccount();const id=createAccount(nm,blankAccountState(nm));const prev=curAcct;curAcct=prev;switchAccount(id);toast('Created “'+nm+'”. Add contacts, or Import a file to bring one in.','ok',5200);});}
+function renameAccountFlow(){promptAccountName('Rename account',(nm)=>{accountName=nm;const a=ACCOUNTS.find(x=>x.id===curAcct);if(a)a.name=nm;writeIndex();refreshAcctPicker();updateHeader();saveCurrentAccount();},accountName);}
+function clearAccountFlow(){promptConfirm('Clear “'+accountName+'”? This removes all its contacts (the account itself stays).',()=>{pushUndo();PEOPLE.length=0;Object.keys(byId).forEach(k=>delete byId[k]);reports={};pos={};collapsed=new Set();setBaseFrom(PEOPLE,reports);world.querySelectorAll('.node').forEach(n=>n.remove());nodeEls={};renderMatrix();if(orgReady)rebuild();updateHeader();saveCurrentAccount();toast('Cleared — start building “'+accountName+'”.','info',4200);});}
+function loadCurrentIntoView(){applyTheme();syncOrientBtn();syncTiersBtn();updateHeader();refreshAcctPicker();world.querySelectorAll('.node').forEach(n=>n.remove());nodeEls={};orgReady=false;undoStack=[];redoStack=[];sel=null;renderMatrix();const onOrg=!document.getElementById('viewport').classList.contains('hide');if(onOrg){buildOrg();fitView();orgReady=true;}updHist();}
+function deleteAccountFlow(){promptConfirm('Delete “'+accountName+'” from this browser? Any saved file for it on disk is not affected.',()=>{
+ const id=curAcct;ACCOUNTS=ACCOUNTS.filter(a=>a.id!==id);try{localStorage.removeItem(acctKey(id));}catch(e){}
+ if(!ACCOUNTS.length){const nid=genAcctId();ACCOUNTS.push({id:nid,name:'New account'});storeAcct(nid,blankAccountState('New account'));curAcct=nid;}
+ else{curAcct=ACCOUNTS[0].id;}
+ writeIndex();hydrate(readAcct(curAcct));loadCurrentIntoView();toast('Account deleted from this browser.','info',4000);});}
+function promptAccountName(title,cb,initial){const m=document.getElementById('merge');const box=m.querySelector('.box');const inSt="width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 10px;font-size:14px;margin-top:8px";
+ box.innerHTML=`<b>${esc(title)}</b><input id="acctinp" placeholder="Account name (e.g. Acme Corp)" value="${esc(initial||'')}" style="${inSt}"><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" id="acctcancel">Cancel</button><button class="btn add" id="acctok">Save</button></div>`;
+ m.classList.add('on');const inp=box.querySelector('#acctinp');setTimeout(()=>{inp.focus();inp.select();},40);
+ const done=()=>{const v=inp.value.trim();if(!v){inp.focus();return;}closeMerge();cb(v);};
+ box.querySelector('#acctok').onclick=done;box.querySelector('#acctcancel').onclick=closeMerge;inp.addEventListener('keydown',e=>{if(e.key==='Enter')done();});}
+function promptConfirm(msg,cb){const m=document.getElementById('merge');const box=m.querySelector('.box');
+ box.innerHTML=`<b>Please confirm</b><div class="dsub" style="margin:10px 0 4px">${esc(msg)}</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" id="pcno">Cancel</button><button class="btn add" id="pcyes">Yes</button></div>`;
+ m.classList.add('on');box.querySelector('#pcyes').onclick=()=>{closeMerge();cb();};box.querySelector('#pcno').onclick=closeMerge;}
+function acctStats(str){if(!str)return null;try{const j=JSON.parse(str);const all=j.people||[];const ppl=all.filter(p=>!p.left);const by=s=>ppl.filter(p=>p.stance===s);
+ return {name:j.accountName||'Account',count:all.length,champions:by('Champion').map(p=>p.name),dm:by('Decision Maker').length,blocker:by('Blocker').length,target:by('Target').length,infl:by('Influencer').length};}catch(e){return null;}}
+function renderPortfolio(){const host=document.getElementById('portfolio');
+ const list=viewAll?ACCOUNTS:ACCOUNTS.filter(a=>a.id===curAcct);
+ const rows=list.map(a=>{const s=acctStats(a.id===curAcct?acctStateStr():readAcct(a.id));return s?Object.assign({id:a.id},s):null;}).filter(Boolean);
+ const tC=rows.reduce((n,r)=>n+r.count,0), tCh=rows.reduce((n,r)=>n+r.champions.length,0);
+ const risks=rows.filter(r=>r.blocker>0&&r.champions.length===0), gaps=rows.filter(r=>r.dm===0);
+ const dot=on=>`<span class="pill ${on?'ok':'no'}">${on?'✓':'—'}</span>`;
+ let h=viewAll?`<div class="dsub" style="margin-bottom:8px">Rollup across all ${rows.length} account(s). Pick an account in the switcher to focus on just one.</div>`
+   :`<div class="dsub" style="margin-bottom:8px">Showing <b>${esc(accountName)}</b> only. Select <b>📊 All Accounts</b> in the switcher for the full book-of-business rollup.</div>`;
+ h+=`<div class="pcard"><div class="pkpi">
+  <div><div class="n">${rows.length}</div><div class="l">accounts</div></div>
+  <div><div class="n">${tC}</div><div class="l">contacts mapped</div></div>
+  <div><div class="n" style="color:var(--acc2)">${tCh}</div><div class="l">champions</div></div>
+  <div><div class="n" style="color:var(--hot)">${risks.length}</div><div class="l">at-risk accounts</div></div>
+  <div><div class="n">${gaps.length}</div><div class="l">no decision-maker</div></div></div></div>`;
+ h+=`<table class="ptable"><thead><tr><th>Account</th><th>Contacts</th><th>Champion</th><th>Decision Maker</th><th>Blocker</th><th>Targets</th><th>Status</th></tr></thead><tbody>`;
+ rows.forEach(r=>{const risk=r.blocker>0&&r.champions.length===0;const status=risk?'<span class="pill risk">⚠ At risk</span>':((r.champions.length&&r.dm)?'<span class="pill ok">Covered</span>':'<span class="pill no">Building</span>');
+  h+=`<tr class="arow" data-acct="${esc(r.id)}"><td><b>${esc(r.name)}</b></td><td>${r.count}</td><td>${dot(r.champions.length>0)}</td><td>${dot(r.dm>0)}</td><td><span class="pill ${r.blocker>0?'risk':'no'}">${r.blocker>0?('⛔ '+r.blocker):'—'}</span></td><td>${r.target||'—'}</td><td>${status}</td></tr>`;});
+ h+='</tbody></table>';
+ if(risks.length)h+=`<div class="pcard" style="border-color:var(--hot)"><b style="color:var(--hot)">⚠ Risk — blocker present, no champion</b><div style="margin-top:6px">${risks.map(r=>`<span class="dlink" data-acct="${esc(r.id)}">${esc(r.name)}</span>`).join(' · ')}</div></div>`;
+ if(gaps.length)h+=`<div class="pcard"><b>◻ Gap — no decision-maker mapped yet</b><div style="margin-top:6px">${gaps.map(r=>`<span class="dlink" data-acct="${esc(r.id)}">${esc(r.name)}</span>`).join(' · ')}</div></div>`;
+ const cr=rows.filter(r=>r.champions.length);
+ if(cr.length)h+=`<div class="pcard"><b style="color:var(--acc2)">⭐ Champions across your book</b>${cr.map(r=>`<div style="margin-top:6px"><span class="dsub">${esc(r.name)}:</span> ${r.champions.map(esc).join(', ')}</div>`).join('')}</div>`;
+ h+=`<div class="dsub" style="margin-top:6px">Portfolio reads accounts saved in <b>this browser</b>. Each account still saves &amp; shares as its own file.</div>`;
+ host.innerHTML=h;host.querySelectorAll('[data-acct]').forEach(el=>el.onclick=()=>{switchAccount(el.dataset.acct);activateTab('matrix');});}
+function initShell(){const idx=readIndex();const stEl=document.getElementById('STATE');const embedded=(stEl&&stEl.textContent.trim())?stEl.textContent:null;
+ if(embedded){let j;try{j=JSON.parse(embedded);}catch(e){j=null;}
+  if(j&&j.people){const id=j.accountId||genAcctId();ACCOUNTS=(idx&&idx.accounts)?idx.accounts.slice():[];
+   const ex=ACCOUNTS.find(a=>a.id===id);if(ex){ex.name=j.accountName||ex.name;}else{ACCOUNTS.push({id,name:j.accountName||'Imported account'});}
+   curAcct=id;storeAcct(id,embedded);hydrate(embedded);writeIndex();return;}}
+ if(idx&&idx.accounts&&idx.accounts.length){ACCOUNTS=idx.accounts.slice();curAcct=(idx.current&&readAcct(idx.current))?idx.current:ACCOUNTS[0].id;if(loadAccountData(curAcct))return;}
+ ACCOUNTS=[];Object.keys(SAMPLE_ACCOUNTS).forEach(id=>{const a=SAMPLE_ACCOUNTS[id];ACCOUNTS.push({id,name:a.name});storeAcct(id,a.state);});
+ curAcct=ACCOUNTS[0].id;writeIndex();hydrate(readAcct(curAcct));}
+initShell();
+/* one-time: retire the earlier summarized seed cards, now replaced by the full source document */
+try{if(!localStorage.getItem('iqvia_intel_mig_v2')){var _OS=['seed_overview','seed_techsignals','seed_zoomplay','seed_eplus','seed_nextsteps'];if(Array.isArray(intel))intel=intel.filter(x=>!(x&&_OS.indexOf(x.id)>=0));localStorage.setItem('iqvia_intel_mig_v2','1');}}catch(e){}
+/* surface any newly-added seed intel cards not already present (so new intel shows up without wiping edits) */
+try{if(!Array.isArray(intel))intel=[];SEED_INTEL.forEach(si=>{if(!intel.some(x=>x&&x.id===si.id))intel.push(Object.assign({},si));});}catch(e){}
+/* surface seed sales data if none saved yet */
+try{if((!salesData||!salesData.rows)&&SEED_SALES&&SEED_SALES.rows)salesData=SEED_SALES;}catch(e){}
+let sel=null, undoStack=[], redoStack=[];
+function snap(){return JSON.stringify({people:PEOPLE.map(p=>Object.assign({},p)),pos:pos,reports:reports,orient:orient,theme:theme,me:meInit,base:base,tiers:tiersOn,layout:orgLayout,showLeft:showLeft,showPhotos:showPhotos,collapsed:[...collapsed],logo:logo,intel:intel,sales:salesData});}
+function pushUndo(str){undoStack.push(str||snap());if(undoStack.length>150)undoStack.shift();redoStack.length=0;updHist();scheduleAutosave();}
+function applyState(str){const j=JSON.parse(str);PEOPLE.length=0;Object.keys(byId).forEach(k=>delete byId[k]);j.people.forEach(p=>{PEOPLE.push(p);byId[p.id]=p;});reports={};Object.assign(reports,j.reports||{});pos={};Object.assign(pos,j.pos||{});if(j.orient)orient=j.orient;if(j.layout)orgLayout=j.layout;else if('tiers' in j)orgLayout=j.tiers?'tiergroup':'tree';tiersOn=(orgLayout!=='tree');if('showLeft' in j)showLeft=!!j.showLeft;if('showPhotos' in j)showPhotos=!!j.showPhotos;collapsed=new Set(j.collapsed||[]);if('logo' in j)logo=j.logo||'';if('intel' in j)intel=j.intel||[];if('sales' in j)salesData=j.sales;renderLogo();if(j.theme){theme=j.theme;applyTheme();}syncOrientBtn();syncTiersBtn();if(sel&&!byId[sel])sel=null;rebuild();if(!document.getElementById('intel').classList.contains('hide'))renderIntel();if(!document.getElementById('sales').classList.contains('hide'))renderSales();}
+function undo(){if(!undoStack.length){setHint('Nothing to undo.');return;}redoStack.push(snap());applyState(undoStack.pop());updHist();setHint('Undid last change.');}
+function redo(){if(!redoStack.length){setHint('Nothing to redo.');return;}undoStack.push(snap());applyState(redoStack.pop());updHist();setHint('Redid.');}
+function updHist(){var u=document.getElementById('undo'),r=document.getElementById('redo');if(u)u.style.opacity=undoStack.length?1:.4;if(r)r.style.opacity=redoStack.length?1:.4;}
+let asTimer=null;
+function scheduleAutosave(){if(asTimer)clearTimeout(asTimer);asTimer=setTimeout(()=>{saveCurrentAccount();},1200);}
+function saveFile(){
+ saveCurrentAccount();
+ const state=acctStateStr();
+ const doc=document.documentElement.cloneNode(true);const Q=s=>doc.querySelector(s);
+ const mg=Q('#mgrid');if(mg)mg.innerHTML='';
+ const wl=Q('#world');if(wl){wl.querySelectorAll('.node').forEach(n=>n.remove());}
+ const bd=Q('#bands');if(bd)bd.innerHTML='';
+ const dt=Q('#detail');if(dt){dt.innerHTML='';dt.classList.remove('on');}
+ const it=Q('#intel');if(it){it.innerHTML='';it.classList.add('hide');}
+ const sl=Q('#sales');if(sl){sl.innerHTML='';sl.classList.add('hide');}
+ const pf=Q('#portfolio');if(pf){pf.innerHTML='';pf.classList.add('hide');}
+ doc.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t==='matrix'));
+ const mx=Q('#matrix');if(mx)mx.classList.remove('hide');
+ const ob=Q('#orgbar');if(ob)ob.classList.add('hide');
+ const vp=Q('#viewport');if(vp)vp.classList.add('hide');
+ const st=Q('#STATE');if(st)st.textContent=state;
+ const html='<!doctype html>\n'+doc.outerHTML;
+ const safe=(accountName||'Account').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'')||'Account';
+ const fn=safe+'_RelationshipMap_'+fileStamp()+'.html';
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.download=fn;a.click();
+ setHint('✔ Saved '+fn+' to your Downloads.');
+ toast('Saved '+fn+' — this file is just the “'+accountName+'” account. Share it with that team.','ok',6500);
+}
+function selectNode(id){if(sel&&nodeEls[sel])nodeEls[sel].classList.remove('sel');sel=(sel===id?null:id);if(sel&&nodeEls[sel])nodeEls[sel].classList.add('sel');}
+function delNode(){if(!sel||!byId[sel]){setHint('Click a card to select it, then Delete.');return;}const id=sel,nm=byId[id].name;deleteContact(id);setHint('Deleted “'+nm+'” (its reports moved up a level). Undo to restore.');}
+const viewport=document.getElementById('viewport');
+const world=document.getElementById('world');
+const conn=document.getElementById('conn');
+let nodeEls={};
+
+function optionsHTML(selId){let o='<option value="">— no manager —</option>';PEOPLE.forEach(p=>{o+=`<option value="${p.id}" ${p.id===selId?'selected':''}>${esc(p.name)}</option>`;});return o;}
+function refreshSelects(){document.querySelectorAll('.node select').forEach(s=>{const id=s.dataset.for;s.innerHTML=optionsHTML(reports[id]||'');});}
+function makeNode(p){
+ const d=document.createElement('div');d.className='node';d.dataset.id=p.id;const _sd=stDef(p);if(_sd)d.style.cssText=glowCss(_sd);
+ d.innerHTML=`<div class="tbar"></div><div class="nhead">${av(p,'nav')}<div><div class="nnm" spellcheck="false">${esc(p.name)}</div><div class="ntt">${esc(p.title||'—')}</div></div></div>
+  <div class="nloc">${esc(p.loc||'')}</div>${_sd?`<div style="margin-top:4px">${stChip(_sd)}</div>`:''}
+  <div class="nfoot"><span style="font-size:10px;color:var(--mut)">↳</span><select data-for="${p.id}">${optionsHTML(reports[p.id])}</select>${p.li?`<a href="${p.li}" target="_blank" title="LinkedIn">in</a>`:''}</div>
+  <div class="plus" title="Add a direct report">+</div><div class="info" title="Details & notes">ⓘ</div><div class="col">▾</div><div class="goneflag">LEFT</div>${p.notes?'<div class="ndot" title="Has notes">📝</div>':''}`;
+ world.appendChild(d);nodeEls[p.id]=d;
+ const info=d.querySelector('.info');info.addEventListener('mousedown',ev=>ev.stopPropagation());info.addEventListener('click',ev=>{ev.stopPropagation();openDetail(p.id);});
+ const selEl=d.querySelector('select');
+ selEl.addEventListener('change',ev=>{const v=ev.target.value; if(v&&isDescendant(p.id,v)){ev.target.value=reports[p.id]||'';setHint('Skipped — that would create a loop.');return;} pushUndo();reports[p.id]=v;markUpdated(p.id);autoArrange();drawConns();});
+ selEl.addEventListener('mousedown',ev=>ev.stopPropagation());
+ const lia=d.querySelector('.nfoot a');if(lia)lia.addEventListener('mousedown',ev=>ev.stopPropagation());
+ const nm=d.querySelector('.nnm');
+ nm.addEventListener('dblclick',ev=>{ev.stopPropagation();startRename(p,nm);});
+ nm.addEventListener('mousedown',ev=>{if(nm.isContentEditable)ev.stopPropagation();});
+ const plus=d.querySelector('.plus');
+ plus.addEventListener('mousedown',ev=>ev.stopPropagation());
+ plus.addEventListener('click',ev=>{ev.stopPropagation();addChild(p.id);});
+ const col=d.querySelector('.col');
+ col.addEventListener('mousedown',ev=>ev.stopPropagation());
+ col.addEventListener('click',ev=>{ev.stopPropagation();toggleCollapse(p.id);});
+ col.addEventListener('dblclick',ev=>ev.stopPropagation());
+ d.addEventListener('mousedown',ev=>startNodeDrag(ev,p.id));
+ d.addEventListener('dblclick',ev=>{if(ev.target.closest('.nnm')||ev.target.closest('select')||ev.target.closest('a')||ev.target.closest('.plus')||ev.target.closest('.info'))return;ev.stopPropagation();openDetail(p.id);});
+ return d;
+}
+function startRename(p,nm){
+ nm.contentEditable='true';nm.textContent=p.name;nm.focus();
+ const r=document.createRange();r.selectNodeContents(nm);const s=getSelection();s.removeAllRanges();s.addRange(r);const pre=snap();
+ function fin(){nm.contentEditable='false';const v=nm.textContent.trim()||p.name;if(v!==p.name)pushUndo(pre);p.name=v;byId[p.id].name=v;nm.innerHTML=esc(v);refreshSelects();nm.removeEventListener('blur',fin);}
+ nm.addEventListener('blur',fin);
+ nm.addEventListener('keydown',ev=>{if(ev.key==='Enter'){ev.preventDefault();nm.blur();}});
+}
+function addChild(parentId){
+ pushUndo();
+ const id='x'+Date.now();
+ const p={id,name:'New role',title:'',role:'',loc:'',email:'',li:'',fit:'',notes:'',photo:'',priority:3,updated:today(),by:meInit||''};
+ PEOPLE.push(p);byId[id]=p;reports[id]=parentId;
+ const par=pos[parentId]||{x:0,y:0};
+ pos[id]={x:par.x+(childrenOf(parentId).length-1)*90,y:par.y+NH+VGAP};
+ makeNode(p);refreshSelects();layout();
+ startRename(p,nodeEls[id].querySelector('.nnm'));
+}
+function buildOrg(){
+ syncOrientBtn();syncTiersBtn();
+ PEOPLE.forEach(makeNode);
+ if(loadedSaved && PEOPLE.every(p=>pos[p.id])){layout();setHint('Loaded your saved layout · Reset returns to the original.');}
+ else{applyLayout();}
+ updHist();
+}
+function rebuild(){world.querySelectorAll('.node').forEach(n=>n.remove());nodeEls={};PEOPLE.forEach(makeNode);layout();if(sel&&nodeEls[sel])nodeEls[sel].classList.add('sel');const oq=document.getElementById('orgq');if(oq&&oq.value.trim())orgFilter();}
+
+function childrenOf(id){return PEOPLE.filter(p=>reports[p.id]===id).map(p=>p.id);}
+function isDescendant(anc,node){let cur=reports[node],g=0;while(cur&&g++<300){if(cur===anc)return true;cur=reports[cur];}return false;}
+function isHidden(id){let cur=reports[id],g=0;while(cur&&g++<400){if(collapsed.has(cur))return true;cur=reports[cur];}return false;}
+/* departed / "left company" handling */
+function leftHidden(id){return !!(byId[id]&&byId[id].left)&&!showLeft;}
+function isOrgHidden(id){return isHidden(id)||leftHidden(id);}
+function effMgr(id){let m=reports[id],g=0;while(m&&byId[m]&&leftHidden(m)&&g++<500){m=reports[m];}return (m&&byId[m])?m:'';}
+function effChildrenOf(id){return PEOPLE.filter(p=>!isOrgHidden(p.id)&&effMgr(p.id)===id).map(p=>p.id);}
+function effRoots(){return PEOPLE.map(p=>p.id).filter(n=>!isOrgHidden(n)&&!effMgr(n));}
+function toggleCollapse(id){if(!childrenOf(id).length)return;pushUndo();if(collapsed.has(id))collapsed.delete(id);else collapsed.add(id);applyLayout();setHint(collapsed.has(id)?'Collapsed “'+byId[id].name+'”’s downline. Click ▸ on the card to expand.':'Expanded “'+byId[id].name+'”’s downline.');}
+function updateColl(id){const el=nodeEls[id];if(!el)return;const c=el.querySelector('.col');if(!c)return;const kids=childrenOf(id).length;if(!kids){c.style.display='none';return;}c.style.display='flex';const tot=totalBelow(id);c.textContent=collapsed.has(id)?('▸ '+tot):('▾ '+tot);c.title=collapsed.has(id)?('Show '+tot+' hidden report(s)'):('Hide these '+tot+' report(s)');c.classList.toggle('cin',collapsed.has(id));}
+function place2(c,depth){return orient==='h'?{x:depth*(NW+HGAP),y:c*(NH+VGAP)}:{x:c*(NW+HGAP),y:depth*(NH+VGAP)};}
+function autoArrange(){
+ let col=0;const seen=new Set();
+ function place(n,depth){
+   if(seen.has(n))return {c:col++,d:depth};seen.add(n);
+   const ch=collapsed.has(n)?[]:effChildrenOf(n).filter(c=>!seen.has(c));
+   if(ch.length===0){const c=col++;pos[n]=place2(c,depth);return {c,d:depth};}
+   let cols=[];ch.forEach(c=>cols.push(place(c,depth+1).c));
+   const c=(Math.min(...cols)+Math.max(...cols))/2;pos[n]=place2(c,depth);return {c,d:depth};
+ }
+ const roots=effRoots();
+ const trees=roots.filter(n=>effChildrenOf(n).length),singles=roots.filter(n=>!effChildrenOf(n).length);
+ trees.forEach(r=>{place(r,0);col+=1;});
+ const placed=[...seen].map(id=>pos[id]).filter(Boolean);
+ const baseY=placed.length?Math.max(...placed.map(p=>p.y)):0;
+ const gcols=8;
+ if(orient==='h'){
+   const baseX=placed.length?Math.max(...placed.map(p=>p.x)):0;
+   const gx=baseX+NW+HGAP+30;
+   singles.forEach((n,i)=>{seen.add(n);pos[n]={x:gx+Math.floor(i/gcols)*(NW+HGAP),y:(i%gcols)*(NH+VGAP)};});
+ } else {
+   const gy=baseY+NH+VGAP+30;
+   singles.forEach((n,i)=>{seen.add(n);pos[n]={x:(i%gcols)*(NW+HGAP),y:gy+Math.floor(i/gcols)*(NH+VGAP)};});
+ }
+ PEOPLE.forEach(p=>{if(!pos[p.id]&&!isOrgHidden(p.id))pos[p.id]={x:(col++)*(NW+HGAP),y:0};});
+ layout();
+}
+function updateNodeTier(id){const el=nodeEls[id];if(!el)return;const tb=el.querySelector('.tbar');const t=TIER_DEFS.find(x=>x.key===tierKey(byId[id]));const c=t?t.text:'';if(tb)tb.style.background=c||'transparent';el.style.background='';}
+function layout(){for(const id in nodeEls){const hid=isOrgHidden(id);nodeEls[id].style.display=hid?'none':'';nodeEls[id].classList.toggle('gone',!!(byId[id]&&byId[id].left));if(!hid&&pos[id]){nodeEls[id].style.left=pos[id].x+'px';nodeEls[id].style.top=pos[id].y+'px';}updateColl(id);updateNodeTier(id);}drawConns();drawBands();}
+function tierArrange(){
+ const present=TIER_DEFS.filter(t=>PEOPLE.some(p=>tierKey(p)===t.key&&!isOrgHidden(p.id)));
+ const rowOf={};present.forEach((t,i)=>rowOf[t.key]=i);
+ const order=[],seen=new Set();
+ function dfs(id){if(seen.has(id))return;seen.add(id);order.push(id);if(!collapsed.has(id))effChildrenOf(id).forEach(dfs);}
+ effRoots().forEach(dfs);
+ PEOPLE.forEach(p=>{if(!seen.has(p.id)&&!isOrgHidden(p.id)){seen.add(p.id);order.push(p.id);}});
+ const col={};
+ order.forEach(id=>{if(isOrgHidden(id))return;const k=tierKey(byId[id]);const r=rowOf[k]||0;const c=(col[k]=(col[k]==null?0:col[k]+1));
+   pos[id]=orient==='h'?{x:r*(NW+HGAP),y:c*(NH+VGAP)}:{x:c*(NW+HGAP),y:r*(NH+VGAP)};});
+ layout();
+}
+/* Tier + reporting FLOW: y = seniority band, x = tidy-tree so each manager's
+   whole downline sits in one contiguous column and lines skip bands cleanly. */
+function tierTreeArrange(){
+ const present=TIER_DEFS.filter(t=>PEOPLE.some(p=>tierKey(p)===t.key&&!isOrgHidden(p.id)));
+ const rowOf={};present.forEach((t,i)=>rowOf[t.key]=i);
+ let col=0;const xcol={},seen=new Set();
+ function assign(id){
+   if(seen.has(id))return xcol[id];seen.add(id);
+   const kids=collapsed.has(id)?[]:effChildrenOf(id).filter(c=>!seen.has(c));
+   if(!kids.length){xcol[id]=col++;return xcol[id];}
+   const cs=kids.map(assign);
+   xcol[id]=(Math.min(...cs)+Math.max(...cs))/2;return xcol[id];
+ }
+ const roots=effRoots();
+ const trees=roots.filter(n=>effChildrenOf(n).length),singles=roots.filter(n=>!effChildrenOf(n).length);
+ trees.forEach(r=>{assign(r);col+=0.6;});
+ singles.forEach(r=>{assign(r);col+=0.2;});
+ PEOPLE.forEach(p=>{if(!isOrgHidden(p.id)&&xcol[p.id]==null)xcol[p.id]=col++;});
+ PEOPLE.forEach(p=>{if(isOrgHidden(p.id))return;const k=tierKey(p),r=rowOf[k]||0,c=xcol[p.id]||0;
+   pos[p.id]=orient==='h'?{x:r*(NW+HGAP),y:c*(NH+VGAP)}:{x:c*(NW+HGAP),y:r*(NH+VGAP)};});
+ // prevent overlap of unrelated nodes sharing a tier, preserving left→right (flow) order
+ present.forEach(t=>{const ns=PEOPLE.filter(p=>!isOrgHidden(p.id)&&tierKey(p)===t.key&&pos[p.id]);
+   if(orient==='h'){ns.sort((a,b)=>pos[a.id].y-pos[b.id].y);let last=-1e9;ns.forEach(p=>{if(pos[p.id].y<last+NH+40)pos[p.id].y=last+NH+40;last=pos[p.id].y;});}
+   else{ns.sort((a,b)=>pos[a.id].x-pos[b.id].x);let last=-1e9;ns.forEach(p=>{if(pos[p.id].x<last+NW+HGAP)pos[p.id].x=last+NW+HGAP;last=pos[p.id].x;});}
+ });
+ layout();
+}
+function applyLayout(){tiersOn=(orgLayout!=='tree');if(orgLayout==='tierflow')tierTreeArrange();else if(orgLayout==='tiergroup')tierArrange();else autoArrange();}
+let bandRects=[];
+function drawBands(){const layer=document.getElementById('bands');bandRects=[];if(!layer)return;
+ if(!tiersOn){layer.innerHTML='';layer.style.display='none';updateTierLabels();return;}
+ layer.style.display='';
+ const vis=PEOPLE.filter(p=>pos[p.id]&&!isOrgHidden(p.id));
+ const all=vis.map(p=>pos[p.id]);if(!all.length){layer.innerHTML='';return;}
+ const minX=Math.min(...all.map(p=>p.x))-48,maxX=Math.max(...all.map(p=>p.x))+NW+48;
+ const minY=Math.min(...all.map(p=>p.y))-34,maxY=Math.max(...all.map(p=>p.y))+NH+34;
+ const present=TIER_DEFS.filter(t=>vis.some(p=>tierKey(p)===t.key));
+ let html='';
+ present.forEach((t,i)=>{const ns=vis.filter(p=>tierKey(p)===t.key);
+  let x0,x1,y0,y1;
+  if(orient==='h'){const xs=ns.map(p=>pos[p.id].x);x0=Math.min(...xs)-18;x1=Math.max(...xs)+NW+18;
+    const px0=(i===0?x0-NW:x0), px1=(i===present.length-1?x1+NW:x1);
+    y0=minY;y1=maxY;
+    bandRects.push({key:t.key,x0:px0,x1:px1,y0,y1});
+    html+=`<div class="band" style="left:${x0}px;top:${y0}px;width:${x1-x0}px;height:${y1-y0}px;background:${t.color};border-top:6px solid ${t.text}"></div>`;}
+  else{const ys=ns.map(p=>pos[p.id].y);y0=Math.min(...ys)-18;y1=Math.max(...ys)+NH+18;
+    const py0=(i===0?y0-NH:y0), py1=(i===present.length-1?y1+NH:y1);
+    x0=minX;x1=maxX;
+    bandRects.push({key:t.key,x0,x1,y0:py0,y1:py1});
+    html+=`<div class="band" style="left:${x0}px;top:${y0}px;width:${x1-x0}px;height:${y1-y0}px;background:${t.color};border-left:6px solid ${t.text}"></div>`;}
+ });
+ layer.innerHTML=html;
+ updateTierLabels();
+}
+function updateTierLabels(){const boxel=document.getElementById('tierlabels');if(!boxel)return;
+ if(!tiersOn||!bandRects.length){boxel.innerHTML='';return;}
+ const vw=viewport.clientWidth,vh=viewport.clientHeight;let html='';
+ bandRects.forEach(r=>{const def=TIER_DEFS.find(t=>t.key===r.key)||{text:'#fff',label:r.key};
+  if(orient==='h'){let x=((r.x0+r.x1)/2)*scale+tx;x=Math.min(Math.max(x,70),vw-70);
+    html+=`<div class="tlab" style="left:${x}px;top:8px;color:${def.text};transform:translateX(-50%)">${esc(def.label)}</div>`;}
+  else{let y=((r.y0+r.y1)/2)*scale+ty;y=Math.min(Math.max(y,18),vh-18);
+    html+=`<div class="tlab" style="left:10px;top:${y}px;color:${def.text};transform:translateY(-50%)">${esc(def.label)}</div>`;}
+ });
+ boxel.innerHTML=html;
+}
+function bandAt(wx,wy){for(const r of bandRects){if(wx>=r.x0&&wx<=r.x1&&wy>=r.y0&&wy<=r.y1)return r.key;}return null;}
+function drawConns(){
+ let s='';
+ for(const p of PEOPLE){if(isOrgHidden(p.id))continue;const m=effMgr(p.id);if(m&&!isOrgHidden(m)&&pos[m]&&pos[p.id]){
+   const a=pos[m],b=pos[p.id];const flow=(orgLayout==='tierflow');
+   if(orient==='h'){
+     const x1=a.x+NW,y1=a.y+NH/2,x2=b.x,y2=b.y+NH/2;const mx=flow?(x2-Math.min(30,(x2-x1)/2)):((x1+x2)/2);
+     s+=`<path d="M${x1} ${y1} H${mx} V${y2} H${x2}" fill="none" stroke="#3a8dff" stroke-width="2" opacity=".8"/>`;
+   }else{
+     const x1=a.x+NW/2,y1=a.y+NH,x2=b.x+NW/2,y2=b.y;const my=flow?(y2-Math.min(30,(y2-y1)/2)):((y1+y2)/2);
+     s+=`<path d="M${x1} ${y1} V${my} H${x2} V${y2}" fill="none" stroke="#3a8dff" stroke-width="2" opacity=".8"/>`;
+   }
+ }}
+ conn.innerHTML=s;
+}
+function applyT(){world.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;if(tiersOn)updateTierLabels();}
+function moveSubtree(id,dx,dy,seen){if(seen.has(id))return;seen.add(id);if(!pos[id])return;pos[id]={x:pos[id].x+dx,y:pos[id].y+dy};if(nodeEls[id]){nodeEls[id].style.left=pos[id].x+'px';nodeEls[id].style.top=pos[id].y+'px';}childrenOf(id).forEach(c=>moveSubtree(c,dx,dy,seen));}
+function reflowChildren(parentId){const par=pos[parentId];if(!par)return;const ch=childrenOf(parentId);if(!ch.length)return;const totalW=ch.length*NW+(ch.length-1)*HGAP;let sx=par.x+NW/2-totalW/2;const y=par.y+NH+VGAP;ch.forEach((c,i)=>{const nx=sx+i*(NW+HGAP);moveSubtree(c,nx-pos[c].x,y-pos[c].y,new Set());});}
+
+/* node drag + drop-to-reparent + link */
+let drag=null, linkMode=false, linkFirst=null, dropTarget=null, dragOff=null, edgeTimer=null, lastMouseX=0, lastMouseY=0;
+function startNodeDrag(ev,id){
+ if(ev.button!==0)return;
+ if(nodeEls[id].querySelector('.nnm').isContentEditable)return;
+ ev.stopPropagation();
+ if(linkMode){handleLink(id);return;}
+ drag={id,pre:snap(),moved:false,downX:ev.clientX,downY:ev.clientY};
+ dragOff={x:(ev.clientX-tx)/scale-pos[id].x,y:(ev.clientY-ty)/scale-pos[id].y};
+ lastMouseX=ev.clientX;lastMouseY=ev.clientY;
+ nodeEls[id].style.cursor='grabbing';nodeEls[id].style.zIndex=20;
+ if(edgeTimer)clearInterval(edgeTimer);edgeTimer=setInterval(edgeScroll,30);
+}
+function nodeAtWorld(wx,wy,exceptId){for(const p of PEOPLE){if(p.id===exceptId)continue;if(p.left&&!showLeft)continue;const q=pos[p.id];if(!q)continue;if(wx>=q.x&&wx<=q.x+NW&&wy>=q.y&&wy<=q.y+NH)return p.id;}return null;}
+function updateDrag(){
+ if(!drag)return;
+ pos[drag.id]={x:(lastMouseX-tx)/scale-dragOff.x,y:(lastMouseY-ty)/scale-dragOff.y};
+ const el=nodeEls[drag.id];el.style.left=pos[drag.id].x+'px';el.style.top=pos[drag.id].y+'px';
+ const cx=pos[drag.id].x+NW/2, cy=pos[drag.id].y+NH/2;
+ let t=nodeAtWorld(cx,cy,drag.id);
+ if(t&&(t===reports[drag.id]||isDescendant(drag.id,t)))t=null;
+ if(t!==dropTarget){if(dropTarget&&nodeEls[dropTarget])nodeEls[dropTarget].classList.remove('droptarget');dropTarget=t;if(t)nodeEls[t].classList.add('droptarget');}
+ drawConns();
+}
+function edgeScroll(){
+ if(!drag)return;const r=viewport.getBoundingClientRect(),M=48,SP=16;let m=false;
+ if(lastMouseX<r.left+M){tx+=SP;m=true;}else if(lastMouseX>r.right-M){tx-=SP;m=true;}
+ if(lastMouseY<r.top+M){ty+=SP;m=true;}else if(lastMouseY>r.bottom-M){ty-=SP;m=true;}
+ if(m){applyT();drag.moved=true;updateDrag();}
+}
+window.addEventListener('mousemove',ev=>{
+ if(!drag)return;lastMouseX=ev.clientX;lastMouseY=ev.clientY;
+ if(Math.abs(ev.clientX-drag.downX)+Math.abs(ev.clientY-drag.downY)>3)drag.moved=true;
+ updateDrag();
+});
+window.addEventListener('mouseup',()=>{
+ if(!drag)return;
+ if(edgeTimer){clearInterval(edgeTimer);edgeTimer=null;}
+ nodeEls[drag.id].style.cursor='grab';nodeEls[drag.id].style.zIndex='';
+ if(dropTarget){
+   pushUndo(drag.pre);
+   reports[drag.id]=dropTarget;markUpdated(drag.id);
+   const selEl=nodeEls[drag.id].querySelector('select');if(selEl)selEl.value=dropTarget;
+   nodeEls[dropTarget].classList.remove('droptarget');
+   setHint('“'+byId[drag.id].name+'” now reports to “'+byId[dropTarget].name+'” — chart re-organized.');
+   dropTarget=null;applyLayout();
+ } else if(drag.moved){
+   pushUndo(drag.pre);
+   if(tiersOn){const cx=pos[drag.id].x+NW/2,cy=pos[drag.id].y+NH/2;const bk=bandAt(cx,cy);
+     if(bk&&bk!==tierKey(byId[drag.id])){byId[drag.id].tier=bk;markUpdated(drag.id);setHint('“'+byId[drag.id].name+'” filed into the '+bk+' band — any reports stay linked to them across bands.');}
+     applyLayout();}
+ }
+ else{selectNode(drag.id);}
+ drawConns();drag=null;
+});
+function handleLink(id){
+ if(!linkFirst){linkFirst=id;nodeEls[id].classList.add('link1');setHint('Now click the MANAGER (or the same card to make top-level).');return;}
+ const emp=linkFirst;nodeEls[emp].classList.remove('link1');linkFirst=null;
+ if(id!==emp && isDescendant(emp,id)){setHint('Skipped — that would create a loop.');const s0=nodeEls[emp].querySelector('select');if(s0)s0.value=reports[emp]||'';drawConns();return;}
+ pushUndo();
+ if(id===emp){reports[emp]='';}else{reports[emp]=id;}
+ markUpdated(emp);autoArrange();
+ const s=nodeEls[emp].querySelector('select');if(s)s.value=reports[emp]||'';drawConns();setHint('Reporting updated & chart re-organized. Click another employee, or turn off Link mode.');
+}
+
+/* pan */
+let pan=null;
+viewport.addEventListener('mousedown',ev=>{if(ev.target.closest('.node'))return;if(sel){selectNode(sel);}pan={sx:ev.clientX,sy:ev.clientY,tx,ty};viewport.classList.add('grabbing');});
+window.addEventListener('mousemove',ev=>{if(!pan)return;tx=pan.tx+(ev.clientX-pan.sx);ty=pan.ty+(ev.clientY-pan.sy);applyT();});
+window.addEventListener('mouseup',()=>{pan=null;viewport.classList.remove('grabbing');});
+/* zoom */
+viewport.addEventListener('wheel',ev=>{ev.preventDefault();const r=viewport.getBoundingClientRect();const mx=ev.clientX-r.left,my=ev.clientY-r.top;const wx=(mx-tx)/scale,wy=(my-ty)/scale;scale*=(ev.deltaY<0?1.1:0.9);scale=Math.max(0.15,Math.min(2.5,scale));tx=mx-wx*scale;ty=my-wy*scale;applyT();},{passive:false});
+function fitView(){
+ const xs=PEOPLE.filter(p=>pos[p.id]&&!isOrgHidden(p.id)).map(p=>pos[p.id]);if(!xs.length)return;
+ const minx=Math.min(...xs.map(p=>p.x)),maxx=Math.max(...xs.map(p=>p.x))+NW;
+ const miny=Math.min(...xs.map(p=>p.y)),maxy=Math.max(...xs.map(p=>p.y))+NH;
+ const vw=viewport.clientWidth-40,vh=viewport.clientHeight-40;
+ scale=Math.min(vw/(maxx-minx),vh/(maxy-miny),1.1);scale=Math.max(scale,0.15);
+ tx=20-minx*scale+(vw-(maxx-minx)*scale)/2;ty=20-miny*scale+(vh-(maxy-miny)*scale)/2;applyT();
+}
+function centerOn(id){const q=pos[id];if(!q)return;if(scale<0.55)scale=0.9;const vw=viewport.clientWidth,vh=viewport.clientHeight;tx=vw/2-(q.x+NW/2)*scale;ty=vh/2-(q.y+NH/2)*scale;applyT();}
+function orgFilter(){
+ const q=(document.getElementById('orgq').value||'').toLowerCase().trim();
+ let matches=[];
+ for(const p of PEOPLE){const el=nodeEls[p.id];if(!el)continue;
+   const hit=!q||[p.name,p.title,p.role,p.loc,p.fit,p.email,p.notes].join(' ').toLowerCase().includes(q);
+   el.classList.toggle('dim',!!q&&!hit);
+   el.classList.remove('find');
+   if(q&&hit)matches.push(p.id);
+ }
+ if(q&&matches.length){matches.forEach(id=>nodeEls[id]&&nodeEls[id].classList.add('find'));centerOn(matches[0]);setHint(matches.length+(matches.length>1?' matches — showing “':' match — showing “')+byId[matches[0]].name+'”. Keep typing to narrow.');}
+ else if(q){setHint('No matches for “'+q+'”.');}
+ else{clearOrgFilter(true);}
+}
+function clearOrgFilter(silent){const inp=document.getElementById('orgq');if(inp)inp.value='';for(const id in nodeEls){nodeEls[id].classList.remove('dim');nodeEls[id].classList.remove('find');}if(!silent)setHint('Drag onto another card to set manager · ▾ collapses downline · dbl-click name to rename · hover for +');}
+function setHint(t){document.getElementById('hint').textContent=t;}
+function toast(msg,type,ms){const wrap=document.getElementById('toast');if(!wrap)return;const el=document.createElement('div');el.className='toast '+(type||'info');const ic=document.createElement('span');ic.className='ic';ic.textContent=type==='ok'?'✔':type==='err'?'⚠':'ℹ';const tx=document.createElement('span');tx.textContent=msg;el.appendChild(ic);el.appendChild(tx);wrap.appendChild(el);const life=ms||4600;setTimeout(()=>{el.style.transition='opacity .3s';el.style.opacity='0';setTimeout(()=>el.remove(),320);},life);}
+function syncOrientBtn(){const b=document.getElementById('orient');if(b)b.textContent=orient==='h'?'⇄ Horizontal':'⇅ Vertical';}
+function syncTiersBtn(){const s=document.getElementById('layout');if(s)s.value=orgLayout;const sl=document.getElementById('org-showleft');if(sl)sl.classList.toggle('on',showLeft);const ph=document.getElementById('org-photos');if(ph)ph.classList.toggle('on',!showPhotos);}
+function applyTheme(){document.body.classList.toggle('light',theme==='light');const b=document.getElementById('theme');if(b)b.textContent=theme==='light'?'☀️ Light':'🌙 Dark';}
+function renderLogo(){const im=document.getElementById('hdrlogo');if(im){if(logo){im.src=logo;im.style.display='';}else{im.style.display='none';}}}
+function setLogo(f){if(!f)return;const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{try{const c=document.createElement('canvas');const MW=280,MH=88;let w=img.width||1,h=img.height||1,sc=Math.min(MW/w,MH/h,1);w=Math.max(1,Math.round(w*sc));h=Math.max(1,Math.round(h*sc));c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);logo=c.toDataURL('image/png');renderLogo();scheduleAutosave();toast('Logo updated.','ok',3000);}catch(e){toast('Could not process that image — try a PNG or JPG.','err',5000);}};img.onerror=()=>{toast('That file isn’t a supported image (use PNG or JPG, not HEIC/PDF).','err',6000);};img.src=r.result;};r.onerror=()=>{toast('Could not read that file.','err',4000);};r.readAsDataURL(f);}
+function confirmBox(msg,cb,yesLabel){const m=document.getElementById('merge');const box=m.querySelector('.box');box.innerHTML=`<b>Please confirm</b><div class="dsub" style="margin:10px 0 4px">${esc(msg)}</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" id="cbno">Cancel</button><button class="btn add" id="cbyes">${esc(yesLabel||'Confirm')}</button></div>`;m.classList.add('on');box.querySelector('#cbyes').onclick=()=>{closeMerge();cb();};box.querySelector('#cbno').onclick=closeMerge;}
+function deleteContact(id){if(!byId[id])return;pushUndo();const mgr=reports[id]||'';childrenOf(id).forEach(c=>{reports[c]=(mgr&&byId[mgr])?mgr:'';});const i=PEOPLE.findIndex(p=>p.id===id);if(i>=0)PEOPLE.splice(i,1);delete byId[id];delete reports[id];delete pos[id];collapsed.delete(id);if(sel===id)sel=null;if(nodeEls[id]){nodeEls[id].remove();delete nodeEls[id];}closeDetail();refreshViews();scheduleAutosave();}
+function today(){try{return new Date().toISOString().slice(0,10);}catch(e){return '2026-07-31';}}
+function fileStamp(){try{const d=new Date();const z=n=>(''+n).padStart(2,'0');return d.getFullYear()+z(d.getMonth()+1)+z(d.getDate())+'_'+z(d.getHours())+z(d.getMinutes());}catch(e){return today();}}
+function fmtDate(d){if(!d)return '—';const p=(''+d).split('-');if(p.length<3)return d;const m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return m[(+p[1]-1)]+' '+(+p[2])+', '+p[0];}
+function markUpdated(id){if(byId[id]){byId[id].updated=today();if(meInit)byId[id].by=meInit;}}
+
+/* ---------- detail / editor drawer (works from Matrix AND Org) ---------- */
+let dPre=null,dCommitted=false;
+function touch(){if(!dCommitted){undoStack.push(dPre);if(undoStack.length>150)undoStack.shift();redoStack.length=0;updHist();dCommitted=true;}}
+function directReports(id){return PEOPLE.filter(p=>reports[p.id]===id).map(p=>p.id);}
+function totalBelow(id){let n=0;const st=directReports(id).slice(),seen=new Set();while(st.length){const x=st.pop();if(seen.has(x))continue;seen.add(x);n++;directReports(x).forEach(c=>st.push(c));}return n;}
+function dAv(p){return p.photo?`<img class="dav" src="${p.photo}">`:`<span class="dav">${esc(initials(p.name))}</span>`;}
+function closeDetail(){document.getElementById('detail').classList.remove('on');}
+function flashCard(id){activateTab('matrix');const c=document.querySelector('.mcard[data-id="'+id+'"]');if(c){c.scrollIntoView({behavior:'smooth',block:'center'});c.classList.add('flash');setTimeout(()=>c.classList.remove('flash'),1500);}}
+function refreshViews(){renderMatrix();if(orgReady)rebuild();}
+function fld(label,attr,val,ta){const st="width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:7px 9px;font:inherit;font-size:13px";return `<label style="display:block;margin-top:8px"><div class="dsub">${label}</div>`+(ta?`<textarea data-f="${attr}" style="${st};min-height:${ta}px;resize:vertical">${esc(val||'')}</textarea>`:`<input data-f="${attr}" value="${esc(val||'')}" style="${st}">`)+`</label>`;}
+function roleSelect(p){const cur=p.role||'';const st="width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:7px 9px;font:inherit;font-size:13px";let opts='<option value="">— select function —</option>';FUNCTIONS.forEach(f=>{opts+=`<option value="${esc(f)}" ${f===cur?'selected':''}>${esc(f)}</option>`;});if(cur&&!FUNCTIONS.includes(cur))opts+=`<option value="${esc(cur)}" selected>${esc(cur)} (custom)</option>`;return `<label style="display:block;margin-top:8px"><div class="dsub">Role / Function</div><select data-f="role" style="${st}">${opts}</select></label>`;}
+function setPhoto(f,p,id){const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const c=document.createElement('canvas');const S=300;let w=img.width,h=img.height,sc=Math.min(S/w,S/h,1);w=Math.round(w*sc);h=Math.round(h*sc);c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);touch();p.photo=c.toDataURL('image/jpeg',0.85);markUpdated(id);openDetail(id);refreshViews();};img.src=r.result;};r.readAsDataURL(f);}
+function openDetail(id,isNew){
+ const p=byId[id];if(!p)return;dPre=snap();dCommitted=false;
+ const drs=directReports(id).map(x=>byId[x]);const tot=totalBelow(id);
+ const mgrOpts='<option value="">— no manager (top level) —</option>'+PEOPLE.filter(x=>x.id!==id).map(x=>`<option value="${x.id}" ${reports[id]===x.id?'selected':''}>${esc(x.name)}</option>`).join('');
+ const inSt="width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:7px 9px;font:inherit;font-size:13px";
+ let h=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div style="font-size:12px;color:var(--mut);letter-spacing:.4px">EDIT CONTACT</div><button class="btn" id="dclose">✕ Close</button></div>
+   <div style="display:flex;gap:12px;align-items:center;margin-top:10px">
+     <div style="position:relative">${av(p,'av')}<label title="Change photo" style="position:absolute;bottom:-3px;right:-3px;background:var(--acc);border:2px solid var(--card);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px">✎<input type="file" id="dphoto" accept="image/*" style="display:none"></label></div>
+     <div style="flex:1"><div class="dsub" style="margin-bottom:3px">Relationship / priority</div><select id="dstance" style="${inSt}"><option value="">○ Neutral / Unknown</option>${STANCE_DEFS.filter(s=>s.key!=='Neutral').map(s=>`<option value="${s.key}" ${p.stance===s.key?'selected':''}>${s.emoji} ${esc(s.label)}</option>`).join('')}</select>${p.photo?'<button class="btn" id="dphotorm" style="margin-top:6px">Remove photo</button>':''}</div></div>
+   <div class="dsub" style="margin-top:8px">🕒 Last updated: <b style="color:var(--tx)">${fmtDate(p.updated)}</b>${p.by?' · by <b style="color:var(--tx)">'+esc(p.by)+'</b>':''}</div>
+   <div style="margin-top:9px"><button class="btn ${p.left?'on':''}" id="dleft" style="${p.left?'background:#7a869c;border-color:#7a869c;color:#fff':''}">${p.left?'✓ Left company — click to restore':'🚪 Mark as “Left company”'}</button></div>
+   ${fld('Name','name',p.name)}${fld('Title','title',p.title)}${roleSelect(p)}${fld('Location','loc',p.loc)}${fld('Email','email',p.email)}${fld('LinkedIn URL','li',p.li)}${fld('Opportunity fit','fit',p.fit,54)}${fld('Notes','notes',p.notes,84)}
+   <h4>Seniority tier (color band)</h4><select id="dtier" style="${inSt}"><option value="">Auto — from title (${esc(tierKey(p))})</option>${TIER_DEFS.map(t=>`<option value="${t.key}" ${p.tier===t.key?'selected':''}>${esc(t.label)}</option>`).join('')}</select>
+   <h4>Reports to</h4><select id="dmgr" style="${inSt}">${mgrOpts}</select>
+   <h4>Direct reports (${drs.length})${tot>drs.length?` · ${tot} total below`:''}</h4>
+   ${drs.length?drs.map(d=>`<div class="drow"><span class="dlink" data-go="${d.id}">${dAv(d)} ${esc(d.name)}</span><span class="dsub" style="margin-left:auto;max-width:150px;text-align:right">${esc(d.title||'')}</span></div>`).join(''):'<div class="tt">— none —</div>'}
+   <div style="margin-top:12px"><span class="dlink" data-card="${id}">⤴ Highlight in matrix</span></div>
+   <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:12px"><button class="btn" id="ddel" style="border-color:var(--hot);color:var(--hot)">🗑 Delete contact</button></div>
+   <div class="dsub" style="margin-top:10px">Edits apply live · click 💾 Save or ⭳ Export to keep them for next time.</div>`;
+ const dd=document.getElementById('detail');dd.innerHTML=h;dd.classList.add('on');
+ if(isNew){const nf=dd.querySelector('[data-f="name"]');if(nf){nf.focus();nf.select();}}
+ dd.querySelector('#dclose').onclick=()=>{closeDetail();refreshViews();};
+ dd.querySelectorAll('[data-f]').forEach(el=>{el.addEventListener('input',()=>{touch();p[el.dataset.f]=el.value;markUpdated(id);scheduleAutosave();});el.addEventListener('change',refreshViews);el.addEventListener('blur',refreshViews);});
+ dd.querySelector('#dstance').addEventListener('change',ev=>{touch();p.stance=ev.target.value;markUpdated(id);openDetail(id);refreshViews();});
+ dd.querySelector('#dleft').onclick=()=>{touch();p.left=!p.left;markUpdated(id);openDetail(id);refreshViews();toast(p.left?'“'+p.name+'” marked as left the company — hidden from the org chart (toggle 🚪 Departed to show).':'“'+p.name+'” restored to active.','info',5000);};
+ dd.querySelector('#dphoto').addEventListener('change',ev=>{if(ev.target.files[0])setPhoto(ev.target.files[0],p,id);});
+ const rm=dd.querySelector('#dphotorm');if(rm)rm.onclick=()=>{touch();p.photo='';markUpdated(id);openDetail(id);refreshViews();};
+ const dtier=dd.querySelector('#dtier');if(dtier)dtier.addEventListener('change',ev=>{touch();p.tier=ev.target.value;markUpdated(id);if(orgReady)applyLayout();refreshViews();});
+ dd.querySelector('#dmgr').addEventListener('change',ev=>{const v=ev.target.value;if(v&&isDescendant(id,v)){ev.target.value=reports[id]||'';setHint('That would create a loop.');return;}touch();reports[id]=v;markUpdated(id);if(orgReady){applyLayout();}drawConns();refreshViews();});
+ dd.querySelectorAll('[data-go]').forEach(el=>el.onclick=()=>{openDetail(el.dataset.go);flashCard(el.dataset.go);});
+ dd.querySelectorAll('[data-card]').forEach(el=>el.onclick=()=>flashCard(el.dataset.card));
+ dd.querySelector('#ddel').onclick=()=>{const mgr=reports[id]&&byId[reports[id]]?byId[reports[id]].name:'the top level';const kids=childrenOf(id).length;confirmBox('Delete “'+p.name+'” and remove all their reporting connections?'+(kids?(' Their '+kids+' direct report(s) will roll up to '+mgr+'.'):''),()=>{const nm=p.name;deleteContact(id);toast('Deleted “'+nm+'”.','info',3500);},'🗑 Delete');};
+}
+
+/* click off the editor drawer -> autosave & close (great for the "add new" flow) */
+document.addEventListener('mousedown',e=>{
+ const dd=document.getElementById('detail');if(!dd.classList.contains('on'))return;
+ if(e.target.closest('#detail'))return;
+ if(e.target.closest('.mcard')||e.target.closest('.node'))return;
+ if(e.target.closest('#addc')||e.target.closest('#org-addbtn')||e.target.closest('#org-addname'))return;
+ closeDetail();refreshViews();
+},true);
+
+/* toolbar */
+document.getElementById('arrange').onclick=()=>{closeDetail();pushUndo();pos={};applyLayout();fitView();setHint('Organized — layout redistributed.');};
+document.getElementById('zin').onclick=()=>{scale=Math.min(2.5,scale*1.15);applyT();};
+document.getElementById('zout').onclick=()=>{scale=Math.max(0.15,scale*0.87);applyT();};
+document.getElementById('fit').onclick=fitView;
+document.getElementById('orgq').addEventListener('input',orgFilter);
+document.getElementById('orgq').addEventListener('keydown',e=>{if(e.key==='Escape'){clearOrgFilter();}});
+document.getElementById('orgqx').onclick=()=>clearOrgFilter();
+document.getElementById('orient').onclick=()=>{closeDetail();orient=(orient==='v'?'h':'v');syncOrientBtn();pushUndo();pos={};applyLayout();fitView();setHint(orient==='h'?'Switched to left-right (horizontal) layout.':'Switched to top-down (vertical) layout.');};
+document.getElementById('layout').onchange=e=>{orgLayout=e.target.value;closeDetail();pushUndo();applyLayout();fitView();const msg=orgLayout==='tierflow'?'Tiers + reporting flow — each manager’s downline stays in one column; lines skip bands.':orgLayout==='tiergroup'?'Tier layers — everyone grouped by seniority band.':'Reporting tree — classic top-down by who reports to whom.';setHint(msg);toast(msg,'info',4200);};
+document.getElementById('org-photos').onclick=e=>{showPhotos=!showPhotos;e.target.classList.toggle('on',!showPhotos);rebuild();};
+document.getElementById('org-showleft').onclick=e=>{showLeft=!showLeft;e.target.classList.toggle('on',showLeft);closeDetail();applyLayout();fitView();setHint(showLeft?'Showing people who left the company (dimmed). Toggle off to hide them.':'Hiding people who left the company.');};
+document.getElementById('linkbtn').onclick=e=>{linkMode=!linkMode;e.target.classList.toggle('on',linkMode);if(linkMode)setHint('LINK MODE: click an employee, then their manager.');else{if(linkFirst){nodeEls[linkFirst].classList.remove('link1');linkFirst=null;}setHint('Drag onto another card to set manager · ▾ collapses downline · dbl-click name to rename · hover for +');}};
+document.getElementById('org-addbtn').onclick=()=>{const inp=document.getElementById('org-addname');const nm=inp.value.trim()||'New contact';const id='n'+Date.now();const p={id,name:nm,title:'',role:'',loc:'',email:'',li:'',fit:'',notes:'',photo:'',priority:3,updated:today(),by:meInit||''};pushUndo();PEOPLE.push(p);byId[id]=p;reports[id]='';inp.value='';rebuild();autoArrange();};
+document.getElementById('expo').onclick=()=>{const blob=new Blob([JSON.stringify({people:PEOPLE,pos,reports,orient,theme},null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='iqvia_ebc_data_'+fileStamp()+'.json';a.click();setHint('Data exported. Import it into any newer version to carry your edits forward.');};
+document.getElementById('impo').onclick=()=>document.getElementById('impf').click();
+function extractState(txt){
+ let j=null;
+ try{j=JSON.parse(txt);}catch(e){}                       // a JSON backup
+ if(!j||!j.people){                                      // or a saved app HTML file
+   try{const doc=new DOMParser().parseFromString(txt,'text/html');const st=doc.getElementById('STATE');if(st&&st.textContent.trim())j=JSON.parse(st.textContent);}catch(e){}
+ }
+ return (j&&j.people)?j:null;
+}
+document.getElementById('impf').onchange=ev=>{const f=ev.target.files[0];if(!f)return;const rd=new FileReader();
+ rd.onload=()=>{const j=extractState(rd.result);
+  if(!j){toast('Couldn’t read “'+f.name+'” — import a saved app HTML file, or a JSON backup.','err',6500);ev.target.value='';return;}
+  const incId=j.accountId;const existing=incId&&ACCOUNTS.find(a=>a.id===incId);
+  if(existing){ if(incId!==curAcct)switchAccount(incId); openImportChoice(j,f.name); }
+  else{ const guess=(j.accountName&&j.accountName.trim())||cleanAcctName(f.name);
+   promptAccountName('Name this imported account',(nm)=>{ const id=incId||genAcctId();
+     saveCurrentAccount(); if(!ACCOUNTS.find(a=>a.id===id))ACCOUNTS.push({id,name:nm});
+     storeAcct(id,JSON.stringify(Object.assign({},j,{accountId:id,accountName:nm}))); writeIndex(); switchAccount(id);
+     toast('Imported “'+nm+'” as a new account.','ok',5500);
+   }, guess); }
+  ev.target.value='';
+ };
+ rd.readAsText(f);};
+
+/* ---------- IMPORT: replace vs smart merge ---------- */
+const MFIELDS=[['name','Name'],['title','Title'],['role','Role / Function'],['loc','Location'],['email','Email'],['li','LinkedIn'],['fit','Opportunity fit'],['notes','Notes'],['stance','Relationship'],['left','Left company'],['priority','Priority'],['tier','Seniority tier']];
+function fLabel(f){if(f==='__mgr')return 'Reports to';if(f==='photo')return 'Photo';const h=MFIELDS.find(x=>x[0]===f);return h?h[1]:f;}
+function vStr(f,v){if(f==='priority')return v===1?'★ Priority':'Standard';if(f==='__mgr')return v?(byId[v]?byId[v].name:'(unknown)'):'— no manager —';return (v===''||v==null)?'—':(''+v);}
+function meLabel(){return meInit||'This file';}
+function closeMerge(){document.getElementById('merge').classList.remove('on');}
+function openImportChoice(j,fn){const m=document.getElementById('merge');const box=m.querySelector('.box');
+ box.innerHTML=`<b>Import “${esc(fn)}”</b><div class="dsub" style="margin:8px 0 14px">${j.people.length} contacts found in that file. How should I bring them in?</div>
+  <div class="cfrow"><b>🔀 Smart merge</b><div class="dsub" style="margin-top:4px">Keep your current data and blend their file in. Changes only one of you made apply automatically; you'll pick a value only where you both changed the SAME field. New contacts on either side are kept.</div><button class="btn add" id="ichoose_merge" style="margin-top:9px">Smart merge</button></div>
+  <div class="cfrow"><b>♻ Replace everything</b><div class="dsub" style="margin-top:4px">Discard what's here and load their file exactly as-is. Use this to adopt a fresh master, or to move an older file's data into this newest version.</div><button class="btn" id="ichoose_replace" style="margin-top:9px">Replace all</button></div>
+  <div style="text-align:right;margin-top:10px"><button class="btn" id="icancel">Cancel</button></div>`;
+ m.classList.add('on');
+ box.querySelector('#ichoose_merge').onclick=()=>{closeMerge();doMerge(j);};
+ box.querySelector('#ichoose_replace').onclick=()=>{closeMerge();replaceWith(j);};
+ box.querySelector('#icancel').onclick=closeMerge;
+}
+function replaceWith(j){pushUndo();PEOPLE.length=0;Object.keys(byId).forEach(k=>delete byId[k]);j.people.forEach(p=>{PEOPLE.push(p);byId[p.id]=p;});reports={};Object.assign(reports,j.reports||{});pos={};Object.assign(pos,j.pos||{});if(j.orient)orient=j.orient;if(j.layout)orgLayout=j.layout;else if('tiers' in j)orgLayout=j.tiers?'tiergroup':'tree';tiersOn=(orgLayout!=='tree');if('showLeft' in j)showLeft=!!j.showLeft;collapsed=new Set(j.collapsed||[]);if(j.theme){theme=j.theme;applyTheme();}syncOrientBtn();syncTiersBtn();setBaseFrom(PEOPLE,reports);clearOrgFilter(true);if(orgReady)rebuild();if(orgReady)fitView();renderMatrix();updHist();setHint('Replaced with the imported file.');toast('Loaded '+j.people.length+' contacts from the imported file. Click 💾 Save & Share to keep it.','ok',6000);}
+let pendingMerge=null;
+function doMerge(j){
+ pushUndo();
+ const incRep=j.reports||{};
+ const anc=(j.base&&j.base.people)?j.base:base;
+ let added=0,auto=0;const conflicts=[],needPos=[];
+ j.people.forEach(ip=>{const id=ip.id;const cur=byId[id];
+  if(!cur){const np=Object.assign({},ip);PEOPLE.push(np);byId[id]=np;reports[id]=incRep[id]||'';if(!pos[id])needPos.push(id);added++;return;}
+  const ba=anc.people[id];
+  MFIELDS.forEach(([f])=>{const cv=cur[f]===undefined?'':cur[f],iv=ip[f]===undefined?'':ip[f];if(String(cv)===String(iv))return;
+    const bv=ba?(ba[f]===undefined?'':ba[f]):undefined;
+    if(bv!==undefined&&String(bv)===String(cv)){cur[f]=iv;auto++;}
+    else if(bv!==undefined&&String(bv)===String(iv)){}
+    else{conflicts.push({id,f,mine:cv,theirs:iv,mineBy:cur.by||'',theirsBy:ip.by||'',mineUpd:cur.updated||'',theirsUpd:ip.updated||'',pick:((ip.updated||'')>(cur.updated||'')?'theirs':'mine')});}
+  });
+  // photo: prefer a set photo over empty; only ask if both set & differ
+  {const cv=cur.photo||'',iv=ip.photo||'';if(cv!==iv){if(!cv&&iv){cur.photo=iv;auto++;}else if(cv&&!iv){}else{conflicts.push({id,f:'photo',mine:cv,theirs:iv,mineBy:cur.by||'',theirsBy:ip.by||'',mineUpd:cur.updated||'',theirsUpd:ip.updated||'',pick:((ip.updated||'')>(cur.updated||'')?'theirs':'mine')});}}}
+  // manager
+  {const cm=reports[id]||'',im=incRep[id]||'';if(cm!==im){const bm=anc.reports?(anc.reports[id]||''):undefined;
+    if(bm!==undefined&&bm===cm){reports[id]=im;auto++;}
+    else if(bm!==undefined&&bm===im){}
+    else{conflicts.push({id,f:'__mgr',mine:cm,theirs:im,mineBy:cur.by||'',theirsBy:ip.by||'',mineUpd:cur.updated||'',theirsUpd:ip.updated||'',pick:((ip.updated||'')>(cur.updated||'')?'theirs':'mine')});}}}
+ });
+ if(needPos.length){const ys=Object.values(pos);const baseY=ys.length?Math.max(...ys.map(p=>p.y)):0;const gy=baseY+NH+VGAP+30;needPos.forEach((id,i)=>{pos[id]={x:(i%8)*(NW+HGAP),y:gy+Math.floor(i/8)*(NH+VGAP)};});}
+ if(conflicts.length){pendingMerge={conflicts,added,auto};openMergePanel();}
+ else{finishMerge(added,auto,0);}
+}
+function finishMerge(added,auto,resolved){setBaseFrom(PEOPLE,reports);clearOrgFilter(true);if(orgReady){rebuild();fitView();}renderMatrix();scheduleAutosave();updHist();setHint('Merged: '+added+' new, '+auto+' auto-merged'+(resolved?', '+resolved+' resolved':'')+'.');openMergeDone(added,auto,resolved);}
+function openMergeDone(added,auto,resolved){const total=added+auto+resolved;const m=document.getElementById('merge');const box=m.querySelector('.box');
+ box.innerHTML=`<div style="text-align:center;padding:4px 0 2px"><div style="font-size:40px;line-height:1">${total?'✅':'👍'}</div><b style="font-size:17px">${total?'Merge complete':'Already in sync'}</b></div>
+  <div style="display:flex;gap:10px;justify-content:center;margin:14px 0;flex-wrap:wrap">
+    <div class="mstat"><div class="mnum">${added}</div><div class="dsub">new contact${added===1?'':'s'}</div></div>
+    <div class="mstat"><div class="mnum">${auto}</div><div class="dsub">auto-merged</div></div>
+    <div class="mstat"><div class="mnum">${resolved}</div><div class="dsub">you resolved</div></div></div>
+  <div class="dsub" style="text-align:center">${total?'Your copy now includes everyone’s edits. Save a fresh copy to keep &amp; share it.':'Both files already matched — nothing needed changing.'}</div>
+  <div style="display:flex;justify-content:center;gap:8px;margin-top:16px"><button class="btn" id="mdok">Close</button>${total?'<button class="btn add" id="mdsave">💾 Save &amp; Share now</button>':''}</div>`;
+ m.classList.add('on');
+ box.querySelector('#mdok').onclick=closeMerge;
+ const sv=box.querySelector('#mdsave');if(sv)sv.onclick=()=>{closeMerge();saveFile();};
+ toast(total?('Merged: '+added+' new, '+auto+' auto-merged'+(resolved?', '+resolved+' resolved':'')):'Files already in sync — nothing changed.','ok',5200);
+}
+function cancelMerge(){closeMerge();if(undoStack.length)applyState(undoStack.pop());updHist();pendingMerge=null;toast('Merge cancelled — nothing changed.','info',3800);}
+function openMergePanel(){const m=document.getElementById('merge');const box=m.querySelector('.box');
+ box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><b>Resolve ${pendingMerge.conflicts.length} conflict(s)</b><button class="btn" id="mgx">✕</button></div>
+  <div class="dsub" style="margin:8px 0 12px">${pendingMerge.added} new contact(s) added · ${pendingMerge.auto} field(s) auto-merged. You both changed these — pick which value to keep (newer edit is pre-selected):</div>
+  <div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn" id="allmine">Keep all mine</button><button class="btn" id="alltheirs">Keep all theirs</button></div>
+  <div id="cflist"></div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn" id="mgcancel">Cancel merge</button><button class="btn add" id="mgapply">Apply ✓</button></div>`;
+ renderCf();m.classList.add('on');
+ box.querySelector('#mgx').onclick=cancelMerge;box.querySelector('#mgcancel').onclick=cancelMerge;
+ box.querySelector('#allmine').onclick=()=>{pendingMerge.conflicts.forEach(c=>c.pick='mine');renderCf();};
+ box.querySelector('#alltheirs').onclick=()=>{pendingMerge.conflicts.forEach(c=>c.pick='theirs');renderCf();};
+ box.querySelector('#mgapply').onclick=applyMerge;
+}
+function renderCf(){const list=document.getElementById('cflist');
+ list.innerHTML=pendingMerge.conflicts.map((c,i)=>{const nm=byId[c.id]?byId[c.id].name:c.id;
+  const mw='Mine'+(c.mineBy?' ('+esc(c.mineBy)+')':'')+(c.mineUpd?' · '+fmtDate(c.mineUpd):'');
+  const tw='Theirs'+(c.theirsBy?' ('+esc(c.theirsBy)+')':'')+(c.theirsUpd?' · '+fmtDate(c.theirsUpd):'');
+  return `<div class="cfrow"><div style="font-weight:600">${esc(nm)} · <span class="dsub">${fLabel(c.f)}</span></div>
+   <div class="opt"><button data-i="${i}" data-p="mine" class="${c.pick==='mine'?'pick':''}"><span class="who">${mw}</span>${esc(vStr(c.f,c.mine))}</button><button data-i="${i}" data-p="theirs" class="${c.pick==='theirs'?'pick':''}"><span class="who">${tw}</span>${esc(vStr(c.f,c.theirs))}</button></div></div>`;}).join('');
+ list.querySelectorAll('button[data-p]').forEach(b=>b.onclick=()=>{pendingMerge.conflicts[+b.dataset.i].pick=b.dataset.p;renderCf();});
+}
+function applyMerge(){pendingMerge.conflicts.forEach(c=>{const val=c.pick==='theirs'?c.theirs:c.mine;if(c.f==='__mgr')reports[c.id]=val;else byId[c.id][c.f]=val;});
+ const a=pendingMerge.added,au=pendingMerge.auto,n=pendingMerge.conflicts.length;closeMerge();finishMerge(a,au,n);pendingMerge=null;}
+document.getElementById('theme').onclick=()=>{theme=(theme==='dark'?'light':'dark');applyTheme();scheduleAutosave();};
+(function(){const mi=document.getElementById('meinit');if(mi){mi.value=meInit;mi.addEventListener('input',()=>{meInit=mi.value.trim().toUpperCase();saveUserInit(meInit);scheduleAutosave();});}})();
+(function(){const lf=document.getElementById('logof');const lb=document.getElementById('logobtn');
+ if(lb&&lf)lb.addEventListener('click',()=>lf.click());
+ if(lf)lf.addEventListener('change',ev=>{const f=ev.target.files[0];if(f)setLogo(f);ev.target.value='';});
+ const im=document.getElementById('hdrlogo');if(im){im.addEventListener('click',()=>{if(lf)lf.click();});im.addEventListener('dblclick',()=>{logo='';renderLogo();scheduleAutosave();toast('Logo removed.','info',2500);});}})();
+function deriveInit(name){const parts=(name||'').trim().split(/\s+/).filter(Boolean);if(!parts.length)return '';if(parts.length===1)return parts[0].slice(0,2).toUpperCase();return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();}
+function saveUser(name,init){try{localStorage.setItem(USERKEY,JSON.stringify({name:name,init:init}));}catch(e){}}
+function saveUserInit(init){try{const s=localStorage.getItem(USERKEY);const u=s?JSON.parse(s):{};u.init=init;localStorage.setItem(USERKEY,JSON.stringify(u));}catch(e){}}
+function promptUser(){const m=document.getElementById('merge');const box=m.querySelector('.box');const inSt="width:100%;background:var(--card2);border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:9px 10px;font-size:14px;margin-top:4px";
+ box.innerHTML=`<b>Welcome — who’s editing?</b><div class="dsub" style="margin:8px 0 12px">Add your name so any changes you make are stamped with your initials (for timestamps & merge tracking). Saved in THIS browser only — you won’t be asked again here.</div>
+  <label class="dsub">Your name (First Last)</label>
+  <input id="uname" placeholder="e.g. Nathan Burrows" style="${inSt}">
+  <div class="dsub" style="margin-top:10px">Your initials: <b id="uinit" style="color:var(--tx);font-size:14px">—</b></div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn" id="uskip">Skip for now</button><button class="btn add" id="usave">Save</button></div>`;
+ m.classList.add('on');
+ const un=box.querySelector('#uname'),ui=box.querySelector('#uinit');
+ un.addEventListener('input',()=>{ui.textContent=deriveInit(un.value)||'—';});
+ setTimeout(()=>un.focus(),40);
+ box.querySelector('#uskip').onclick=closeMerge;
+ box.querySelector('#usave').onclick=()=>{const nm=un.value.trim();if(!nm){un.focus();return;}const init=deriveInit(nm);meInit=init;saveUser(nm,init);const mi=document.getElementById('meinit');if(mi)mi.value=init;closeMerge();scheduleAutosave();setHint('Thanks '+nm.split(/\s+/)[0]+' — your edits will be tagged “'+init+'”.');};
+ un.addEventListener('keydown',e=>{if(e.key==='Enter')box.querySelector('#usave').click();});
+}
+function initUser(){let u=null;try{const s=localStorage.getItem(USERKEY);if(s)u=JSON.parse(s);}catch(e){}
+ if(u&&u.init){meInit=u.init;const mi=document.getElementById('meinit');if(mi)mi.value=meInit;}
+ else{promptUser();}}
+document.getElementById('save').onclick=saveFile;
+document.getElementById('undo').onclick=undo;
+document.getElementById('redo').onclick=redo;
+document.getElementById('org-del').onclick=delNode;
+document.getElementById('newacct').onclick=newAccountFlow;
+document.getElementById('clearacct').onclick=clearAccountFlow;
+document.getElementById('acctrename').onclick=renameAccountFlow;
+document.getElementById('acctdel').onclick=deleteAccountFlow;
+document.getElementById('acctsel').onchange=e=>{const v=e.target.value;
+ if(v==='__new__'){refreshAcctPicker();newAccountFlow();}
+ else if(v==='__all__'){viewAll=true;refreshAcctPicker();activateTab('portfolio');}
+ else{viewAll=false;if(v!==curAcct){switchAccount(v);}else{refreshAcctPicker();updateHeader();const onPort=!document.getElementById('portfolio').classList.contains('hide');if(onPort)renderPortfolio();else activateTab('matrix');}}};
+document.addEventListener('keydown',e=>{
+ if(document.getElementById('viewport').classList.contains('hide'))return;
+ if(document.querySelector('.nnm[contenteditable="true"]'))return;
+ const t=e.target.tagName; if(t==='INPUT'||t==='SELECT'||t==='TEXTAREA')return;
+ const mod=e.ctrlKey||e.metaKey;
+ if(mod&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();}
+ else if(mod&&e.key.toLowerCase()==='y'){e.preventDefault();redo();}
+ else if(mod&&e.key.toLowerCase()==='s'){e.preventDefault();saveFile();}
+ else if((e.key==='Delete'||e.key==='Backspace')&&sel){e.preventDefault();delNode();}
+});
+applyTheme();renderLogo();refreshAcctPicker();updateHeader();renderMatrix();updHist();initUser();
+</script></body></html>
