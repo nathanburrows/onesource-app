@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Pitch Counter</title>
+<link id="favicon" rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><text y=%22.9em%22 font-size=%2258%22>⚾</text></svg>'>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #0f172a; color: #e2e8f0;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    overscroll-behavior-y: contain;
+  }
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 16px;
+    user-select: none;
+  }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-emoji { font-size: 26px; line-height: 1; }
+  .brand-text { font-size: 19px; font-weight: 800; letter-spacing: -0.01em;
+                background: linear-gradient(to right, #818cf8, #c084fc, #f472b6);
+                -webkit-background-clip: text; background-clip: text;
+                -webkit-text-fill-color: transparent; color: transparent; }
+  .new-game-btn {
+    background: rgba(148,163,184,0.12); border: 1px solid rgba(148,163,184,0.25);
+    color: #cbd5e1; font-size: 12px; font-weight: 600; padding: 8px 12px;
+    border-radius: 8px; cursor: pointer;
+  }
+  .new-game-btn:active { background: rgba(148,163,184,0.22); }
+
+  .add-form {
+    display: flex; gap: 8px;
+  }
+  .add-form input {
+    flex: 1; min-width: 0;
+    background: #1e293b; border: 1px solid #334155; color: #f1f5f9;
+    font-size: 16px; padding: 12px 14px; border-radius: 10px;
+  }
+  .add-form input:focus { outline: none; border-color: #818cf8; }
+  .add-form button {
+    background: #6366f1; color: #fff; border: none; font-weight: 700;
+    font-size: 14px; padding: 0 18px; border-radius: 10px; cursor: pointer;
+  }
+  .add-form button:active { filter: brightness(1.15); }
+
+  .empty {
+    margin-top: 40px; text-align: center; color: #64748b; font-size: 14px;
+  }
+
+  .cards { display: flex; flex-direction: column; gap: 14px; flex: 1; }
+
+  .card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 16px;
+    padding: 16px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .card-name {
+    font-size: 16px; font-weight: 700; color: #f1f5f9;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-tools { display: flex; gap: 6px; flex-shrink: 0; }
+  .icon-btn {
+    background: rgba(148,163,184,0.12); border: 1px solid rgba(148,163,184,0.2);
+    color: #94a3b8; width: 30px; height: 30px; border-radius: 8px;
+    font-size: 14px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; line-height: 1;
+  }
+  .icon-btn:active { background: rgba(148,163,184,0.25); }
+  .icon-btn.danger { color: #f87171; }
+
+  .tap-zone {
+    background: linear-gradient(160deg, #312e81, #1e1b4b);
+    border: 1px solid #4338ca;
+    border-radius: 14px;
+    padding: 26px 16px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px;
+    cursor: pointer;
+    transition: transform .06s ease, filter .06s ease;
+  }
+  .tap-zone:active { transform: scale(0.98); filter: brightness(1.12); }
+  .tap-zone .count {
+    font-size: 56px; font-weight: 800; color: #fff;
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .tap-zone .hint { font-size: 11px; color: #a5b4fc; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 6px; }
+
+  .card-bottom { display: flex; align-items: center; justify-content: space-between; }
+  .undo-btn {
+    background: none; border: none; color: #64748b; font-size: 12px;
+    padding: 4px 6px; cursor: pointer;
+  }
+  .undo-btn:disabled { opacity: 0.3; }
+  .undo-btn:active:not(:disabled) { color: #94a3b8; }
+  .last-tap { font-size: 11px; color: #475569; }
+
+  @media (prefers-color-scheme: light) {
+    html, body { background: #f8fafc; color: #1e293b; }
+    .new-game-btn { background: #f1f5f9; border-color: #e2e8f0; color: #475569; }
+    .add-form input { background: #fff; border-color: #cbd5e1; color: #0f172a; }
+    .card { background: #fff; border-color: #e2e8f0; }
+    .card-name { color: #0f172a; }
+    .icon-btn { background: #f1f5f9; border-color: #e2e8f0; color: #64748b; }
+    .tap-zone { background: linear-gradient(160deg, #6366f1, #4f46e5); border-color: #4338ca; }
+    .last-tap { color: #94a3b8; }
+    .empty { color: #94a3b8; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brand-emoji">⚾</div>
+    <div class="brand-text">Pitch Counter</div>
+  </div>
+  <button class="new-game-btn" id="newGameBtn">New Game</button>
+</header>
+
+<form class="add-form" id="addForm">
+  <input id="nameInput" type="text" placeholder="Pitcher name" autocomplete="off" maxlength="40">
+  <button type="submit">Add</button>
+</form>
+
+<div class="empty" id="emptyState">Add a pitcher, then tap their card to count each pitch.</div>
+
+<div class="cards" id="cards"></div>
+
+<script>
+(function () {
+  var STORAGE_KEY = 'pitchCounter.pitchers.v1';
+  var pitchers = [];
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      pitchers = raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      pitchers = [];
+    }
+  }
+
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(pitchers)); } catch (e) {}
+  }
+
+  function uid() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function fmtTime(ts) {
+    if (!ts) return '';
+    var d = new Date(ts);
+    var h = d.getHours(), m = d.getMinutes();
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if (h === 0) h = 12;
+    return h + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
+  }
+
+  function render() {
+    var cardsEl = document.getElementById('cards');
+    var emptyEl = document.getElementById('emptyState');
+    cardsEl.innerHTML = '';
+
+    if (pitchers.length === 0) {
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+
+    pitchers.forEach(function (p) {
+      var card = document.createElement('div');
+      card.className = 'card';
+
+      var top = document.createElement('div');
+      top.className = 'card-top';
+
+      var name = document.createElement('div');
+      name.className = 'card-name';
+      name.textContent = p.name;
+      top.appendChild(name);
+
+      var tools = document.createElement('div');
+      tools.className = 'card-tools';
+
+      var resetBtn = document.createElement('button');
+      resetBtn.className = 'icon-btn';
+      resetBtn.title = 'Reset count';
+      resetBtn.textContent = '↺';
+      resetBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (p.count > 0 && !confirm('Reset ' + p.name + '’s pitch count to 0?')) return;
+        p.count = 0;
+        p.history = [];
+        p.lastTap = null;
+        save(); render();
+      });
+      tools.appendChild(resetBtn);
+
+      var delBtn = document.createElement('button');
+      delBtn.className = 'icon-btn danger';
+      delBtn.title = 'Remove pitcher';
+      delBtn.textContent = '✕';
+      delBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!confirm('Remove ' + p.name + ' from this game?')) return;
+        pitchers = pitchers.filter(function (x) { return x.id !== p.id; });
+        save(); render();
+      });
+      tools.appendChild(delBtn);
+
+      top.appendChild(tools);
+      card.appendChild(top);
+
+      var tapZone = document.createElement('div');
+      tapZone.className = 'tap-zone';
+      var count = document.createElement('div');
+      count.className = 'count';
+      count.textContent = p.count;
+      var hint = document.createElement('div');
+      hint.className = 'hint';
+      hint.textContent = 'Tap for pitch';
+      tapZone.appendChild(count);
+      tapZone.appendChild(hint);
+      tapZone.addEventListener('click', function () {
+        p.count += 1;
+        p.history = p.history || [];
+        p.history.push(Date.now());
+        p.lastTap = Date.now();
+        save(); render();
+        if (navigator.vibrate) navigator.vibrate(15);
+      });
+      card.appendChild(tapZone);
+
+      var bottom = document.createElement('div');
+      bottom.className = 'card-bottom';
+
+      var undoBtn = document.createElement('button');
+      undoBtn.className = 'undo-btn';
+      undoBtn.textContent = 'Undo last pitch';
+      undoBtn.disabled = p.count === 0;
+      undoBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (p.count === 0) return;
+        p.count -= 1;
+        if (p.history && p.history.length) p.history.pop();
+        p.lastTap = p.history && p.history.length ? p.history[p.history.length - 1] : null;
+        save(); render();
+      });
+      bottom.appendChild(undoBtn);
+
+      var lastTap = document.createElement('div');
+      lastTap.className = 'last-tap';
+      lastTap.textContent = p.lastTap ? 'last: ' + fmtTime(p.lastTap) : '';
+      bottom.appendChild(lastTap);
+
+      card.appendChild(bottom);
+      cardsEl.appendChild(card);
+    });
+  }
+
+  document.getElementById('addForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var input = document.getElementById('nameInput');
+    var name = input.value.trim();
+    if (!name) return;
+    pitchers.push({ id: uid(), name: name, count: 0, history: [], lastTap: null });
+    input.value = '';
+    save(); render();
+  });
+
+  document.getElementById('newGameBtn').addEventListener('click', function () {
+    if (pitchers.length === 0) return;
+    if (!confirm('Start a new game? This clears all pitchers and counts.')) return;
+    pitchers = [];
+    save(); render();
+  });
+
+  load();
+  render();
+})();
+</script>
+
+</body>
+</html>
